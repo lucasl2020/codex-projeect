@@ -1,0 +1,100 @@
+[build-system]
+requires = ["setuptools>=64.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "cf-captcha-solver"
+version = "1.0.0"
+description = "Cloudflare 验证绕过 + 验证码自动识别一体化 Python 库"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+authors = [
+    {name = "cf-captcha-solver"},
+]
+keywords = [
+    "cloudflare", "captcha", "bypass", "ddddocr", "turnstile",
+    "recaptcha", "hcaptcha", "slider", "ocr", "verification",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+# 核心依赖（必装）
+dependencies = [
+    "requests>=2.28.0",
+]
+
+# 可选依赖组
+[project.optional-dependencies]
+# 验证码识别（ddddocr OCR + 目标检测 + 滑块）
+captcha = [
+    "ddddocr>=1.5.6",
+    "Pillow>=9.0.0",
+]
+# hCaptcha 九宫格本地识别（ONNX 模型）
+hcaptcha = [
+    "hcaptcha-challenger>=0.7.0",
+]
+# hCaptcha 浏览器自动化（Playwright + ONNX）
+hcaptcha-browser = [
+    "hcaptcha-challenger>=0.7.0",
+    "playwright>=1.40.0",
+]
+# Cloudflare 绕过 - 轻量级（TLS 指纹）
+cf-lite = [
+    "curl_cffi>=0.7.0",
+    "cloudscraper>=1.2.71",
+]
+# Cloudflare 绕过 - 浏览器自动化
+cf-browser = [
+    "DrissionPage>=4.0.0",
+]
+# Cloudflare 绕过 - Playwright
+cf-playwright = [
+    "playwright>=1.40.0",
+    "cf-clearance>=2.0.0",
+]
+# HTTP API 服务（让非 Python 程序也能调用）
+server = [
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.23.0",
+    "python-multipart>=0.0.6",
+]
+# 全部安装（含服务端）
+all = [
+    "curl_cffi>=0.7.0",
+    "cloudscraper>=1.2.71",
+    "DrissionPage>=4.0.0",
+    "playwright>=1.40.0",
+    "cf-clearance>=2.0.0",
+    "ddddocr>=1.5.6",
+    "Pillow>=9.0.0",
+    "hcaptcha-challenger>=0.7.0",
+    "fastapi>=0.100.0",
+    "uvicorn[standard]>=0.23.0",
+    "python-multipart>=0.0.6",
+]
+
+[project.urls]
+Homepage = "https://github.com/example/cf-captcha-solver"
+Repository = "https://github.com/example/cf-captcha-solver"
+Documentation = "https://github.com/example/cf-captcha-solver#readme"
+
+[project.scripts]
+cf-bypass = "cf_captcha_solver.cli:cf_bypass_main"
+captcha-solver = "cf_captcha_solver.cli:captcha_solver_main"
+cf-captcha-server = "cf_captcha_solver.server:server_main"
+
+[tool.setuptools.packages.find]
+include = ["cf_captcha_solver*"]

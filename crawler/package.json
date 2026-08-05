@@ -1,0 +1,23 @@
+﻿{
+  "name": "card-shop-manager",
+  "version": "1.0.0",
+  "description": "Local card-shop URL manager with scheduled crawls and price/warranty ranking",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "start:open": "node scripts/one-click.mjs",
+    "dev": "node scripts/one-click.mjs",
+    "test": "node --test tests/**/*.test.js",
+    "import-seed": "node scripts/import-seed.js",
+    "install-browser": "npx playwright install chromium"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.8.1",
+    "express": "^4.21.2",
+    "playwright": "^1.50.1"
+  }
+}

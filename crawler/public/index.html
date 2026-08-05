@@ -1,0 +1,103 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>卡网管理 · Card Shop Manager</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="top">
+    <div class="brand">
+      <strong>卡网管理</strong>
+      <span class="muted">Card Shop Manager</span>
+    </div>
+    <div class="actions">
+      <span id="crawlStatus" class="status pill">idle</span>
+      <button id="btnRefreshAll" class="btn primary">全部刷新</button>
+      <button id="btnReload" class="btn">刷新展示</button>
+      <button id="btnSettings" class="btn">设置</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="panel import-panel">
+      <h2>导入网址</h2>
+      <p class="muted">每行一个 URL（卡网或导航站）。会自动清洗追踪参数并去重。</p>
+      <textarea id="importText" rows="6" placeholder="https://example.com/shop/xxx"></textarea>
+      <div class="row">
+        <button id="btnImport" class="btn primary">导入</button>
+        <button id="btnImportSeed" class="btn">导入种子文件列表</button>
+        <span id="importMsg" class="muted"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <h2>筛选</h2>
+      </div>
+      <div class="row filters">
+        <input id="filterQ" type="search" placeholder="搜商品名 / 店铺" />
+        <input id="filterMin" type="number" step="0.01" min="0" placeholder="最低价" />
+        <input id="filterMax" type="number" step="0.01" min="0" placeholder="最高价" />
+        <button id="btnSearch" class="btn primary">跨店搜索</button>
+        <button id="btnClearSearch" class="btn">清除</button>
+      </div>
+      <div id="searchResults" class="search-results hidden"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <h2>店铺 <span id="shopCount" class="badge">0</span></h2>
+        <span class="muted">组内：价格升序 → 质保越长越前</span>
+      </div>
+      <div id="shops" class="shops"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <h2>导航站 <span id="navCount" class="badge">0</span></h2>
+      </div>
+      <div id="navs" class="link-list"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-head">
+        <h2>未识别 <span id="unknownCount" class="badge">0</span></h2>
+      </div>
+      <div id="unknowns" class="link-list"></div>
+    </section>
+  </main>
+
+  <dialog id="settingsDialog">
+    <form method="dialog" id="settingsForm" class="settings-form">
+      <h3>设置</h3>
+      <label><input type="checkbox" id="s_crawl_on_startup" /> 启动时爬取</label>
+      <label><input type="checkbox" id="s_schedule_enabled" /> 启用定时爬取</label>
+      <label>定时间隔（小时）
+        <input type="number" id="s_schedule_interval_hours" min="1" step="1" />
+      </label>
+      <label>并发
+        <input type="number" id="s_crawl_concurrency" min="1" max="5" step="1" />
+      </label>
+      <label>站间延迟（ms）
+        <input type="number" id="s_crawl_delay_ms" min="0" step="100" />
+      </label>
+      <label>超时（ms）
+        <input type="number" id="s_request_timeout_ms" min="5000" step="1000" />
+      </label>
+      <label>连续失败自动禁用（0=关）
+        <input type="number" id="s_auto_disable_after_fails" min="0" step="1" />
+      </label>
+      <label><input type="checkbox" id="s_playwright_headless" /> Headless 浏览器</label>
+      <div class="row">
+        <button value="cancel" class="btn">取消</button>
+        <button id="btnSaveSettings" value="default" class="btn primary">保存</button>
+      </div>
+      <p class="muted">保存后会热重载定时器；浏览器池在下次爬取时按 headless 配置重建。</p>
+    </form>
+  </dialog>
+
+  <script src="/app.js"></script>
+</body>
+</html>

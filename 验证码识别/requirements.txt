@@ -1,0 +1,42 @@
+# Cloudflare 验证绕过脚本 - 依赖
+# 按需安装，不必全部安装（脚本会自动跳过未安装的库）
+
+# === 策略 1: curl_cffi（TLS 指纹伪装）—— 必装，也是探测器 ===
+curl_cffi>=0.7.0
+
+# === 策略 2: cloudscraper（免费版 5 秒盾）===
+cloudscraper>=1.2.71
+
+# === 策略 3: FlareSolverr（Docker 服务，无需 pip 安装）===
+# 需要 Docker 启动:
+#   docker run -d --name=flaresolverr -p 8191:8191 \
+#     -e LOG_LEVEL=info --restart unless-stopped \
+#     ghcr.io/flaresolverr/flaresolverr:latest
+requests>=2.28.0
+
+# === 策略 4: DrissionPage（CDP 协议，推荐）===
+DrissionPage>=4.0.0
+
+# === 策略 5: Playwright（浏览器自动化兜底）===
+playwright>=1.40.0
+cf-clearance>=2.0.0
+# 安装 Playwright 浏览器: playwright install chromium
+
+# ===========================================================================
+# 验证码识别模块依赖 (captcha_solver.py)
+# ===========================================================================
+
+# === ddddocr: 核心 OCR + 目标检测 + 滑块识别（必装）===
+# 支持: 文字验证码 / 算术验证码 / 点选验证码 / 滑块验证码
+# GitHub: https://github.com/sml2h3/ddddocr
+ddddocr>=1.5.6
+
+# === Pillow: 图片处理（ddddocr 依赖，通常自动安装）===
+Pillow>=9.0.0
+
+# === 第三方打码平台（可选，用于 reCAPTCHA / hCaptcha / Turnstile / FunCaptcha）===
+# 需要自行注册获取 API Key:
+#   2captcha:   https://2captcha.com
+#   capsolver:  https://capsolver.com
+#   yescaptcha: https://yescaptcha.com
+# 无需额外 pip 安装，使用标准 requests 库调用 API

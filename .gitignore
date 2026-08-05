@@ -1,0 +1,27 @@
+# === 依赖 ===
+node_modules/
+__pycache__/
+*.pyc
+*.pyo
+
+# === 本地配置 / 密钥（勿提交）===
+config.local.json
+*.local.json
+.vsllm-auth.json
+.vsllm-profile/
+
+# === 数据 / 运行时产物 ===
+*.db
+*.db-journal
+browser-profile/
+*.log
+
+# === WorkBuddy 工作区数据 ===
+.workbuddy/
+
+# === 系统 ===
+Thumbs.db
+.DS_Store
+
+# === 敏感凭证提醒：如需彻底排除，取消下行注释 ===
+# 显示codex配置信息/codex-plus-key-fix.md
