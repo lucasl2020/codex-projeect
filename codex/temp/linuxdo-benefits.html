@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>LinuxDO 公开福利 RSS（备用）</title>
+  <style>
+    body { max-width: 760px; margin: 60px auto; padding: 0 20px; color: #202124; font: 16px/1.7 system-ui, sans-serif; }
+    main { padding: 28px; border: 1px solid #dadce0; border-radius: 12px; box-shadow: 0 4px 18px #0001; }
+    button { border: 0; border-radius: 7px; padding: 11px 18px; background: #137333; color: #fff; cursor: pointer; font-size: 15px; }
+    button:disabled { opacity: .65; cursor: wait; }
+    .notice { padding: 10px 12px; background: #fff8e1; border-left: 4px solid #f9ab00; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>LinuxDO 公开福利 RSS（备用）</h1>
+    <p>页面打开后会自动执行一次，也可以点击下面的按钮重新抓取。该模式只读取第三方公开只读 RSS，不进入 LinuxDO，不使用 Node.js 或 Playwright。</p>
+    <p class="notice">这是未登录备用模式，信息可能不完整或已经失效。需要读取登录账号可见内容时，请安装 <code>linuxdo-benefits.user.js</code>，然后双击 <code>运行LinuxDO福利.cmd</code>。</p>
+    <p class="notice">公开服务会看到你的 IP、浏览器信息和请求时间，但不会收到 LinuxDO Cookie 或当前页面 Referer。</p>
+    <button id="linuxdo-benefits-public-rss-launcher" type="button">公开RSS抓取（备用）</button>
+  </main>
+  <script src="./linuxdo-benefits.user.js"></script>
+  <script>
+    const button = document.getElementById('linuxdo-benefits-public-rss-launcher');
+    const collector = window.LinuxdoBenefitsUserscript;
+    if (!collector?.runPublicRssScan) {
+      button.disabled = true;
+      button.textContent = '脚本加载失败';
+      alert('没有加载到 linuxdo-benefits.user.js，请确认它和本页面位于同一目录。');
+    } else {
+      button.addEventListener('click', () => collector.runPublicRssScan(button));
+      setTimeout(() => button.click(), 0);
+    }
+  </script>
+</body>
+</html>

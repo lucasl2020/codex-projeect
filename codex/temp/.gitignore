@@ -1,0 +1,9 @@
+﻿node_modules/
+browser-profile/
+state.json
+.vsllm-profile/
+*.log
+linuxdo-browser-profile/
+linuxdo-state.json
+outputs/
+.vsllm-auth.json

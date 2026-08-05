@@ -1,0 +1,19 @@
+{
+    "name":  "vsllm-rewards-bot",
+    "version":  "1.0.0",
+    "private":  true,
+    "description":  "使用 Playwright + Google Chrome 自动执行 VSLLM 福利签到和翻牌",
+    "main":  "vsllm-rewards.cjs",
+    "scripts":  {
+                    "daily-setup":  "node daily-rewards-v2.js --setup",
+                    "daily-once":  "node daily-rewards-v2.js --once",
+                    "daily-daemon":  "node daily-rewards-v2.js --daemon",
+                    "linuxdo:setup":  "node linuxdo-benefits.js --setup",
+                    "linuxdo:scan":  "node linuxdo-benefits.js --scan",
+                    "test":  "node --test"
+                },
+    "dependencies":  {
+                         "playwright-core":  "^1.61.1"
+                     }
+}
+

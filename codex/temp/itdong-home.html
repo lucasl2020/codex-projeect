@@ -1,0 +1,1436 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hans" class="no-js triple-column immersion-color use-big-shadow use-serif toolbar-blur article-header-style-1 ">
+<head>
+	<meta charset="UTF-8">
+			<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+		<meta property="og:title" content="栋dong的个人站点 &#8211; 一个记录和分享的地方">
+	<meta property="og:type" content="article">
+	<meta property="og:url" content="https://itdong.me">
+				<meta name="description" content="个人站点，一些刷题日记和JAVA小项目，你可以在这里找到很多常用环境的安装教程和一些搜集到的脚本">
+			<meta property="og:description" content="个人站点，一些刷题日记和JAVA小项目，你可以在这里找到很多常用环境的安装教程和一些搜集到的脚本">
+	
+				<meta name="keywords" content="站点,leetcode,算法,JAVA,项目,蓝桥杯,大学生">
+	
+	
+	<meta name="theme-color" content="#2196f3">
+	<meta name="theme-color-rgb" content="33,150,243">
+	<meta name="theme-color-origin" content="#2196f3">
+	<meta name="argon-enable-custom-theme-color" content="false">
+
+
+	<meta name="theme-card-radius" content="25">
+	<meta name="theme-card-radius-origin" content="25">
+
+	<meta name="theme-version" content="1.3.5">
+
+	<link rel="profile" href="http://gmpg.org/xfn/11">
+			<title>栋dong的个人站点 &#8211; 一个记录和分享的地方</title>
+<meta name='robots' content='max-image-preview:large' />
+<link rel='dns-prefetch' href='//www.googletagmanager.com' />
+<link rel='dns-prefetch' href='//pagead2.googlesyndication.com' />
+<style id="wp-img-auto-sizes-contain-inline-css">
+img:is([sizes=auto i],[sizes^="auto," i]){contain-intrinsic-size:3000px 1500px}
+/*# sourceURL=wp-img-auto-sizes-contain-inline-css */
+</style>
+<link rel='stylesheet' id='argon_css_merged-css' href='https://itdong.me/wp-content/themes/argon/assets/argon_css_merged.css?ver=1.3.5' media='all' />
+<link rel='stylesheet' id='style-css' href='https://itdong.me/wp-content/themes/argon/style.css?ver=1.3.5' media='all' />
+<style id="wp-emoji-styles-inline-css">
+
+	img.wp-smiley, img.emoji {
+		display: inline !important;
+		border: none !important;
+		box-shadow: none !important;
+		height: 1em !important;
+		width: 1em !important;
+		margin: 0 0.07em !important;
+		vertical-align: -0.1em !important;
+		background: none !important;
+		padding: 0 !important;
+	}
+/*# sourceURL=wp-emoji-styles-inline-css */
+</style>
+<style id="wp-block-library-inline-css">
+:root{--wp-block-synced-color:#7a00df;--wp-block-synced-color--rgb:122,0,223;--wp-bound-block-color:var(--wp-block-synced-color);--wp-editor-canvas-background:#ddd;--wp-admin-theme-color:#007cba;--wp-admin-theme-color--rgb:0,124,186;--wp-admin-theme-color-darker-10:#006ba1;--wp-admin-theme-color-darker-10--rgb:0,107,160.5;--wp-admin-theme-color-darker-20:#005a87;--wp-admin-theme-color-darker-20--rgb:0,90,135;--wp-admin-border-width-focus:2px}@media (min-resolution:192dpi){:root{--wp-admin-border-width-focus:1.5px}}.wp-element-button{cursor:pointer}:root .has-very-light-gray-background-color{background-color:#eee}:root .has-very-dark-gray-background-color{background-color:#313131}:root .has-very-light-gray-color{color:#eee}:root .has-very-dark-gray-color{color:#313131}:root .has-vivid-green-cyan-to-vivid-cyan-blue-gradient-background{background:linear-gradient(135deg,#00d084,#0693e3)}:root .has-purple-crush-gradient-background{background:linear-gradient(135deg,#34e2e4,#4721fb 50%,#ab1dfe)}:root .has-hazy-dawn-gradient-background{background:linear-gradient(135deg,#faaca8,#dad0ec)}:root .has-subdued-olive-gradient-background{background:linear-gradient(135deg,#fafae1,#67a671)}:root .has-atomic-cream-gradient-background{background:linear-gradient(135deg,#fdd79a,#004a59)}:root .has-nightshade-gradient-background{background:linear-gradient(135deg,#330968,#31cdcf)}:root .has-midnight-gradient-background{background:linear-gradient(135deg,#020381,#2874fc)}:root{--wp--preset--font-size--normal:16px;--wp--preset--font-size--huge:42px}.has-regular-font-size{font-size:1em}.has-larger-font-size{font-size:2.625em}.has-normal-font-size{font-size:var(--wp--preset--font-size--normal)}.has-huge-font-size{font-size:var(--wp--preset--font-size--huge)}:root .has-text-align-center{text-align:center}:root .has-text-align-left{text-align:left}:root .has-text-align-right{text-align:right}.has-fit-text{white-space:nowrap!important}#end-resizable-editor-section{display:none}.aligncenter{clear:both}.items-justified-left{justify-content:flex-start}.items-justified-center{justify-content:center}.items-justified-right{justify-content:flex-end}.items-justified-space-between{justify-content:space-between}.screen-reader-text{word-wrap:normal!important;border:0;clip-path:inset(50%);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px}.screen-reader-text:focus{background-color:#ddd;clip-path:none;color:#444;display:block;font-size:1em;height:auto;left:5px;line-height:normal;padding:15px 23px 14px;text-decoration:none;top:5px;width:auto;z-index:100000}html :where(.has-border-color){border-style:solid}html :where([style*=border-color]){border-style:solid}html :where([style*=border-top-color]){border-top-style:solid}html :where([style*=border-right-color]){border-right-style:solid}html :where([style*=border-bottom-color]){border-bottom-style:solid}html :where([style*=border-left-color]){border-left-style:solid}html :where([style*=border-width]){border-style:solid}html :where([style*=border-top-width]){border-top-style:solid}html :where([style*=border-right-width]){border-right-style:solid}html :where([style*=border-bottom-width]){border-bottom-style:solid}html :where([style*=border-left-width]){border-left-style:solid}html :where(img[class*=wp-image-]){height:auto;max-width:100%}:where(figure){margin:0 0 1em}html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:var(--wp-admin--admin-bar--height,0px)}@media screen and (max-width:600px){html :where(.is-position-sticky){--wp-admin--admin-bar--position-offset:0px}}
+
+/*# sourceURL=/wp-includes/css/dist/block-library/common.min.css */
+</style>
+<style id="wp-block-heading-inline-css">
+h1:where(.wp-block-heading).has-background,h2:where(.wp-block-heading).has-background,h3:where(.wp-block-heading).has-background,h4:where(.wp-block-heading).has-background,h5:where(.wp-block-heading).has-background,h6:where(.wp-block-heading).has-background{padding:1.25em 2.375em}h1.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),h1.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]),h2.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),h2.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]),h3.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),h3.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]),h4.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),h4.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]),h5.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),h5.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]),h6.has-text-align-left[style*=writing-mode]:where([style*=vertical-lr]),h6.has-text-align-right[style*=writing-mode]:where([style*=vertical-rl]){rotate:180deg}
+/*# sourceURL=https://itdong.me/wp-includes/blocks/heading/style.min.css */
+</style>
+<style id="wp-block-image-inline-css">
+.wp-block-image>a,.wp-block-image>figure>a{display:inline-block}.wp-block-image img{box-sizing:border-box;height:auto;max-width:100%;vertical-align:bottom}@media not (prefers-reduced-motion){.wp-block-image img.hide{visibility:hidden}.wp-block-image img.show{animation:show-content-image .4s}}.wp-block-image[style*=border-radius] img,.wp-block-image[style*=border-radius]>a{border-radius:inherit}.wp-block-image.has-custom-border img{box-sizing:border-box}.wp-block-image.aligncenter{text-align:center}.wp-block-image.alignfull>a,.wp-block-image.alignwide>a{width:100%}.wp-block-image.alignfull img,.wp-block-image.alignwide img{height:auto;width:100%}.wp-block-image .aligncenter,.wp-block-image .alignleft,.wp-block-image .alignright,.wp-block-image.aligncenter,.wp-block-image.alignleft,.wp-block-image.alignright{display:table}.wp-block-image .aligncenter>figcaption,.wp-block-image .alignleft>figcaption,.wp-block-image .alignright>figcaption,.wp-block-image.aligncenter>figcaption,.wp-block-image.alignleft>figcaption,.wp-block-image.alignright>figcaption{caption-side:bottom;display:table-caption}.wp-block-image .alignleft{float:left;margin:.5em 1em .5em 0}.wp-block-image .alignright{float:right;margin:.5em 0 .5em 1em}.wp-block-image .aligncenter{margin-left:auto;margin-right:auto}.wp-block-image :where(figcaption){margin-bottom:1em;margin-top:.5em}.wp-block-image.is-style-circle-mask img{border-radius:9999px}@supports ((-webkit-mask-image:none) or (mask-image:none)) or (-webkit-mask-image:none){.wp-block-image.is-style-circle-mask img{border-radius:0;-webkit-mask-image:url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50"/></svg>');mask-image:url('data:image/svg+xml;utf8,<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="50"/></svg>');mask-mode:alpha;-webkit-mask-position:center;mask-position:center;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:contain;mask-size:contain}}:root :where(.wp-block-image.is-style-rounded img,.wp-block-image .is-style-rounded img){border-radius:9999px}.wp-block-image figure{margin:0}.wp-lightbox-container{display:flex;flex-direction:column;position:relative}.wp-lightbox-container img{cursor:zoom-in}.wp-lightbox-container img:hover+button{opacity:1}.wp-lightbox-container button{align-items:center;backdrop-filter:blur(16px) saturate(180%);background-color:#5a5a5a40;border:none;border-radius:4px;cursor:zoom-in;display:flex;height:20px;justify-content:center;opacity:0;padding:0;position:absolute;right:16px;text-align:center;top:16px;width:20px;z-index:100}@media not (prefers-reduced-motion){.wp-lightbox-container button{transition:opacity .2s ease}}.wp-lightbox-container button:focus-visible{outline:3px auto #5a5a5a40;outline:3px auto -webkit-focus-ring-color;outline-offset:3px}.wp-lightbox-container button:hover{cursor:pointer;opacity:1}.wp-lightbox-container button:focus{opacity:1}.wp-lightbox-container button:focus,.wp-lightbox-container button:hover,.wp-lightbox-container button:not(:hover):not(:active):not(.has-background){background-color:#5a5a5a40;border:none}.wp-lightbox-overlay{box-sizing:border-box;cursor:zoom-out;height:100vh;left:0;overflow:hidden;position:fixed;top:0;visibility:hidden;width:100%;z-index:100000}.wp-lightbox-overlay .wp-lightbox-close-button{align-items:center;cursor:pointer;display:flex;font-family:inherit;gap:8px;justify-content:center;line-height:1;min-height:40px;min-width:40px;padding:0 4px;position:absolute;right:calc(env(safe-area-inset-right) + 16px);top:calc(env(safe-area-inset-top) + 16px);z-index:5000000}.wp-lightbox-overlay .wp-lightbox-close-button:focus,.wp-lightbox-overlay .wp-lightbox-close-button:hover,.wp-lightbox-overlay .wp-lightbox-close-button:not(:hover):not(:active):not(.has-background){background:none;border:none}.wp-lightbox-overlay .wp-lightbox-close-button:has(.wp-lightbox-close-text:not([hidden])) .wp-lightbox-close-icon svg{height:1em;width:1em}.wp-lightbox-overlay .wp-lightbox-close-icon svg{display:block}.wp-lightbox-overlay .wp-lightbox-navigation-button-next,.wp-lightbox-overlay .wp-lightbox-navigation-button-prev{align-items:center;bottom:16px;cursor:pointer;display:flex;font-family:inherit;gap:4px;justify-content:center;line-height:1;min-height:40px;min-width:40px;padding:0 8px;position:absolute;z-index:2000002}.wp-lightbox-overlay .wp-lightbox-navigation-button-next[hidden],.wp-lightbox-overlay .wp-lightbox-navigation-button-prev[hidden]{display:none}@media (min-width:960px){.wp-lightbox-overlay .wp-lightbox-navigation-button-next,.wp-lightbox-overlay .wp-lightbox-navigation-button-prev{bottom:50%;transform:translateY(-50%)}}.wp-lightbox-overlay .wp-lightbox-navigation-button-next:focus,.wp-lightbox-overlay .wp-lightbox-navigation-button-next:hover,.wp-lightbox-overlay .wp-lightbox-navigation-button-next:not(:hover):not(:active):not(.has-background),.wp-lightbox-overlay .wp-lightbox-navigation-button-prev:focus,.wp-lightbox-overlay .wp-lightbox-navigation-button-prev:hover,.wp-lightbox-overlay .wp-lightbox-navigation-button-prev:not(:hover):not(:active):not(.has-background){background:none;border:none;padding:0 8px}.wp-lightbox-overlay .wp-lightbox-navigation-button-next:has(.wp-lightbox-navigation-text:not([hidden])) .wp-lightbox-navigation-icon svg,.wp-lightbox-overlay .wp-lightbox-navigation-button-prev:has(.wp-lightbox-navigation-text:not([hidden])) .wp-lightbox-navigation-icon svg{display:block;height:1.5em;width:1.5em}.wp-lightbox-overlay .wp-lightbox-navigation-button-prev{left:calc(env(safe-area-inset-left) + 16px)}.wp-lightbox-overlay .wp-lightbox-navigation-button-next{right:calc(env(safe-area-inset-right) + 16px)}.wp-lightbox-overlay .wp-lightbox-navigation-icon svg{vertical-align:middle}.wp-lightbox-overlay .lightbox-image-container{height:var(--wp--lightbox-container-height);left:50%;overflow:hidden;position:absolute;top:50%;transform:translate(-50%,-50%);transform-origin:top left;width:var(--wp--lightbox-container-width);z-index:2000001}.wp-lightbox-overlay .wp-block-image{align-items:center;box-sizing:border-box;display:flex;height:100%;justify-content:center;margin:0;position:relative;transform-origin:0 0;width:100%;z-index:3000000}.wp-lightbox-overlay .wp-block-image img{height:var(--wp--lightbox-image-height);min-height:var(--wp--lightbox-image-height);min-width:var(--wp--lightbox-image-width);width:var(--wp--lightbox-image-width)}.wp-lightbox-overlay .wp-block-image figcaption{display:none}.wp-lightbox-overlay button{background:none;border:none}.wp-lightbox-overlay .scrim{background-color:#fff;height:100%;opacity:.9;position:absolute;width:100%;z-index:2000000}.wp-lightbox-overlay.active{visibility:visible}@media not (prefers-reduced-motion){.wp-lightbox-overlay.active{animation:turn-on-visibility .25s both}.wp-lightbox-overlay.active img{animation:turn-on-visibility .35s both}.wp-lightbox-overlay.show-closing-animation:not(.active){animation:turn-off-visibility .35s both}.wp-lightbox-overlay.show-closing-animation:not(.active) img{animation:turn-off-visibility .25s both}.wp-lightbox-overlay.zoom.active{animation:none;opacity:1;visibility:visible}.wp-lightbox-overlay.zoom.active .lightbox-image-container{animation:lightbox-zoom-in .4s}.wp-lightbox-overlay.zoom.active .lightbox-image-container img{animation:none}.wp-lightbox-overlay.zoom.active .scrim{animation:turn-on-visibility .4s forwards}.wp-lightbox-overlay.zoom.show-closing-animation:not(.active){animation:none}.wp-lightbox-overlay.zoom.show-closing-animation:not(.active) .lightbox-image-container{animation:lightbox-zoom-out .4s}.wp-lightbox-overlay.zoom.show-closing-animation:not(.active) .lightbox-image-container img{animation:none}.wp-lightbox-overlay.zoom.show-closing-animation:not(.active) .scrim{animation:turn-off-visibility .4s forwards}}@keyframes show-content-image{0%{visibility:hidden}99%{visibility:hidden}to{visibility:visible}}@keyframes turn-on-visibility{0%{opacity:0}to{opacity:1}}@keyframes turn-off-visibility{0%{opacity:1;visibility:visible}99%{opacity:0;visibility:visible}to{opacity:0;visibility:hidden}}@keyframes lightbox-zoom-in{0%{transform:translate(calc((-100vw + var(--wp--lightbox-scrollbar-width))/2 + var(--wp--lightbox-initial-left-position)),calc(-50vh + var(--wp--lightbox-initial-top-position))) scale(var(--wp--lightbox-scale))}to{transform:translate(-50%,-50%) scale(1)}}@keyframes lightbox-zoom-out{0%{transform:translate(-50%,-50%) scale(1);visibility:visible}99%{visibility:visible}to{transform:translate(calc((-100vw + var(--wp--lightbox-scrollbar-width))/2 + var(--wp--lightbox-initial-left-position)),calc(-50vh + var(--wp--lightbox-initial-top-position))) scale(var(--wp--lightbox-scale));visibility:hidden}}
+/*# sourceURL=https://itdong.me/wp-includes/blocks/image/style.min.css */
+</style>
+<style id="wp-block-latest-comments-inline-css">
+ol.wp-block-latest-comments{box-sizing:border-box;margin-left:0}:where(.wp-block-latest-comments:not([style*=line-height] .wp-block-latest-comments__comment)){line-height:1.1}:where(.wp-block-latest-comments:not([style*=line-height] .wp-block-latest-comments__comment-excerpt p)){line-height:1.8}.has-dates :where(.wp-block-latest-comments:not([style*=line-height])),.has-excerpts :where(.wp-block-latest-comments:not([style*=line-height])){line-height:1.5}.wp-block-latest-comments .wp-block-latest-comments{padding-left:0}.wp-block-latest-comments__comment{list-style:none;margin-bottom:1em}.has-avatars .wp-block-latest-comments__comment{list-style:none;min-height:2.25em}.has-avatars .wp-block-latest-comments__comment .wp-block-latest-comments__comment-excerpt,.has-avatars .wp-block-latest-comments__comment .wp-block-latest-comments__comment-meta{margin-left:3.25em}.wp-block-latest-comments__comment-excerpt p{font-size:.875em;margin:.36em 0 1.4em}.wp-block-latest-comments__comment-date{display:block;font-size:.75em}.wp-block-latest-comments .avatar,.wp-block-latest-comments__comment-avatar{border-radius:1.5em;display:block;float:left;height:2.5em;margin-right:.75em;width:2.5em}.wp-block-latest-comments[class*=-font-size] a,.wp-block-latest-comments[style*=font-size] a{font-size:inherit}
+/*# sourceURL=https://itdong.me/wp-includes/blocks/latest-comments/style.min.css */
+</style>
+<style id="wp-block-paragraph-inline-css">
+.is-small-text{font-size:.875em}.is-regular-text{font-size:1em}.is-large-text{font-size:2.25em}.is-larger-text{font-size:3em}.has-drop-cap:not(:focus):first-letter{float:left;font-size:8.4em;font-style:normal;font-weight:100;line-height:.68;margin:.05em .1em 0 0;text-transform:uppercase}body.rtl .has-drop-cap:not(:focus):first-letter{float:none;margin-left:.1em}p.has-drop-cap.has-background{overflow:hidden}:root :where(p.has-background){padding:1.25em 2.375em}:where(p.has-text-color:not(.has-link-color)) a{color:inherit}p.has-text-align-left[style*="writing-mode:vertical-lr"],p.has-text-align-right[style*="writing-mode:vertical-rl"]{rotate:180deg}
+/*# sourceURL=https://itdong.me/wp-includes/blocks/paragraph/style.min.css */
+</style>
+<style id="wp-block-tag-cloud-inline-css">
+.wp-block-tag-cloud{box-sizing:border-box}.wp-block-tag-cloud.aligncenter{justify-content:center;text-align:center}.wp-block-tag-cloud a{display:inline-block;margin-right:5px}.wp-block-tag-cloud span{display:inline-block;margin-left:5px;text-decoration:none}:root :where(.wp-block-tag-cloud.is-style-outline){display:flex;flex-wrap:wrap;gap:1ch}:root :where(.wp-block-tag-cloud.is-style-outline a){border:1px solid;font-size:unset!important;margin-right:0;padding:1ch 2ch;text-decoration:none!important}
+/*# sourceURL=https://itdong.me/wp-includes/blocks/tag-cloud/style.min.css */
+</style>
+<style id="wp-block-columns-inline-css">
+.wp-block-columns{box-sizing:border-box;display:flex;flex-wrap:wrap!important}@media (min-width:782px){.wp-block-columns{flex-wrap:nowrap!important}}.wp-block-columns{align-items:normal!important}.wp-block-columns.are-vertically-aligned-top{align-items:flex-start}.wp-block-columns.are-vertically-aligned-center{align-items:center}.wp-block-columns.are-vertically-aligned-bottom{align-items:flex-end}@media (max-width:781px){.wp-block-columns:not(.is-not-stacked-on-mobile)>.wp-block-column{flex-basis:100%!important}}@media (min-width:782px){.wp-block-columns:not(.is-not-stacked-on-mobile)>.wp-block-column{flex-basis:0;flex-grow:1}.wp-block-columns:not(.is-not-stacked-on-mobile)>.wp-block-column[style*=flex-basis]{flex-grow:0}}.wp-block-columns.is-not-stacked-on-mobile{flex-wrap:nowrap!important}.wp-block-columns.is-not-stacked-on-mobile>.wp-block-column{flex-basis:0;flex-grow:1}.wp-block-columns.is-not-stacked-on-mobile>.wp-block-column[style*=flex-basis]{flex-grow:0}:where(.wp-block-columns){margin-bottom:1.75em}:where(.wp-block-columns.has-background){padding:1.25em 2.375em}.wp-block-column{flex-grow:1;min-width:0;overflow-wrap:break-word;word-break:break-word}.wp-block-column.is-vertically-aligned-top{align-self:flex-start}.wp-block-column.is-vertically-aligned-center{align-self:center}.wp-block-column.is-vertically-aligned-bottom{align-self:flex-end}.wp-block-column.is-vertically-aligned-stretch{align-self:stretch}.wp-block-column.is-vertically-aligned-bottom,.wp-block-column.is-vertically-aligned-center,.wp-block-column.is-vertically-aligned-top{width:100%}
+/*# sourceURL=https://itdong.me/wp-includes/blocks/columns/style.min.css */
+</style>
+<style id="wp-block-group-inline-css">
+.wp-block-group{box-sizing:border-box}:where(.wp-block-group.wp-block-group-is-layout-constrained){position:relative}
+/*# sourceURL=https://itdong.me/wp-includes/blocks/group/style.min.css */
+</style>
+<style id="wp-block-quote-inline-css">
+.wp-block-quote{box-sizing:border-box;overflow-wrap:break-word}.wp-block-quote.is-large:where(:not(.is-style-plain)),.wp-block-quote.is-style-large:where(:not(.is-style-plain)){margin-bottom:1em;padding:0 1em}.wp-block-quote.is-large:where(:not(.is-style-plain)) p,.wp-block-quote.is-style-large:where(:not(.is-style-plain)) p{font-size:1.5em;font-style:italic;line-height:1.6}.wp-block-quote.is-large:where(:not(.is-style-plain)) cite,.wp-block-quote.is-large:where(:not(.is-style-plain)) footer,.wp-block-quote.is-style-large:where(:not(.is-style-plain)) cite,.wp-block-quote.is-style-large:where(:not(.is-style-plain)) footer{font-size:1.125em;text-align:right}.wp-block-quote>cite{display:block}
+/*# sourceURL=https://itdong.me/wp-includes/blocks/quote/style.min.css */
+</style>
+
+<style id="classic-theme-styles-inline-css">
+/*! This file is auto-generated */
+.wp-block-button__link{color:#fff;background-color:#32373c;border-radius:9999px;box-shadow:none;text-decoration:none;padding:calc(.667em + 2px) calc(1.333em + 2px);font-size:1.125em}.wp-block-file__button{background:#32373c;color:#fff;text-decoration:none}
+/*# sourceURL=/wp-includes/css/classic-themes.min.css */
+</style>
+
+<link rel='stylesheet' id='timelineCSS-css' href='https://itdong.me/wp-content/plugins/timeline-block-block/assets/css/timeline.min.css?ver=1.3.3' media='all' />
+<style id="global-styles-inline-css">
+:root{--wp--preset--aspect-ratio--square: 1;--wp--preset--aspect-ratio--4-3: 4/3;--wp--preset--aspect-ratio--3-4: 3/4;--wp--preset--aspect-ratio--3-2: 3/2;--wp--preset--aspect-ratio--2-3: 2/3;--wp--preset--aspect-ratio--16-9: 16/9;--wp--preset--aspect-ratio--9-16: 9/16;--wp--preset--color--black: #000000;--wp--preset--color--cyan-bluish-gray: #abb8c3;--wp--preset--color--white: #ffffff;--wp--preset--color--pale-pink: #f78da7;--wp--preset--color--vivid-red: #cf2e2e;--wp--preset--color--luminous-vivid-orange: #ff6900;--wp--preset--color--luminous-vivid-amber: #fcb900;--wp--preset--color--light-green-cyan: #7bdcb5;--wp--preset--color--vivid-green-cyan: #00d084;--wp--preset--color--pale-cyan-blue: #8ed1fc;--wp--preset--color--vivid-cyan-blue: #0693e3;--wp--preset--color--vivid-purple: #9b51e0;--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple: linear-gradient(135deg,rgb(6,147,227) 0%,rgb(155,81,224) 100%);--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan: linear-gradient(135deg,rgb(122,220,180) 0%,rgb(0,208,130) 100%);--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange: linear-gradient(135deg,rgb(252,185,0) 0%,rgb(255,105,0) 100%);--wp--preset--gradient--luminous-vivid-orange-to-vivid-red: linear-gradient(135deg,rgb(255,105,0) 0%,rgb(207,46,46) 100%);--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray: linear-gradient(135deg,rgb(238,238,238) 0%,rgb(169,184,195) 100%);--wp--preset--gradient--cool-to-warm-spectrum: linear-gradient(135deg,rgb(74,234,220) 0%,rgb(151,120,209) 20%,rgb(207,42,186) 40%,rgb(238,44,130) 60%,rgb(251,105,98) 80%,rgb(254,248,76) 100%);--wp--preset--gradient--blush-light-purple: linear-gradient(135deg,rgb(255,206,236) 0%,rgb(152,150,240) 100%);--wp--preset--gradient--blush-bordeaux: linear-gradient(135deg,rgb(254,205,165) 0%,rgb(254,45,45) 50%,rgb(107,0,62) 100%);--wp--preset--gradient--luminous-dusk: linear-gradient(135deg,rgb(255,203,112) 0%,rgb(199,81,192) 50%,rgb(65,88,208) 100%);--wp--preset--gradient--pale-ocean: linear-gradient(135deg,rgb(255,245,203) 0%,rgb(182,227,212) 50%,rgb(51,167,181) 100%);--wp--preset--gradient--electric-grass: linear-gradient(135deg,rgb(202,248,128) 0%,rgb(113,206,126) 100%);--wp--preset--gradient--midnight: linear-gradient(135deg,rgb(2,3,129) 0%,rgb(40,116,252) 100%);--wp--preset--font-size--small: 13px;--wp--preset--font-size--medium: 20px;--wp--preset--font-size--large: 36px;--wp--preset--font-size--x-large: 42px;--wp--preset--spacing--20: 0.44rem;--wp--preset--spacing--30: 0.67rem;--wp--preset--spacing--40: 1rem;--wp--preset--spacing--50: 1.5rem;--wp--preset--spacing--60: 2.25rem;--wp--preset--spacing--70: 3.38rem;--wp--preset--spacing--80: 5.06rem;--wp--preset--shadow--natural: 6px 6px 9px rgba(0, 0, 0, 0.2);--wp--preset--shadow--deep: 12px 12px 50px rgba(0, 0, 0, 0.4);--wp--preset--shadow--sharp: 6px 6px 0px rgba(0, 0, 0, 0.2);--wp--preset--shadow--outlined: 6px 6px 0px -3px rgb(255, 255, 255), 6px 6px rgb(0, 0, 0);--wp--preset--shadow--crisp: 6px 6px 0px rgb(0, 0, 0);}:where(body) { margin: 0; }:where(.is-layout-flex){gap: 0.5em;}:where(.is-layout-grid){gap: 0.5em;}body .is-layout-flex{display: flex;}.is-layout-flex{flex-wrap: wrap;align-items: center;}.is-layout-flex > :is(*, div){margin: 0;}body .is-layout-grid{display: grid;}.is-layout-grid > :is(*, div){margin: 0;}body{padding-top: 0px;padding-right: 0px;padding-bottom: 0px;padding-left: 0px;}:root :where(.wp-element-button, .wp-block-button__link){background-color: #32373c;border-width: 0;color: #fff;font-family: inherit;font-size: inherit;font-style: inherit;font-weight: inherit;letter-spacing: inherit;line-height: inherit;padding-top: calc(0.667em + 2px);padding-right: calc(1.333em + 2px);padding-bottom: calc(0.667em + 2px);padding-left: calc(1.333em + 2px);text-decoration: none;text-transform: inherit;}.has-black-color{color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-color{color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-color{color: var(--wp--preset--color--white) !important;}.has-pale-pink-color{color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-color{color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-color{color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-color{color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-color{color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-color{color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-color{color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-color{color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-color{color: var(--wp--preset--color--vivid-purple) !important;}.has-black-background-color{background-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-background-color{background-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-background-color{background-color: var(--wp--preset--color--white) !important;}.has-pale-pink-background-color{background-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-background-color{background-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-background-color{background-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-background-color{background-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-background-color{background-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-background-color{background-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-background-color{background-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-background-color{background-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-background-color{background-color: var(--wp--preset--color--vivid-purple) !important;}.has-black-border-color{border-color: var(--wp--preset--color--black) !important;}.has-cyan-bluish-gray-border-color{border-color: var(--wp--preset--color--cyan-bluish-gray) !important;}.has-white-border-color{border-color: var(--wp--preset--color--white) !important;}.has-pale-pink-border-color{border-color: var(--wp--preset--color--pale-pink) !important;}.has-vivid-red-border-color{border-color: var(--wp--preset--color--vivid-red) !important;}.has-luminous-vivid-orange-border-color{border-color: var(--wp--preset--color--luminous-vivid-orange) !important;}.has-luminous-vivid-amber-border-color{border-color: var(--wp--preset--color--luminous-vivid-amber) !important;}.has-light-green-cyan-border-color{border-color: var(--wp--preset--color--light-green-cyan) !important;}.has-vivid-green-cyan-border-color{border-color: var(--wp--preset--color--vivid-green-cyan) !important;}.has-pale-cyan-blue-border-color{border-color: var(--wp--preset--color--pale-cyan-blue) !important;}.has-vivid-cyan-blue-border-color{border-color: var(--wp--preset--color--vivid-cyan-blue) !important;}.has-vivid-purple-border-color{border-color: var(--wp--preset--color--vivid-purple) !important;}.has-vivid-cyan-blue-to-vivid-purple-gradient-background{background: var(--wp--preset--gradient--vivid-cyan-blue-to-vivid-purple) !important;}.has-light-green-cyan-to-vivid-green-cyan-gradient-background{background: var(--wp--preset--gradient--light-green-cyan-to-vivid-green-cyan) !important;}.has-luminous-vivid-amber-to-luminous-vivid-orange-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-amber-to-luminous-vivid-orange) !important;}.has-luminous-vivid-orange-to-vivid-red-gradient-background{background: var(--wp--preset--gradient--luminous-vivid-orange-to-vivid-red) !important;}.has-very-light-gray-to-cyan-bluish-gray-gradient-background{background: var(--wp--preset--gradient--very-light-gray-to-cyan-bluish-gray) !important;}.has-cool-to-warm-spectrum-gradient-background{background: var(--wp--preset--gradient--cool-to-warm-spectrum) !important;}.has-blush-light-purple-gradient-background{background: var(--wp--preset--gradient--blush-light-purple) !important;}.has-blush-bordeaux-gradient-background{background: var(--wp--preset--gradient--blush-bordeaux) !important;}.has-luminous-dusk-gradient-background{background: var(--wp--preset--gradient--luminous-dusk) !important;}.has-pale-ocean-gradient-background{background: var(--wp--preset--gradient--pale-ocean) !important;}.has-electric-grass-gradient-background{background: var(--wp--preset--gradient--electric-grass) !important;}.has-midnight-gradient-background{background: var(--wp--preset--gradient--midnight) !important;}.has-small-font-size{font-size: var(--wp--preset--font-size--small) !important;}.has-medium-font-size{font-size: var(--wp--preset--font-size--medium) !important;}.has-large-font-size{font-size: var(--wp--preset--font-size--large) !important;}.has-x-large-font-size{font-size: var(--wp--preset--font-size--x-large) !important;}
+:where(.wp-block-columns.is-layout-flex){gap: 2em;}:where(.wp-block-columns.is-layout-grid){gap: 2em;}
+/*# sourceURL=global-styles-inline-css */
+</style>
+
+<style id="md-style-inline-css">
+ .katex-container { margin: 25px !important; text-align: center; } .katex-container.katex-inline { display: inline-block !important; background: none !important; margin: 0 !important; padding: 0 !important; } pre .katex-container { font-size: 1.4em !important; } .katex-inline { background: none !important; margin: 0 3px; } 
+/*# sourceURL=md-style-inline-css */
+</style>
+<script id="argon_js_merged-js" src="https://itdong.me/wp-content/themes/argon/assets/argon_js_merged.js?ver=1.3.5"></script>
+<script id="argonjs-js" src="https://itdong.me/wp-content/themes/argon/assets/js/argon.min.js?ver=1.3.5"></script>
+<script id="jquery-core-js" src="https://itdong.me/wp-includes/js/jquery/jquery.min.js?ver=3.7.1"></script>
+<script id="jquery-migrate-js" src="https://itdong.me/wp-includes/js/jquery/jquery-migrate.min.js?ver=3.4.1"></script>
+
+<!-- Google tag (gtag.js) snippet added by Site Kit -->
+<!-- Site Kit 添加的 Google Analytics 代码段 -->
+<script id="google_gtagjs-js" src="https://www.googletagmanager.com/gtag/js?id=GT-55VRZ4ZM" async></script>
+<script id="google_gtagjs-js-after">
+window.dataLayer = window.dataLayer || [];function gtag(){dataLayer.push(arguments);}
+gtag("set","linker",{"domains":["itdong.me"]});
+gtag("js", new Date());
+gtag("set", "developer_id.dZTNiMT", true);
+gtag("config", "GT-55VRZ4ZM");
+//# sourceURL=google_gtagjs-js-after
+</script>
+<link rel="https://api.w.org/" href="https://itdong.me/wp-json/" /><link rel="EditURI" type="application/rsd+xml" title="RSD" href="https://itdong.me/xmlrpc.php?rsd" />
+
+<meta name="generator" content="Site Kit by Google 1.183.0" />
+<!-- Google AdSense meta tags added by Site Kit -->
+<meta name="google-adsense-platform-account" content="ca-host-pub-2644536267352236">
+<meta name="google-adsense-platform-domain" content="sitekit.withgoogle.com">
+<!-- End Google AdSense meta tags added by Site Kit -->
+
+<!-- Site Kit 添加的 Google AdSense 代码段 -->
+<script async crossorigin="anonymous" src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9287258075918307&#038;host=ca-host-pub-2644536267352236"></script>
+
+<!-- 结束 Site Kit 添加的 Google AdSense 代码段 -->
+<link rel="icon" href="https://itdong.me/wp-content/uploads/2023/04/cropped-透明底反黑图-e1681661076974-32x32.png" sizes="32x32" />
+<link rel="icon" href="https://itdong.me/wp-content/uploads/2023/04/cropped-透明底反黑图-e1681661076974-192x192.png" sizes="192x192" />
+<link rel="apple-touch-icon" href="https://itdong.me/wp-content/uploads/2023/04/cropped-透明底反黑图-e1681661076974-180x180.png" />
+<meta name="msapplication-TileImage" content="https://itdong.me/wp-content/uploads/2023/04/cropped-透明底反黑图-e1681661076974-270x270.png" />
+<style id="wp-custom-css">
+ @font-face{
+    font-family:btfFont;
+    src:
+    url(https://itdong.me/wp-content/uploads/2023/01/Alimama_ShuHeiTi_Bold.woff2) format('woff2')
+}
+
+body{
+    font-family:"btfFont" !important
+} 
+/*网站黑白色（悼念）*/
+/*html {
+    filter: grayscale(100%);
+    -webkit-filter: grayscale(100%);
+    -moz-filter: grayscale(100%);
+    -ms-filter: grayscale(100%);
+    -o-filter: grayscale(100%);
+    filter: url("data:image/svg+xml;utf8,#grayscale");
+    filter:progid:DXImageTransform.Microsoft.BasicImage(grayscale=1);
+    -webkit-filter: grayscale(1);
+}*/
+</style>
+		<script>
+		document.documentElement.classList.remove("no-js");
+		var argonConfig = {
+			wp_path: "/",
+			language: "zh_CN",
+			dateFormat: "YMD",
+							zoomify: false,
+						pangu: "false",
+							lazyload: {
+					threshold: 800,
+					effect: "fadeIn"
+				},
+						fold_long_comments: true,
+			fold_long_shuoshuo: true,
+			disable_pjax: false,
+			pjax_animation_durtion: 600,
+			headroom: "true",
+			waterflow_columns: "1",
+			code_highlight: {
+				enable: true,
+				hide_linenumber: false,
+				transparent_linenumber: false,
+				break_line: false			}
+		}
+	</script>
+	<script>
+		var darkmodeAutoSwitch = "system";
+		function setDarkmode(enable){
+			if (enable == true){
+				$("html").addClass("darkmode");
+			}else{
+				$("html").removeClass("darkmode");
+			}
+			$(window).trigger("scroll");
+		}
+		function toggleDarkmode(){
+			if ($("html").hasClass("darkmode")){
+				setDarkmode(false);
+				sessionStorage.setItem("Argon_Enable_Dark_Mode", "false");
+			}else{
+				setDarkmode(true);
+				sessionStorage.setItem("Argon_Enable_Dark_Mode", "true");
+			}
+		}
+		if (sessionStorage.getItem("Argon_Enable_Dark_Mode") == "true"){
+			setDarkmode(true);
+		}
+		function toggleDarkmodeByPrefersColorScheme(media){
+			if (sessionStorage.getItem('Argon_Enable_Dark_Mode') == "false" || sessionStorage.getItem('Argon_Enable_Dark_Mode') == "true"){
+				return;
+			}
+			if (media.matches){
+				setDarkmode(true);
+			}else{
+				setDarkmode(false);
+			}
+		}
+		function toggleDarkmodeByTime(){
+			if (sessionStorage.getItem('Argon_Enable_Dark_Mode') == "false" || sessionStorage.getItem('Argon_Enable_Dark_Mode') == "true"){
+				return;
+			}
+			let hour = new Date().getHours();
+			if (hour < 7 || hour >= 22){
+				setDarkmode(true);
+			}else{
+				setDarkmode(false);
+			}
+		}
+		if (darkmodeAutoSwitch == 'system'){
+			var darkmodeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+			darkmodeMediaQuery.addListener(toggleDarkmodeByPrefersColorScheme);
+			toggleDarkmodeByPrefersColorScheme(darkmodeMediaQuery);
+		}
+		if (darkmodeAutoSwitch == 'time'){
+			toggleDarkmodeByTime();
+		}
+		if (darkmodeAutoSwitch == 'alwayson'){
+			setDarkmode(true);
+		}
+
+		function toggleAmoledDarkMode(){
+			$("html").toggleClass("amoled-dark");
+			if ($("html").hasClass("amoled-dark")){
+				localStorage.setItem("Argon_Enable_Amoled_Dark_Mode", "true");
+			}else{
+				localStorage.setItem("Argon_Enable_Amoled_Dark_Mode", "false");
+			}
+		}
+		if (localStorage.getItem("Argon_Enable_Amoled_Dark_Mode") == "true"){
+			$("html").addClass("amoled-dark");
+		}else if (localStorage.getItem("Argon_Enable_Amoled_Dark_Mode") == "false"){
+			$("html").removeClass("amoled-dark");
+		}
+	</script>
+	<script>
+		if (navigator.userAgent.indexOf("Safari") !== -1 && navigator.userAgent.indexOf("Chrome") === -1){
+			$("html").addClass("using-safari");
+		}
+	</script>
+
+			<script src="https://itdong.me/wp-content/themes/argon/assets/vendor/smoothscroll/smoothscroll1.js"></script>
+	
+<style id="core-block-supports-inline-css">
+.wp-container-core-columns-is-layout-8f761849{flex-wrap:nowrap;}
+/*# sourceURL=core-block-supports-inline-css */
+</style>
+
+</head>
+
+
+<style id="themecolor_css">
+		:root{
+		--themecolor: #2196f3;
+		--themecolor-R: 33;
+		--themecolor-G: 150;
+		--themecolor-B: 243;
+		--themecolor-H: 207;
+		--themecolor-S: 90;
+		--themecolor-L: 54;
+	}
+</style>
+<style id="theme_cardradius_css">
+	:root{
+		--card-radius: 25px;
+	}
+</style>
+
+<body class="home blog wp-theme-argon">
+<div id="toolbar">
+	<header class="header-global">
+		<nav id="navbar-main" class="navbar navbar-main navbar-expand-lg navbar-transparent navbar-light bg-primary headroom--not-bottom headroom--not-top headroom--pinned">
+			<div class="container">
+				<button id="open_sidebar" class="navbar-toggler" type="button" aria-expanded="false" aria-label="Toggle sidebar">
+					<span class="navbar-toggler-icon"></span>
+				</button>
+				<div class="navbar-brand mr-0">
+											<a class="navbar-brand navbar-icon mr-lg-5" href="">
+							<img src="https://itdong.me/wp-content/uploads/2023/04/透明底反黑图-e1681661076974.png">
+						</a>
+															<a class="navbar-brand navbar-title" href="https://itdong.me">栋dong的个人站点</a>
+				</div>
+				<div class="navbar-collapse collapse" id="navbar_global">
+					<div class="navbar-collapse-header">
+						<div class="row" style="display: none;">
+							<div class="col-6 collapse-brand"></div>
+							<div class="col-6 collapse-close">
+								<button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar_global" aria-controls="navbar_global" aria-expanded="false" aria-label="Toggle navigation">
+									<span></span>
+									<span></span>
+								</button>
+							</div>
+						</div>
+						<div class="input-group input-group-alternative">
+							<div class="input-group-prepend">
+								<span class="input-group-text"><i class="fa fa-search"></i></span>
+							</div>
+							<input id="navbar_search_input_mobile" class="form-control" placeholder="搜索什么..." type="text" autocomplete="off">
+						</div>
+					</div>
+					<ul class='navbar-nav navbar-nav-hover align-items-lg-center'>
+
+										<li class='nav-item'>
+											<a href='https://itdong.me/historical-timeline/' class='nav-link' target='' title=''>
+										  		<i class='ni ni-book-bookmark d-lg-none'></i>
+												<span class='nav-link-inner--text'><i class="fa fa-tree" ></i> <strong>历史时间轴</strong></span>
+										  </a>
+</li>
+
+										<li class='nav-item'>
+											<a href='https://itdong.me/archive-timeline/' class='nav-link' target='' title=''>
+										  		<i class='ni ni-book-bookmark d-lg-none'></i>
+												<span class='nav-link-inner--text'><i class="fa fa-list"></i><strong>归档时间轴</strong></span>
+										  </a>
+</li>
+
+										<li class='nav-item'>
+											<a href='https://itdong.me/message-area/' class='nav-link' target='' title=''>
+										  		<i class='ni ni-book-bookmark d-lg-none'></i>
+												<span class='nav-link-inner--text'><i class="fa fa-comment-o"></i><strong> 留言</strong></span>
+										  </a>
+</li>
+
+										<li class='nav-item'>
+											<a href='https://itdong.me/privacy-policy/' class='nav-link' target='' title=''>
+										  		<i class='ni ni-book-bookmark d-lg-none'></i>
+												<span class='nav-link-inner--text'><i class="fa fa-anchor"></i> <strong>某些话</strong></span>
+										  </a>
+</li>
+
+										<li class='nav-item'>
+											<a href='https://itdong.me/links/' class='nav-link' target='' title=''>
+										  		<i class='ni ni-book-bookmark d-lg-none'></i>
+												<span class='nav-link-inner--text'><i class="fa fa-link"></i><strong> 友情链接</strong></span>
+										  </a>
+</li>
+
+										<li class='nav-item'>
+											<a href='https://itdong.dpdns.org' class='nav-link' target='_blank' title=''>
+										  		<i class='ni ni-book-bookmark d-lg-none'></i>
+												<span class='nav-link-inner--text'><i class="fa fa-server"></i> <strong>站点状态</strong></span>
+										  </a>
+</li>
+
+										<li class='nav-item'>
+											<a href='https://itdong.me/book/' class='nav-link' target='' title=''>
+										  		<i class='ni ni-book-bookmark d-lg-none'></i>
+												<span class='nav-link-inner--text'><i class="fa fa-book"></i> <strong>书籍</strong></span>
+										  </a>
+</li></ul>					<ul class="navbar-nav align-items-lg-center ml-lg-auto">
+						<li id="navbar_search_container" class="nav-item" data-toggle="modal">
+							<div id="navbar_search_input_container">
+								<div class="input-group input-group-alternative">
+									<div class="input-group-prepend">
+										<span class="input-group-text"><i class="fa fa-search"></i></span>
+									</div>
+									<input id="navbar_search_input" class="form-control" placeholder="搜索什么..." type="text" autocomplete="off">
+								</div>
+							</div>
+						</li>
+					</ul>
+				</div>
+				<div id="navbar_menu_mask" data-toggle="collapse" data-target="#navbar_global"></div>
+				<button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar_global" aria-controls="navbar_global" aria-expanded="false" aria-label="Toggle navigation">
+					<span class="navbar-toggler-icon navbar-toggler-searcg-icon"></span>
+				</button>
+			</div>
+		</nav>
+	</header>
+</div>
+<div class="modal fade" id="argon_search_modal" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered modal-sm" role="document">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">搜索</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<form id="argon_serach_form" method="get" action="https://itdong.me">
+	<div class="form-group mb-3">
+		<div class="input-group input-group-alternative">
+			<div class="input-group-prepend">
+				<span class="input-group-text"><i class="fa fa-search"></i></span>
+			</div>
+			<input name="s" class="form-control" placeholder="搜索什么..." type="text"  autocomplete="off" >
+		</div>
+	</div>
+	<div class="text-center">
+		<button onclick="if($('#argon_serach_form input[name=\'s\']').val() != '') {document.getElementById('argon_serach_form').submit();}" type="button" class="btn btn-primary">搜索</button>
+	</div>
+</form>			</div>
+		</div>
+	</div>
+</div>
+<!--Banner-->
+<section id="banner" class="banner section section-lg section-shaped">
+	<div class="shape  shape-primary">
+		<span></span>
+		<span></span>
+		<span></span>
+		<span></span>
+		<span></span>
+		<span></span>
+		<span></span>
+		<span></span>
+		<span></span>
+	</div>
+
+		<div id="banner_container" class="banner-container container text-center">
+					<div class="banner-title text-white" data-interval="150"><span data-text="栋dong的个人站点" class="banner-title-inner">&nbsp;</span>
+			<span data-text="乾坤未定，你我皆是牛马" class="banner-subtitle d-block">&nbsp;</span></div>
+			</div>
+		</section>
+
+	<style>
+					#banner, #banner .shape {
+				background: transparent !important;
+			}
+				#content:before {
+			content: '';
+			display: block;
+			position: fixed;
+			left: 0;
+			right: 0;
+			top: 0;
+			bottom: 0;
+			z-index: -2;
+			background: url(https://api.foreverlink.love/bing);
+			background-position: center;
+			background-size: cover;
+			background-repeat: no-repeat;
+			opacity: 0.74;
+			transition: opacity .5s ease;
+		}
+		html.darkmode #content:before{
+			filter: brightness(0.65);
+		}
+					#content:after {
+				content: '';
+				display: block;
+				position: fixed;
+				left: 0;
+				right: 0;
+				top: 0;
+				bottom: 0;
+				z-index: -2;
+				background: url(https://itdong.me/wp-content/uploads/2022/12/LiDong2022_ZH-CN9929478283_UHD-1024x576-1.jpg);
+				background-position: center;
+				background-size: cover;
+				background-repeat: no-repeat;
+				opacity: 0;
+				transition: opacity .5s ease;
+			}
+			html.darkmode #content:after {
+				opacity: 0.74;
+			}
+			html.darkmode #content:before {
+				opacity: 0;
+			}
+			</style>
+
+	<style>
+		#banner:after {
+			content: '';
+			width: 100vw;
+			position: absolute;
+			left: 0;
+			top: 0;
+			height: 120px;
+			background: linear-gradient(180deg, rgba(0,0,0,0.25) 0%, rgba(0,0,0,0.15) 35%, rgba(0,0,0,0) 100%);
+			display: block;
+			z-index: -1;
+		}
+		.banner-title {
+			text-shadow: 0 5px 15px rgba(0, 0, 0, .2);
+		}
+	</style>
+
+<div id="float_action_buttons" class="float-action-buttons fabtns-unloaded">
+	<button id="fabtn_toggle_sides" class="btn btn-icon btn-neutral fabtn shadow-sm" type="button" aria-hidden="true" tooltip-move-to-left="移至左侧" tooltip-move-to-right="移至右侧">
+		<span class="btn-inner--icon fabtn-show-on-right"><i class="fa fa-caret-left"></i></span>
+		<span class="btn-inner--icon fabtn-show-on-left"><i class="fa fa-caret-right"></i></span>
+	</button>
+	<button id="fabtn_back_to_top" class="btn btn-icon btn-neutral fabtn shadow-sm" type="button" aria-label="Back To Top" tooltip="回到顶部">
+		<span class="btn-inner--icon"><i class="fa fa-angle-up"></i></span>
+	</button>
+	<button id="fabtn_go_to_comment" class="btn btn-icon btn-neutral fabtn shadow-sm d-none" type="button"  aria-label="Comment" tooltip="评论">
+		<span class="btn-inner--icon"><i class="fa fa-comment-o"></i></span>
+	</button>
+	<button id="fabtn_toggle_darkmode" class="btn btn-icon btn-neutral fabtn shadow-sm" type="button"  aria-label="Toggle Darkmode" tooltip-darkmode="夜间模式" tooltip-blackmode="暗黑模式" tooltip-lightmode="日间模式">
+		<span class="btn-inner--icon"><i class="fa fa-moon-o"></i><i class='fa fa-lightbulb-o'></i></span>
+	</button>
+	<button id="fabtn_toggle_blog_settings_popup" class="btn btn-icon btn-neutral fabtn shadow-sm" type="button"  style='display: none;' aria-label="Open Blog Settings Menu" tooltip="设置">
+		<span class="btn-inner--icon"><i class="fa fa-cog"></i></span>
+	</button>
+	<div id="fabtn_blog_settings_popup" class="card shadow-sm" style="opacity: 0;" aria-hidden="true">
+		<div id="close_blog_settings"><i class="fa fa-close"></i></div>
+		<div class="blog-setting-item mt-3">
+			<div style="transform: translateY(-4px);"><div id="blog_setting_toggle_darkmode_and_amoledarkmode" tooltip-switch-to-darkmode="切换到夜间模式" tooltip-switch-to-blackmode="切换到暗黑模式"><span>夜间模式</span><span>暗黑模式</span></div></div>
+			<div style="flex: 1;"></div>
+			<label id="blog_setting_darkmode_switch" class="custom-toggle">
+				<span class="custom-toggle-slider rounded-circle"></span>
+			</label>
+		</div>
+		<div class="blog-setting-item mt-3">
+			<div style="flex: 1;">字体</div>
+			<div>
+				<button id="blog_setting_font_sans_serif" type="button" class="blog-setting-font btn btn-outline-primary blog-setting-selector-left">Sans Serif</button><button id="blog_setting_font_serif" type="button" class="blog-setting-font btn btn-outline-primary blog-setting-selector-right">Serif</button>
+			</div>
+		</div>
+		<div class="blog-setting-item mt-3">
+			<div style="flex: 1;">阴影</div>
+			<div>
+				<button id="blog_setting_shadow_small" type="button" class="blog-setting-shadow btn btn-outline-primary blog-setting-selector-left">浅阴影</button><button id="blog_setting_shadow_big" type="button" class="blog-setting-shadow btn btn-outline-primary blog-setting-selector-right">深阴影</button>
+			</div>
+		</div>
+		<div class="blog-setting-item mt-3 mb-3">
+			<div style="flex: 1;">滤镜</div>
+			<div id="blog_setting_filters" class="ml-3">
+				<button id="blog_setting_filter_off" type="button" class="blog-setting-filter-btn ml-0" filter-name="off">关闭</button>
+				<button id="blog_setting_filter_sunset" type="button" class="blog-setting-filter-btn" filter-name="sunset">日落</button>
+				<button id="blog_setting_filter_darkness" type="button" class="blog-setting-filter-btn" filter-name="darkness">暗化</button>
+				<button id="blog_setting_filter_grayscale" type="button" class="blog-setting-filter-btn" filter-name="grayscale">灰度</button>
+			</div>
+		</div>
+		<div class="blog-setting-item mb-3">
+			<div id="blog_setting_card_radius_to_default" style="cursor: pointer;" tooltip="恢复默认">圆角</div>
+			<div style="flex: 1;margin-left: 20px;margin-right: 8px;transform: translateY(2px);">
+				<div id="blog_setting_card_radius"></div>
+			</div>
+		</div>
+			</div>
+	<button id="fabtn_reading_progress" class="btn btn-icon btn-neutral fabtn shadow-sm" type="button" aria-hidden="true" tooltip="阅读进度">
+		<div id="fabtn_reading_progress_bar" style="width: 0%;"></div>
+		<span id="fabtn_reading_progress_details">0%</span>
+	</button>
+</div>
+
+<div id="content" class="site-content">
+
+<div class="page-information-card-container"></div>
+
+<div id="sidebar_mask"></div>
+<aside id="leftbar" class="leftbar widget-area" role="complementary">
+					<div id="leftbar_announcement" class="card bg-white shadow-sm border-0">
+				<div class="leftbar-announcement-body">
+					<div class="leftbar-announcement-title text-white">公告</div>
+					<div class="leftbar-announcement-content text-white">Hi，我是栋，欢迎留言</div>
+				</div>
+			</div>
+				<div id="leftbar_part1" class="widget widget_search card bg-white shadow-sm border-0">
+			<div class="leftbar-banner card-body">
+				<span class="leftbar-banner-title text-white">栋dong的个人站点</span>
+
+													<span class="leftbar-banner-subtitle text-white"><span class='hitokoto'></span></span>
+				
+			</div>
+
+			<ul id='leftbar_part1_menu' class='leftbar-menu'></ul>			<div class="card-body text-center leftbar-search-button">
+				<button id="leftbar_search_container" class="btn btn-secondary btn-lg active btn-sm btn-block border-0" role="button">
+					<i class="menu-item-icon fa fa-search mr-0"></i> 搜索					<input id="leftbar_search_input" type="text" placeholder="搜索什么..." class="form-control form-control-alternative" autocomplete="off">
+				</button>
+			</div>
+		</div>
+	<!-- 用法
+    在sidebar.php中<div id="leftbar_part2" class="widget widget_search card bg-white shadow-sm border-0">标签前引用下列命令即可.
+    注意，第一个!记得去掉！
+    <!?php require('./specialEffects/progress-wrapper.php'); ?>
+-->
+
+<!-- 换行符 -->
+<style type="text/css">
+    .high01{
+        line-height: 0.6rem
+    }
+</style>
+
+<!-- 主体 -->
+<div class="high01"><br></div>
+<div class="card bg-white shadow-sm border-0">
+    <div class="progress-wrapper" style="padding: 0.8rem">
+        <div class="progress-info">
+            <div class="progress-label">
+                <span id="yearprogress_yearname" style="color: var(--themecolor); background-color: rgba(var(--themecolor-rgbstr), 0.1); font-size: 1rem"></span>
+            </div>
+            <div id="yearprogress_text_container" class="progress-percentage">
+                <!-- <span id="yearprogress_progresstext" style="color: var(--themecolor); font-size: 1rem"></span> -->
+                <span id="yearprogress_progresstext_full" style="color: var(--themecolor); font-size: 1rem"></span>
+            </div>
+        </div>
+        <div class="progress" style="background-color: #CE7777">
+            <div id="yearprogress_progressbar" class="progress-bar" style="background-color: var(--themecolor)"></div>
+            <!-- style="background-color: #CE7777" -->
+        </div>
+    </div>
+    <script no-pjax="">
+        function yearprogress_refresh() {
+            let year = new Date().getFullYear();
+            $("#yearprogress_yearname").text(year);
+            let from = new Date(year, 0, 1, 0, 0, 0);
+            let to = new Date(year, 11, 31, 23, 59, 59);
+            let now = new Date();
+            let progress = (((now - from) / (to - from + 1)) * 100).toFixed(7);
+            let progressshort = (((now - from) / (to - from + 1)) * 100).toFixed(2);
+            $("#yearprogress_progresstext").text(progressshort + "%");
+            $("#yearprogress_progresstext_full").text(progress + "%");
+            $("#yearprogress_progressbar").css("width", progress + "%");
+        }
+        yearprogress_refresh();
+        if (typeof yearProgressIntervalHasSet == "undefined") {
+            var yearProgressIntervalHasSet = true;
+            setInterval(function () {
+                yearprogress_refresh();
+            }, 500);
+        }
+    </script>
+    <style>
+        #yearprogress_text_container {
+            width: 100%;
+            height: 22px;
+            overflow: hidden;
+            user-select: none;
+        }
+
+        #yearprogress_text_container>span {
+            transition: all 0.3s ease;
+        }
+
+        /* #yearprogress_text_container:hover>span {
+            transform: translateY(-20px);
+        } */
+    </style>
+</div>
+<!-- <div class="high01"><br></div> -->		<div id="leftbar_part2" class="widget widget_search card bg-white shadow-sm border-0">
+			<div id="leftbar_part2_inner" class="card-body">
+								<div class="nav-wrapper" style="padding-top: 5px;">
+	                <ul class="nav nav-pills nav-fill" role="tablist">
+												<li class="nav-item sidebar-tab-switcher">
+							<a class="active show" id="leftbar_tab_overview_btn" data-toggle="tab" href="#leftbar_tab_overview" role="tab" aria-controls="leftbar_tab_overview" no-pjax>站点概览</a>
+						</li>
+													<li class="nav-item sidebar-tab-switcher">
+								<a class="" id="leftbar_tab_tools_btn" data-toggle="tab" href="#leftbar_tab_tools" role="tab" aria-controls="leftbar_tab_tools" no-pjax>功能</a>
+							</li>
+							                </ul>
+				</div>
+				<div>
+					<div class="tab-content" style="padding: 10px 10px 0 10px;">
+												<div class="tab-pane fade text-center active show" id="leftbar_tab_overview" role="tabpanel" aria-labelledby="leftbar_tab_overview_btn">
+							<div id="leftbar_overview_author_image" style="background-image: url(https://itdong.me/wp-content/uploads/2023/10/cropped-白底反黑图-e1697250867587.png)" class="rounded-circle shadow-sm" alt="avatar"></div>
+							<h6 id="leftbar_overview_author_name">栋dong</h6>
+							<h6 id="leftbar_overview_author_description">在校大学生，喜欢开发，想参加一点编程和算法类的竞赛</h6>							<nav class="site-state">
+								<div class="site-state-item site-state-posts">
+									<a href="https://itdong.me/archive-timeline/">
+										<span class="site-state-item-count">96</span>
+										<span class="site-state-item-name">文章</span>
+									</a>
+								</div>
+								<div class="site-state-item site-state-categories">
+									<a data-toggle="modal" data-target="#blog_categories">
+										<span class="site-state-item-count">40</span>
+										<span class="site-state-item-name">分类</span>
+									</a>
+								</div>      
+								<div class="site-state-item site-state-tags">
+									<a data-toggle="modal" data-target="#blog_tags">
+										<span class="site-state-item-count">113</span>
+										<span class="site-state-item-name">标签</span>
+									</a>
+								</div>
+							</nav>
+							<div class='site-author-links'>
+
+											<div class='site-author-links-item'>
+												<a href='https://dongdong741236.cn/feed/' rel='noopener' target='_blank'><i class="fa fa-rss" ></i>     RSS</a></div>
+
+											<div class='site-author-links-item'>
+												<a href='https://dongdong741236.cn/sitemap.xml' rel='noopener' target='_blank'><i class="fa fa-map"></i>     站点地图</a></div>
+
+											<div class='site-author-links-item'>
+												<a href='https://github.com/dong-dong6' rel='noopener' target='_blank'><i class="fa fa-github"></i> Github</a></div>
+
+											<div class='site-author-links-item'>
+												<a href='mailto:DongDong741236@outlook.com' rel='noopener' target='_blank'><i class="fa fa-envelope"></i> 邮件</a></div></div>							<div style='height: 20px;'></div>															<div id="leftbar_siteinfo_extra_tools">
+									<div id="block-43" class="widget widget_block card bg-white border-0"><a href="https://www.foreverblog.cn/go.html" target="_blank"> <img decoding="async" src="https://img.foreverblog.cn/wormhole_3_tp.gif" alt="" style="width:auto;height:32px;" title="穿梭虫洞-随机访问十年之约友链博客"></a></div>								</div>
+													</div>
+													<div class="tab-pane fade" id="leftbar_tab_tools" role="tabpanel" aria-labelledby="leftbar_tab_tools_btn">
+								<div id="block-44" class="widget widget_block card bg-white border-0"></div>							</div>
+											</div>
+				</div>
+			</div>
+		</div>
+</aside>
+<div class="modal fade" id="blog_categories" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">分类</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<a href=https://itdong.me/category/b%e7%ab%99%e4%bc%98%e5%8c%96/ class='badge badge-secondary tag'>B站优化 <span class='tag-num'>1</span></a><a href=https://itdong.me/category/chatgpt/ class='badge badge-secondary tag'>chatGPT <span class='tag-num'>2</span></a><a href=https://itdong.me/category/docker/ class='badge badge-secondary tag'>docker <span class='tag-num'>2</span></a><a href=https://itdong.me/category/java/ class='badge badge-secondary tag'>JAVA <span class='tag-num'>9</span></a><a href=https://itdong.me/category/java%e5%b0%8f%e9%a1%b9%e7%9b%ae/ class='badge badge-secondary tag'>JAVA小项目 <span class='tag-num'>3</span></a><a href=https://itdong.me/category/%e7%ae%97%e6%b3%95/leetcode/ class='badge badge-secondary tag'>leetcode <span class='tag-num'>13</span></a><a href=https://itdong.me/category/linux/ class='badge badge-secondary tag'>linux <span class='tag-num'>3</span></a><a href=https://itdong.me/category/matlab/ class='badge badge-secondary tag'>MATLAB <span class='tag-num'>1</span></a><a href=https://itdong.me/category/mworks/ class='badge badge-secondary tag'>Mworks <span class='tag-num'>1</span></a><a href=https://itdong.me/category/mysql/ class='badge badge-secondary tag'>MySQL <span class='tag-num'>1</span></a><a href=https://itdong.me/category/python/ class='badge badge-secondary tag'>python <span class='tag-num'>1</span></a><a href=https://itdong.me/category/redis/ class='badge badge-secondary tag'>redis <span class='tag-num'>1</span></a><a href=https://itdong.me/category/springboot/ class='badge badge-secondary tag'>springboot <span class='tag-num'>6</span></a><a href=https://itdong.me/category/springcloud/ class='badge badge-secondary tag'>springcloud <span class='tag-num'>4</span></a><a href=https://itdong.me/category/springsecurity/ class='badge badge-secondary tag'>SpringSecurity <span class='tag-num'>1</span></a><a href=https://itdong.me/category/%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84/string/ class='badge badge-secondary tag'>String <span class='tag-num'>2</span></a><a href=https://itdong.me/category/unity/ class='badge badge-secondary tag'>Unity <span class='tag-num'>4</span></a><a href=https://itdong.me/category/windows/ class='badge badge-secondary tag'>Windows <span class='tag-num'>1</span></a><a href=https://itdong.me/category/%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84/%e4%ba%8c%e5%8f%89%e6%a0%91/ class='badge badge-secondary tag'>二叉树 <span class='tag-num'>5</span></a><a href=https://itdong.me/category/%e7%ae%97%e6%b3%95/%e4%bd%8d%e8%bf%90%e7%ae%97/ class='badge badge-secondary tag'>位运算 <span class='tag-num'>1</span></a><a href=https://itdong.me/category/%e7%bd%91%e7%bb%9c/%e5%86%85%e7%bd%91%e7%a9%bf%e9%80%8f/ class='badge badge-secondary tag'>内网穿透 <span class='tag-num'>2</span></a><a href=https://itdong.me/category/%e5%91%bd%e4%bb%a4/ class='badge badge-secondary tag'>命令 <span class='tag-num'>3</span></a><a href=https://itdong.me/category/%e5%b0%8f%e7%88%b1%e8%af%be%e8%a1%a8/ class='badge badge-secondary tag'>小爱课表 <span class='tag-num'>1</span></a><a href=https://itdong.me/category/%e5%bb%ba%e8%ae%be%e5%8e%86%e7%a8%8b/ class='badge badge-secondary tag'>建设历程 <span class='tag-num'>1</span></a><a href=https://itdong.me/category/%e5%be%ae%e4%bf%a1%e5%85%ac%e4%bc%97%e5%8f%b7/ class='badge badge-secondary tag'>微信公众号 <span class='tag-num'>2</span></a><a href=https://itdong.me/category/%e7%ae%97%e6%b3%95/%e6%8e%92%e5%ba%8f/ class='badge badge-secondary tag'>排序 <span class='tag-num'>3</span></a><a href=https://itdong.me/category/%e6%95%99%e7%a8%8b/ class='badge badge-secondary tag'>教程 <span class='tag-num'>9</span></a><a href=https://itdong.me/category/matlab/%e6%95%b0%e5%ad%a6%e5%ae%9e%e9%aa%8c/ class='badge badge-secondary tag'>数学实验 <span class='tag-num'>1</span></a><a href=https://itdong.me/category/%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84/ class='badge badge-secondary tag'>数据结构 <span class='tag-num'>5</span></a><a href=https://itdong.me/category/uncategorized/ class='badge badge-secondary tag'>未分类 <span class='tag-num'>12</span></a><a href=https://itdong.me/category/%e6%9e%b6%e6%9e%84/ class='badge badge-secondary tag'>架构 <span class='tag-num'>1</span></a><a href=https://itdong.me/category/%e6%ac%a2%e8%bf%8e%e7%95%8c%e9%9d%a2/ class='badge badge-secondary tag'>欢迎界面 <span class='tag-num'>1</span></a><a href=https://itdong.me/category/%e7%ae%97%e6%b3%95/ class='badge badge-secondary tag'>算法 <span class='tag-num'>28</span></a><a href=https://itdong.me/category/%e7%bd%91%e7%bb%9c/ class='badge badge-secondary tag'>网络 <span class='tag-num'>2</span></a><a href=https://itdong.me/category/%e8%84%9a%e6%9c%ac/ class='badge badge-secondary tag'>脚本 <span class='tag-num'>7</span></a><a href=https://itdong.me/category/%e8%93%9d%e6%a1%a5/ class='badge badge-secondary tag'>蓝桥 <span class='tag-num'>10</span></a><a href=https://itdong.me/category/%e8%99%9a%e6%8b%9f%e6%9c%ba/ class='badge badge-secondary tag'>虚拟机 <span class='tag-num'>1</span></a><a href=https://itdong.me/category/%e8%a7%84%e5%88%92/ class='badge badge-secondary tag'>规划 <span class='tag-num'>0</span></a><a href=https://itdong.me/category/%e8%af%be%e5%a0%82%e4%bd%9c%e4%b8%9a/ class='badge badge-secondary tag'>课堂作业 <span class='tag-num'>2</span></a><a href=https://itdong.me/category/%e9%95%bf%e6%98%a5%e7%90%86%e5%b7%a5%e5%a4%a7%e5%ad%a6/ class='badge badge-secondary tag'>长春理工大学 <span class='tag-num'>1</span></a>			</div>
+		</div>
+	</div>
+</div>
+<div class="modal fade" id="blog_tags" tabindex="-1" role="dialog" aria-labelledby="" aria-hidden="true">
+	<div class="modal-dialog modal-dialog-centered">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h5 class="modal-title">标签</h5>
+				<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+					<span aria-hidden="true">&times;</span>
+				</button>
+			</div>
+			<div class="modal-body">
+				<a href=https://itdong.me/tag/chatgpt/ class='badge badge-secondary tag'>chatGPT <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/cloudflare/ class='badge badge-secondary tag'>cloudflare <span class='tag-num'>3</span></a><a href=https://itdong.me/tag/docker/ class='badge badge-secondary tag'>docker <span class='tag-num'>4</span></a><a href=https://itdong.me/tag/eureka/ class='badge badge-secondary tag'>eureka <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/frp/ class='badge badge-secondary tag'>frp <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/get/ class='badge badge-secondary tag'>GET <span class='tag-num'>0</span></a><a href=https://itdong.me/tag/git/ class='badge badge-secondary tag'>git <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/gpt/ class='badge badge-secondary tag'>GPT <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/image/ class='badge badge-secondary tag'>image <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/java/ class='badge badge-secondary tag'>JAVA <span class='tag-num'>40</span></a><a href=https://itdong.me/tag/leetcode/ class='badge badge-secondary tag'>leetcode <span class='tag-num'>15</span></a><a href=https://itdong.me/tag/linux/ class='badge badge-secondary tag'>linux <span class='tag-num'>2</span></a><a href=https://itdong.me/tag/list/ class='badge badge-secondary tag'>list <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/matlab/ class='badge badge-secondary tag'>matlab <span class='tag-num'>2</span></a><a href=https://itdong.me/tag/maven/ class='badge badge-secondary tag'>MAVEN <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/mysql/ class='badge badge-secondary tag'>MySQL <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/nacos/ class='badge badge-secondary tag'>nacos <span class='tag-num'>2</span></a><a href=https://itdong.me/tag/navicat/ class='badge badge-secondary tag'>navicat <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/npm/ class='badge badge-secondary tag'>npm <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/openai/ class='badge badge-secondary tag'>OpenAI <span class='tag-num'>0</span></a><a href=https://itdong.me/tag/page/ class='badge badge-secondary tag'>page <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/pom/ class='badge badge-secondary tag'>pom <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/post/ class='badge badge-secondary tag'>POST <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/pta/ class='badge badge-secondary tag'>PTA <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/python/ class='badge badge-secondary tag'>python <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/rclone/ class='badge badge-secondary tag'>rclone <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/redis/ class='badge badge-secondary tag'>redis <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/ribbon/ class='badge badge-secondary tag'>Ribbon <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/root/ class='badge badge-secondary tag'>root <span class='tag-num'>0</span></a><a href=https://itdong.me/tag/springboot/ class='badge badge-secondary tag'>springboot <span class='tag-num'>5</span></a><a href=https://itdong.me/tag/springcloud/ class='badge badge-secondary tag'>springcloud <span class='tag-num'>4</span></a><a href=https://itdong.me/tag/springsecurity/ class='badge badge-secondary tag'>SpringSecurity <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/string/ class='badge badge-secondary tag'>String <span class='tag-num'>2</span></a><a href=https://itdong.me/tag/swap/ class='badge badge-secondary tag'>swap <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/token/ class='badge badge-secondary tag'>token <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/ubuntu/ class='badge badge-secondary tag'>Ubuntu <span class='tag-num'>3</span></a><a href=https://itdong.me/tag/unity/ class='badge badge-secondary tag'>unity <span class='tag-num'>4</span></a><a href=https://itdong.me/tag/vm/ class='badge badge-secondary tag'>VM <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/vpn/ class='badge badge-secondary tag'>vpn <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/webstorm/ class='badge badge-secondary tag'>webstorm <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/work/ class='badge badge-secondary tag'>work <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/zerotier/ class='badge badge-secondary tag'>zerotier <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e4%b8%8a%e7%bd%91/ class='badge badge-secondary tag'>上网 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e4%ba%8c%e5%8f%89%e6%a0%91/ class='badge badge-secondary tag'>二叉树 <span class='tag-num'>10</span></a><a href=https://itdong.me/tag/%e4%bb%a3%e7%90%86/ class='badge badge-secondary tag'>代理 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e4%bd%8d%e8%bf%90%e7%ae%97/ class='badge badge-secondary tag'>位运算 <span class='tag-num'>2</span></a><a href=https://itdong.me/tag/%e4%bd%9c%e4%b8%9a/ class='badge badge-secondary tag'>作业 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e5%85%88%e5%ba%8f%e4%b8%ad%e5%ba%8f%e4%b8%8e%e5%90%8e%e5%ba%8f/ class='badge badge-secondary tag'>先序中序与后序 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e5%86%85%e7%bd%91%e7%a9%bf%e9%80%8f/ class='badge badge-secondary tag'>内网穿透 <span class='tag-num'>2</span></a><a href=https://itdong.me/tag/%e5%8e%86%e7%a8%8b/ class='badge badge-secondary tag'>历程 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e5%8e%8b%e7%bc%a9/ class='badge badge-secondary tag'>压缩 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e5%8e%9f%e7%a5%9e/ class='badge badge-secondary tag'>原神 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e5%90%88%e5%b9%b6/ class='badge badge-secondary tag'>合并 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e5%91%bd%e4%bb%a4/ class='badge badge-secondary tag'>命令 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e5%93%94%e5%93%a9%e5%93%94%e5%93%a9/ class='badge badge-secondary tag'>哔哩哔哩 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e5%a4%a7%e6%95%b0%e8%ae%a1%e7%ae%97/ class='badge badge-secondary tag'>大数计算 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e5%ad%97%e7%ac%a6%e4%b8%b2/ class='badge badge-secondary tag'>字符串 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e5%ad%a6%e4%b9%a0%e5%8e%86%e7%a8%8b/ class='badge badge-secondary tag'>学习历程 <span class='tag-num'>4</span></a><a href=https://itdong.me/tag/%e5%ad%a6%e4%b9%a0%e9%80%9a/ class='badge badge-secondary tag'>学习通 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e5%ae%89%e8%a3%85/ class='badge badge-secondary tag'>安装 <span class='tag-num'>2</span></a><a href=https://itdong.me/tag/%e5%ae%89%e8%a3%85%e3%80%91/ class='badge badge-secondary tag'>安装】 <span class='tag-num'>0</span></a><a href=https://itdong.me/tag/%e5%ae%89%e8%a3%85%e6%95%99%e7%a8%8b/ class='badge badge-secondary tag'>安装教程 <span class='tag-num'>2</span></a><a href=https://itdong.me/tag/%e5%b0%8f%e7%88%b1%e8%af%be%e8%a1%a8/ class='badge badge-secondary tag'>小爱课表 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e5%b7%a5%e5%85%b7/ class='badge badge-secondary tag'>工具 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e5%b9%82%e8%bf%90%e7%ae%97/ class='badge badge-secondary tag'>幂运算 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e5%bd%92%e5%b9%b6%e6%8e%92%e5%ba%8f/ class='badge badge-secondary tag'>归并排序 <span class='tag-num'>2</span></a><a href=https://itdong.me/tag/%e5%be%ae%e4%bf%a1/ class='badge badge-secondary tag'>微信 <span class='tag-num'>0</span></a><a href=https://itdong.me/tag/%e5%be%ae%e4%bf%a1%e5%85%ac%e4%bc%97%e5%8f%b7/ class='badge badge-secondary tag'>微信公众号 <span class='tag-num'>2</span></a><a href=https://itdong.me/tag/%e6%89%8b%e5%86%99/ class='badge badge-secondary tag'>手写 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e6%8e%92%e5%ba%8f/ class='badge badge-secondary tag'>排序 <span class='tag-num'>2</span></a><a href=https://itdong.me/tag/%e6%90%9c%e7%b4%a2/ class='badge badge-secondary tag'>搜索 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e6%95%99%e7%a8%8b/ class='badge badge-secondary tag'>教程 <span class='tag-num'>3</span></a><a href=https://itdong.me/tag/%e6%95%99%e8%82%b2%e7%89%88/ class='badge badge-secondary tag'>教育版 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e6%95%b0%e5%ad%a6%e5%ae%9e%e9%aa%8c/ class='badge badge-secondary tag'>数学实验 <span class='tag-num'>0</span></a><a href=https://itdong.me/tag/%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84/ class='badge badge-secondary tag'>数据结构 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e6%99%ba%e6%85%a7%e6%a0%91/ class='badge badge-secondary tag'>智慧树 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e6%9a%b4%e5%8a%9b/ class='badge badge-secondary tag'>暴力 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e6%9c%ba%e5%99%a8%e4%ba%ba/ class='badge badge-secondary tag'>机器人 <span class='tag-num'>0</span></a><a href=https://itdong.me/tag/%e6%9d%83%e9%99%90/ class='badge badge-secondary tag'>权限 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e6%9e%b6%e6%9e%84/ class='badge badge-secondary tag'>架构 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e6%a8%a1%e6%8b%9f%e5%99%a8/ class='badge badge-secondary tag'>模拟器 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e6%ac%a2%e8%bf%8e%e9%a1%b5%e9%9d%a2/ class='badge badge-secondary tag'>欢迎页面 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e6%ad%a3%e5%ae%9a/ class='badge badge-secondary tag'>正定 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e6%b5%8b%e9%80%9f/ class='badge badge-secondary tag'>测速 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e6%b7%b1%e5%ba%a6/ class='badge badge-secondary tag'>深度 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e6%b7%b1%e5%ba%a6%e4%b8%8e/ class='badge badge-secondary tag'>深度与 <span class='tag-num'>0</span></a><a href=https://itdong.me/tag/%e7%9f%a9%e9%98%b5/ class='badge badge-secondary tag'>矩阵 <span class='tag-num'>2</span></a><a href=https://itdong.me/tag/%e7%a0%b4%e8%a7%a3%e7%89%88/ class='badge badge-secondary tag'>破解版 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e7%a7%a6%e4%b9%9d%e9%9f%b6/ class='badge badge-secondary tag'>秦九韶 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e7%ae%97%e6%b3%95/ class='badge badge-secondary tag'>算法 <span class='tag-num'>26</span></a><a href=https://itdong.me/tag/%e7%b1%b3%e6%b8%b8%e7%a4%be/ class='badge badge-secondary tag'>米游社 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e7%bd%91%e7%ab%99/ class='badge badge-secondary tag'>网站 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e7%bd%ae%e9%a1%b6/ class='badge badge-secondary tag'>置顶 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e8%80%83%e7%a0%94/ class='badge badge-secondary tag'>考研 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e8%84%9a%e6%9c%ac/ class='badge badge-secondary tag'>脚本 <span class='tag-num'>2</span></a><a href=https://itdong.me/tag/%e8%93%9d%e6%a1%a5/ class='badge badge-secondary tag'>蓝桥 <span class='tag-num'>10</span></a><a href=https://itdong.me/tag/%e8%99%9a%e6%8b%9f%e6%9c%ba/ class='badge badge-secondary tag'>虚拟机 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e8%a7%84%e5%88%92/ class='badge badge-secondary tag'>规划 <span class='tag-num'>0</span></a><a href=https://itdong.me/tag/%e8%a7%a3%e5%8e%8b/ class='badge badge-secondary tag'>解压 <span class='tag-num'>0</span></a><a href=https://itdong.me/tag/%e8%ae%a1%e7%ae%97%e6%9c%ba%e7%bb%84%e6%88%90%e5%8e%9f%e7%90%86/ class='badge badge-secondary tag'>计算机组成原理 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e8%bd%af%e4%bb%b6/ class='badge badge-secondary tag'>软件 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e9%80%86%e5%ba%8f%e5%af%b9/ class='badge badge-secondary tag'>逆序对 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e9%80%86%e5%ba%8f%e6%95%b0/ class='badge badge-secondary tag'>逆序数 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e9%80%92%e5%bd%92%e5%ba%8f/ class='badge badge-secondary tag'>递归序 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e9%81%8d%e5%8e%86/ class='badge badge-secondary tag'>遍历 <span class='tag-num'>6</span></a><a href=https://itdong.me/tag/%e9%93%be%e8%a1%a8/ class='badge badge-secondary tag'>链表 <span class='tag-num'>3</span></a><a href=https://itdong.me/tag/%e9%95%bf%e6%98%a5%e7%90%86%e5%b7%a5/ class='badge badge-secondary tag'>长春理工 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e9%95%bf%e6%98%a5%e7%90%86%e5%b7%a5%e5%a4%a7%e5%ad%a6/ class='badge badge-secondary tag'>长春理工大学 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e9%98%9f%e5%88%97/ class='badge badge-secondary tag'>队列 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e9%98%bf%e9%87%8c%e4%ba%91/ class='badge badge-secondary tag'>阿里云 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e9%9d%99%e6%80%81%e5%b1%9e%e6%80%a7/ class='badge badge-secondary tag'>静态属性 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e9%a1%b9%e7%9b%ae/ class='badge badge-secondary tag'>项目 <span class='tag-num'>1</span></a><a href=https://itdong.me/tag/%e9%ab%98%e7%ad%89%e4%bb%a3%e6%95%b0/ class='badge badge-secondary tag'>高等代数 <span class='tag-num'>1</span></a>			</div>
+		</div>
+	</div>
+</div>
+<aside id="rightbar" class="rightbar widget-area" role="complementary"><div id="block-10" class="widget widget_block widget_media_image card shadow-sm bg-white border-0">
+<figure class="wp-block-image size-large"><img fetchpriority="high" decoding="async" width="1024" height="576" src="https://dongdong741236.cn/wp-content/uploads/2022/12/歼20-1024x576.png" alt="" class="wp-image-284" srcset="https://itdong.me/wp-content/uploads/2022/12/歼20-1024x576.png 1024w, https://itdong.me/wp-content/uploads/2022/12/歼20-300x169.png 300w, https://itdong.me/wp-content/uploads/2022/12/歼20-768x432.png 768w, https://itdong.me/wp-content/uploads/2022/12/歼20-1536x864.png 1536w, https://itdong.me/wp-content/uploads/2022/12/歼20-2048x1152.png 2048w" sizes="(max-width: 1024px) 100vw, 1024px" /><figcaption class="wp-element-caption">--------歼20是最帅的------</figcaption></figure>
+</div><div id="block-4" class="widget widget_block card shadow-sm bg-white border-0">
+<div class="wp-block-group"><div class="wp-block-group__inner-container is-layout-flow wp-block-group-is-layout-flow">
+<h2 class="wp-block-heading">最新评论</h2>
+
+
+<ol class="wp-block-latest-comments"><li class="wp-block-latest-comments__comment"><article><footer class="wp-block-latest-comments__comment-meta"><span class="wp-block-latest-comments__comment-author">Mugzx</span> 发表在 <a class="wp-block-latest-comments__comment-link" href="https://itdong.me/bilibili_pcdn/#comment-208">B站卡顿优化-PC端禁用PCDN</a></footer></article></li><li class="wp-block-latest-comments__comment"><article><footer class="wp-block-latest-comments__comment-meta"><a class="wp-block-latest-comments__comment-author" href="http://dongdong741236.cn">栋dong</a> 发表在 <a class="wp-block-latest-comments__comment-link" href="https://itdong.me/doh-ech-check/#comment-207">DOH&#038;&#038;ECH检测工具</a></footer></article></li><li class="wp-block-latest-comments__comment"><article><footer class="wp-block-latest-comments__comment-meta"><a class="wp-block-latest-comments__comment-author" href="http://dongdong741236.cn">栋dong</a> 发表在 <a class="wp-block-latest-comments__comment-link" href="https://itdong.me/message-area/#comment-206">留言区</a></footer></article></li><li class="wp-block-latest-comments__comment"><article><footer class="wp-block-latest-comments__comment-meta"><span class="wp-block-latest-comments__comment-author">ohmygod</span> 发表在 <a class="wp-block-latest-comments__comment-link" href="https://itdong.me/doh-ech-check/#comment-205">DOH&#038;&#038;ECH检测工具</a></footer></article></li><li class="wp-block-latest-comments__comment"><article><footer class="wp-block-latest-comments__comment-meta"><span class="wp-block-latest-comments__comment-author">泼猴</span> 发表在 <a class="wp-block-latest-comments__comment-link" href="https://itdong.me/message-area/#comment-204">留言区</a></footer></article></li></ol></div></div>
+</div><div id="block-39" class="widget widget_block card shadow-sm bg-white border-0"><div><svg viewBox="0 0 105 36" role="img" width="105px" height="41px" aria-hidden="true"><path fill="#000" d="M11.679 26.754h2.353v6.423h4.111v2.06H11.68v-8.483zM20.58 31.02v-.024c0-2.436 1.965-4.412 4.584-4.412 2.62 0 4.56 1.951 4.56 4.387v.025c0 2.436-1.965 4.41-4.584 4.41-2.618 0-4.56-1.95-4.56-4.386zm6.743 0v-.024c0-1.223-.885-2.291-2.183-2.291-1.285 0-2.147 1.042-2.147 2.266v.025c0 1.222.886 2.29 2.171 2.29 1.298 0 2.159-1.042 2.159-2.266zM32.604 31.517v-4.763h2.389v4.714c0 1.223.618 1.806 1.564 1.806.946 0 1.564-.557 1.564-1.745v-4.775h2.39v4.7c0 2.74-1.564 3.939-3.978 3.939s-3.93-1.223-3.93-3.878M44.112 26.755h3.274c3.032 0 4.79 1.744 4.79 4.192v.025c0 2.447-1.782 4.265-4.838 4.265h-3.226v-8.483zm3.31 6.397c1.408 0 2.34-.775 2.34-2.146v-.024c0-1.357-.932-2.145-2.34-2.145h-.958v4.316l.959-.001zM55.596 26.754h6.791v2.06h-4.438v1.442h4.014v1.951h-4.014v3.03h-2.353v-8.483zM65.661 26.754h2.353v6.423h4.111v2.06h-6.464v-8.483zM78.273 26.693h2.268l3.614 8.544h-2.522l-.62-1.515H77.74l-.606 1.515h-2.474l3.614-8.544zm2.062 5.2l-.946-2.413-.959 2.412h1.905zM87.186 26.754H91.2c1.298 0 2.195.34 2.765.921.498.485.752 1.14.752 1.976v.024c0 1.296-.693 2.156-1.746 2.605l2.025 2.957H92.28l-1.71-2.57h-1.03v2.57h-2.353v-8.483zm3.905 4.072c.8 0 1.262-.388 1.262-1.006v-.024c0-.667-.486-1.006-1.275-1.006h-1.54v2.038l1.553-.002zM98.112 26.754h6.827v2h-4.498v1.284h4.075v1.854h-4.075v1.346H105v1.999h-6.888v-8.483zM6.528 32.014c-.33.744-1.023 1.272-1.944 1.272-1.286 0-2.171-1.067-2.171-2.29v-.025c0-1.223.86-2.266 2.146-2.266.97 0 1.708.595 2.02 1.406h2.48c-.398-2.02-2.173-3.526-4.475-3.526-2.62 0-4.584 1.977-4.584 4.41v.024c0 2.436 1.94 4.388 4.56 4.388 2.24 0 3.991-1.45 4.453-3.393H6.528z"></path><path d="M89.012 22.355l.257-.887c.306-1.056.192-2.031-.321-2.748-.472-.66-1.259-1.049-2.214-1.094l-18.096-.229a.358.358 0 01-.285-.151.367.367 0 01-.04-.326.481.481 0 01.42-.321l18.263-.232c2.166-.099 4.512-1.856 5.333-3.998L93.37 9.65a.659.659 0 00.028-.36C92.216 3.975 87.468 0 81.792 0c-5.23 0-9.67 3.373-11.263 8.061a5.34 5.34 0 00-3.756-1.039 5.356 5.356 0 00-4.637 6.644c-4.099.12-7.386 3.475-7.386 7.6 0 .368.028.735.082 1.1a.354.354 0 00.348.305l33.408.004h.009a.44.44 0 00.415-.32z" fill="#F6821F"></path><path d="M95.04 9.847c-.167 0-.334.004-.5.013a.28.28 0 00-.079.017.285.285 0 00-.182.192l-.712 2.456c-.305 1.055-.192 2.03.322 2.746.471.661 1.258 1.05 2.213 1.094l3.858.232a.351.351 0 01.275.149.365.365 0 01.041.328.484.484 0 01-.42.32l-4.008.232c-2.176.1-4.521 1.856-5.342 3.998l-.29.756a.212.212 0 00.095.262c.03.017.062.027.096.028h13.802a.366.366 0 00.356-.265 9.846 9.846 0 00.367-2.677c-.001-5.457-4.429-9.88-9.891-9.88z" fill="#FBAD41"></path></svg>加速</a></div></div><div id="block-41" class="widget widget_block card shadow-sm bg-white border-0"><div><a title = "007" href="https://www.007idc.cn/aff/SREEFHMT" target="_blank"><img decoding="async" src="https://www.007idc.cn/upload/banner/logo.png" height="35">超高防服务器</a></div></div><div id="block-34" class="widget widget_block card shadow-sm bg-white border-0">
+<div class="wp-block-group"><div class="wp-block-group__inner-container is-layout-constrained wp-block-group-is-layout-constrained">
+<div class="wp-block-columns is-layout-flex wp-container-core-columns-is-layout-8f761849 wp-block-columns-is-layout-flex">
+<div class="wp-block-column is-layout-flow wp-block-column-is-layout-flow" style="flex-basis:100%">
+<p class="has-large-font-size wp-block-paragraph"><strong>标签云</strong></p>
+
+
+<p class="is-style-default wp-block-tag-cloud"><a href="https://itdong.me/tag/chatgpt/" class="tag-cloud-link tag-link-47 tag-link-position-1" style="font-size: 8pt;" aria-label="chatGPT (1 项)">chatGPT</a>
+<a href="https://itdong.me/tag/cloudflare/" class="tag-cloud-link tag-link-134 tag-link-position-2" style="font-size: 11.206106870229pt;" aria-label="cloudflare (3 项)">cloudflare</a>
+<a href="https://itdong.me/tag/docker/" class="tag-cloud-link tag-link-116 tag-link-position-3" style="font-size: 12.274809160305pt;" aria-label="docker (4 项)">docker</a>
+<a href="https://itdong.me/tag/java/" class="tag-cloud-link tag-link-7 tag-link-position-4" style="font-size: 22pt;" aria-label="JAVA (40 项)">JAVA</a>
+<a href="https://itdong.me/tag/leetcode/" class="tag-cloud-link tag-link-23 tag-link-position-5" style="font-size: 17.618320610687pt;" aria-label="leetcode (15 项)">leetcode</a>
+<a href="https://itdong.me/tag/linux/" class="tag-cloud-link tag-link-101 tag-link-position-6" style="font-size: 9.9236641221374pt;" aria-label="linux (2 项)">linux</a>
+<a href="https://itdong.me/tag/matlab/" class="tag-cloud-link tag-link-107 tag-link-position-7" style="font-size: 9.9236641221374pt;" aria-label="matlab (2 项)">matlab</a>
+<a href="https://itdong.me/tag/nacos/" class="tag-cloud-link tag-link-100 tag-link-position-8" style="font-size: 9.9236641221374pt;" aria-label="nacos (2 项)">nacos</a>
+<a href="https://itdong.me/tag/springboot/" class="tag-cloud-link tag-link-79 tag-link-position-9" style="font-size: 13.129770992366pt;" aria-label="springboot (5 项)">springboot</a>
+<a href="https://itdong.me/tag/springcloud/" class="tag-cloud-link tag-link-97 tag-link-position-10" style="font-size: 12.274809160305pt;" aria-label="springcloud (4 项)">springcloud</a>
+<a href="https://itdong.me/tag/string/" class="tag-cloud-link tag-link-58 tag-link-position-11" style="font-size: 9.9236641221374pt;" aria-label="String (2 项)">String</a>
+<a href="https://itdong.me/tag/ubuntu/" class="tag-cloud-link tag-link-67 tag-link-position-12" style="font-size: 11.206106870229pt;" aria-label="Ubuntu (3 项)">Ubuntu</a>
+<a href="https://itdong.me/tag/unity/" class="tag-cloud-link tag-link-39 tag-link-position-13" style="font-size: 12.274809160305pt;" aria-label="unity (4 项)">unity</a>
+<a href="https://itdong.me/tag/%e4%ba%8c%e5%8f%89%e6%a0%91/" class="tag-cloud-link tag-link-26 tag-link-position-14" style="font-size: 15.908396946565pt;" aria-label="二叉树 (10 项)">二叉树</a>
+<a href="https://itdong.me/tag/%e4%bd%8d%e8%bf%90%e7%ae%97/" class="tag-cloud-link tag-link-22 tag-link-position-15" style="font-size: 9.9236641221374pt;" aria-label="位运算 (2 项)">位运算</a>
+<a href="https://itdong.me/tag/%e4%bd%9c%e4%b8%9a/" class="tag-cloud-link tag-link-8 tag-link-position-16" style="font-size: 8pt;" aria-label="作业 (1 项)">作业</a>
+<a href="https://itdong.me/tag/%e5%85%88%e5%ba%8f%e4%b8%ad%e5%ba%8f%e4%b8%8e%e5%90%8e%e5%ba%8f/" class="tag-cloud-link tag-link-36 tag-link-position-17" style="font-size: 8pt;" aria-label="先序中序与后序 (1 项)">先序中序与后序</a>
+<a href="https://itdong.me/tag/%e5%86%85%e7%bd%91%e7%a9%bf%e9%80%8f/" class="tag-cloud-link tag-link-83 tag-link-position-18" style="font-size: 9.9236641221374pt;" aria-label="内网穿透 (2 项)">内网穿透</a>
+<a href="https://itdong.me/tag/%e5%8e%86%e7%a8%8b/" class="tag-cloud-link tag-link-9 tag-link-position-19" style="font-size: 8pt;" aria-label="历程 (1 项)">历程</a>
+<a href="https://itdong.me/tag/%e5%90%88%e5%b9%b6/" class="tag-cloud-link tag-link-32 tag-link-position-20" style="font-size: 8pt;" aria-label="合并 (1 项)">合并</a>
+<a href="https://itdong.me/tag/%e5%a4%a7%e6%95%b0%e8%ae%a1%e7%ae%97/" class="tag-cloud-link tag-link-52 tag-link-position-21" style="font-size: 8pt;" aria-label="大数计算 (1 项)">大数计算</a>
+<a href="https://itdong.me/tag/%e5%ad%a6%e4%b9%a0%e5%8e%86%e7%a8%8b/" class="tag-cloud-link tag-link-40 tag-link-position-22" style="font-size: 12.274809160305pt;" aria-label="学习历程 (4 项)">学习历程</a>
+<a href="https://itdong.me/tag/%e5%ae%89%e8%a3%85/" class="tag-cloud-link tag-link-120 tag-link-position-23" style="font-size: 9.9236641221374pt;" aria-label="安装 (2 项)">安装</a>
+<a href="https://itdong.me/tag/%e5%ae%89%e8%a3%85%e6%95%99%e7%a8%8b/" class="tag-cloud-link tag-link-122 tag-link-position-24" style="font-size: 9.9236641221374pt;" aria-label="安装教程 (2 项)">安装教程</a>
+<a href="https://itdong.me/tag/%e5%b9%82%e8%bf%90%e7%ae%97/" class="tag-cloud-link tag-link-28 tag-link-position-25" style="font-size: 8pt;" aria-label="幂运算 (1 项)">幂运算</a>
+<a href="https://itdong.me/tag/%e5%bd%92%e5%b9%b6%e6%8e%92%e5%ba%8f/" class="tag-cloud-link tag-link-114 tag-link-position-26" style="font-size: 9.9236641221374pt;" aria-label="归并排序 (2 项)">归并排序</a>
+<a href="https://itdong.me/tag/%e5%be%ae%e4%bf%a1%e5%85%ac%e4%bc%97%e5%8f%b7/" class="tag-cloud-link tag-link-90 tag-link-position-27" style="font-size: 9.9236641221374pt;" aria-label="微信公众号 (2 项)">微信公众号</a>
+<a href="https://itdong.me/tag/%e6%8e%92%e5%ba%8f/" class="tag-cloud-link tag-link-43 tag-link-position-28" style="font-size: 9.9236641221374pt;" aria-label="排序 (2 项)">排序</a>
+<a href="https://itdong.me/tag/%e6%90%9c%e7%b4%a2/" class="tag-cloud-link tag-link-41 tag-link-position-29" style="font-size: 8pt;" aria-label="搜索 (1 项)">搜索</a>
+<a href="https://itdong.me/tag/%e6%95%99%e7%a8%8b/" class="tag-cloud-link tag-link-72 tag-link-position-30" style="font-size: 11.206106870229pt;" aria-label="教程 (3 项)">教程</a>
+<a href="https://itdong.me/tag/%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84/" class="tag-cloud-link tag-link-35 tag-link-position-31" style="font-size: 8pt;" aria-label="数据结构 (1 项)">数据结构</a>
+<a href="https://itdong.me/tag/%e6%ac%a2%e8%bf%8e%e9%a1%b5%e9%9d%a2/" class="tag-cloud-link tag-link-10 tag-link-position-32" style="font-size: 8pt;" aria-label="欢迎页面 (1 项)">欢迎页面</a>
+<a href="https://itdong.me/tag/%e6%b7%b1%e5%ba%a6/" class="tag-cloud-link tag-link-31 tag-link-position-33" style="font-size: 8pt;" aria-label="深度 (1 项)">深度</a>
+<a href="https://itdong.me/tag/%e7%9f%a9%e9%98%b5/" class="tag-cloud-link tag-link-11 tag-link-position-34" style="font-size: 9.9236641221374pt;" aria-label="矩阵 (2 项)">矩阵</a>
+<a href="https://itdong.me/tag/%e7%ae%97%e6%b3%95/" class="tag-cloud-link tag-link-21 tag-link-position-35" style="font-size: 20.076335877863pt;" aria-label="算法 (26 项)">算法</a>
+<a href="https://itdong.me/tag/%e7%bd%91%e7%ab%99/" class="tag-cloud-link tag-link-12 tag-link-position-36" style="font-size: 8pt;" aria-label="网站 (1 项)">网站</a>
+<a href="https://itdong.me/tag/%e7%bd%ae%e9%a1%b6/" class="tag-cloud-link tag-link-13 tag-link-position-37" style="font-size: 8pt;" aria-label="置顶 (1 项)">置顶</a>
+<a href="https://itdong.me/tag/%e8%84%9a%e6%9c%ac/" class="tag-cloud-link tag-link-61 tag-link-position-38" style="font-size: 9.9236641221374pt;" aria-label="脚本 (2 项)">脚本</a>
+<a href="https://itdong.me/tag/%e8%93%9d%e6%a1%a5/" class="tag-cloud-link tag-link-51 tag-link-position-39" style="font-size: 15.908396946565pt;" aria-label="蓝桥 (10 项)">蓝桥</a>
+<a href="https://itdong.me/tag/%e9%80%86%e5%ba%8f%e6%95%b0/" class="tag-cloud-link tag-link-25 tag-link-position-40" style="font-size: 8pt;" aria-label="逆序数 (1 项)">逆序数</a>
+<a href="https://itdong.me/tag/%e9%80%92%e5%bd%92%e5%ba%8f/" class="tag-cloud-link tag-link-37 tag-link-position-41" style="font-size: 8pt;" aria-label="递归序 (1 项)">递归序</a>
+<a href="https://itdong.me/tag/%e9%81%8d%e5%8e%86/" class="tag-cloud-link tag-link-27 tag-link-position-42" style="font-size: 13.87786259542pt;" aria-label="遍历 (6 项)">遍历</a>
+<a href="https://itdong.me/tag/%e9%93%be%e8%a1%a8/" class="tag-cloud-link tag-link-29 tag-link-position-43" style="font-size: 11.206106870229pt;" aria-label="链表 (3 项)">链表</a>
+<a href="https://itdong.me/tag/%e9%a1%b9%e7%9b%ae/" class="tag-cloud-link tag-link-15 tag-link-position-44" style="font-size: 8pt;" aria-label="项目 (1 项)">项目</a>
+<a href="https://itdong.me/tag/%e9%ab%98%e7%ad%89%e4%bb%a3%e6%95%b0/" class="tag-cloud-link tag-link-16 tag-link-position-45" style="font-size: 8pt;" aria-label="高等代数 (1 项)">高等代数</a></p></div>
+</div>
+</div></div>
+</div><div id="block-45" class="widget widget_block card shadow-sm bg-white border-0"><!-- 左侧广告 -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-9287258075918307"
+     data-ad-slot="7933610813"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script></div></aside>
+<div id="primary" class="content-area">
+	<main id="main" class="site-main article-list article-list-home" role="main">
+			<article class="post card bg-white shadow-sm border-0 post-preview post-preview-layout-3" id="post-90" class="post-90 post type-post status-publish format-standard sticky hentry category-4 tag-10 tag-13">
+				<header class="post-header">
+			<a class="post-title" href="https://itdong.me/%e6%ac%a2%e8%bf%8e%e6%9d%a5%e5%88%b0%e6%88%91%e7%9a%84%e7%ab%99%e7%82%b9/">欢迎来到我的站点</a>
+			<div class="post-meta">
+				<div class="post-meta-detail post-meta-detail-stickey">
+					<i class="fa fa-thumb-tack" aria-hidden="true"></i>
+					置顶
+				</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-time">
+					<i class="fa fa-clock-o" aria-hidden="true"></i>
+					<time title="发布于 2024-4-01 0:00:37 | 编辑于 2024-4-01 19:11:22">2024-4-01 0:00
+					</time>
+				</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-views">
+					<i class="fa fa-eye" aria-hidden="true"></i> 2,540</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-comments">
+					<i class="fa fa-comments-o" aria-hidden="true"></i> 0</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-categories">
+				<i class="fa fa-bookmark-o" aria-hidden="true"></i> <a href="https://itdong.me/category/%e6%ac%a2%e8%bf%8e%e7%95%8c%e9%9d%a2/" target="_blank" class="post-meta-detail-catagory-link">欢迎界面</a></div>								</br><div class="post-meta-detail post-meta-detail-words">
+		<i class="fa fa-file-word-o" aria-hidden="true"></i><span> 33 字</span>
+		</div>
+		<div class="post-meta-devide">|</div>
+		<div class="post-meta-detail post-meta-detail-words">
+			<i class="fa fa-hourglass-end" aria-hidden="true"></i>
+			几秒读完
+		</div>
+				</div>
+		</header>
+
+				<div class="post-content">
+			大家好，欢迎留言哦，留言在顶部导航栏哦。手机版的留言在右上角搜索		</div>
+	
+			<div class="post-tags">
+			<i class="fa fa-tags" aria-hidden="true"></i>
+			<a href='https://itdong.me/tag/%e6%ac%a2%e8%bf%8e%e9%a1%b5%e9%9d%a2/' target='_blank' class='tag badge badge-secondary post-meta-detail-tag'>欢迎页面</a><a href='https://itdong.me/tag/%e7%bd%ae%e9%a1%b6/' target='_blank' class='tag badge badge-secondary post-meta-detail-tag'>置顶</a>		</div>
+	</article><article class="post card bg-white shadow-sm border-0 post-preview post-preview-layout-3" id="post-1670" class="post-1670 post type-post status-publish format-standard sticky hentry category-chatgpt tag-gpt">
+				<header class="post-header">
+			<a class="post-title" href="https://itdong.me/gpt4/">AI</a>
+			<div class="post-meta">
+				<div class="post-meta-detail post-meta-detail-stickey">
+					<i class="fa fa-thumb-tack" aria-hidden="true"></i>
+					置顶
+				</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-time">
+					<i class="fa fa-clock-o" aria-hidden="true"></i>
+					<time title="发布于 2024-3-09 0:14:59 | 编辑于 2026-7-22 17:24:01">2024-3-09 0:14
+					</time>
+				</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-views">
+					<i class="fa fa-eye" aria-hidden="true"></i> 9,651</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-comments">
+					<i class="fa fa-comments-o" aria-hidden="true"></i> 16</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-categories">
+				<i class="fa fa-bookmark-o" aria-hidden="true"></i> <a href="https://itdong.me/category/chatgpt/" target="_blank" class="post-meta-detail-catagory-link">chatGPT</a></div>								</br><div class="post-meta-detail post-meta-detail-words">
+		<i class="fa fa-file-word-o" aria-hidden="true"></i><span> 314 字</span>
+		</div>
+		<div class="post-meta-devide">|</div>
+		<div class="post-meta-detail post-meta-detail-words">
+			<i class="fa fa-hourglass-end" aria-hidden="true"></i>
+			2 分钟
+		</div>
+				</div>
+		</header>
+
+				<div class="post-content">
+			链接来自于神级论坛linux.do，创始人为Pandora作者Neo Pandora为初期大多数镜像&hellip;		</div>
+	
+			<div class="post-tags">
+			<i class="fa fa-tags" aria-hidden="true"></i>
+			<a href='https://itdong.me/tag/gpt/' target='_blank' class='tag badge badge-secondary post-meta-detail-tag'>GPT</a>		</div>
+	</article><article class="post card bg-white shadow-sm border-0 post-preview post-preview-layout-3" id="post-2347" class="post-2347 post type-post status-publish format-standard hentry category-uncategorized">
+				<header class="post-header">
+			<a class="post-title" href="https://itdong.me/doh-ech-check/">DOH&#038;&#038;ECH检测工具</a>
+			<div class="post-meta">
+				<div class="post-meta-detail post-meta-detail-time">
+					<i class="fa fa-clock-o" aria-hidden="true"></i>
+					<time title="发布于 2025-11-13 12:00:10 | 编辑于 2025-11-13 12:00:10">2025-11-13 12:00
+					</time>
+				</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-views">
+					<i class="fa fa-eye" aria-hidden="true"></i> 1,577</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-comments">
+					<i class="fa fa-comments-o" aria-hidden="true"></i> 2</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-categories">
+				<i class="fa fa-bookmark-o" aria-hidden="true"></i> <a href="https://itdong.me/category/uncategorized/" target="_blank" class="post-meta-detail-catagory-link">未分类</a></div>								</br><div class="post-meta-detail post-meta-detail-words">
+		<i class="fa fa-file-word-o" aria-hidden="true"></i><span> 129 字</span>
+		</div>
+		<div class="post-meta-devide">|</div>
+		<div class="post-meta-detail post-meta-detail-words">
+			<i class="fa fa-hourglass-end" aria-hidden="true"></i>
+			1 分钟内
+		</div>
+				</div>
+		</header>
+
+				<div class="post-content">
+			自建了一个adguard，但是没有比较好的测试网站看看这个doh能不能正常使用 让cursor搓了一&hellip;		</div>
+	
+	</article><article class="post card bg-white shadow-sm border-0 post-preview post-preview-layout-3" id="post-2316" class="post-2316 post type-post status-publish format-standard hentry category-uncategorized tag-156 tag-157">
+				<header class="post-header">
+			<a class="post-title" href="https://itdong.me/408-principlesofcomputerorganization-datarepresentationandoperations/">计算机组成原理-数据的表示和运算</a>
+			<div class="post-meta">
+				<div class="post-meta-detail post-meta-detail-time">
+					<i class="fa fa-clock-o" aria-hidden="true"></i>
+					<time title="发布于 2025-8-23 23:40:04 | 编辑于 2025-8-23 23:40:04">2025-8-23 23:40
+					</time>
+				</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-views">
+					<i class="fa fa-eye" aria-hidden="true"></i> 799</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-comments">
+					<i class="fa fa-comments-o" aria-hidden="true"></i> 0</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-categories">
+				<i class="fa fa-bookmark-o" aria-hidden="true"></i> <a href="https://itdong.me/category/uncategorized/" target="_blank" class="post-meta-detail-catagory-link">未分类</a></div>								</br><div class="post-meta-detail post-meta-detail-words">
+		<i class="fa fa-file-word-o" aria-hidden="true"></i><span> 1687 字</span>
+		</div>
+		<div class="post-meta-devide">|</div>
+		<div class="post-meta-detail post-meta-detail-words">
+			<i class="fa fa-hourglass-end" aria-hidden="true"></i>
+			7 分钟
+		</div>
+				</div>
+		</header>
+
+				<div class="post-content">
+			考纲 （一）数制与编码 进位计数制及其相互转换；定点数的编码表示 （二）运算方法和运算电路 基本运算&hellip;		</div>
+	
+			<div class="post-tags">
+			<i class="fa fa-tags" aria-hidden="true"></i>
+			<a href='https://itdong.me/tag/%e8%80%83%e7%a0%94/' target='_blank' class='tag badge badge-secondary post-meta-detail-tag'>考研</a><a href='https://itdong.me/tag/%e8%ae%a1%e7%ae%97%e6%9c%ba%e7%bb%84%e6%88%90%e5%8e%9f%e7%90%86/' target='_blank' class='tag badge badge-secondary post-meta-detail-tag'>计算机组成原理</a>		</div>
+	</article><article class="post card bg-white shadow-sm border-0 post-preview post-preview-layout-3" id="post-2304" class="post-2304 post type-post status-publish format-standard hentry category-uncategorized">
+				<header class="post-header">
+			<a class="post-title" href="https://itdong.me/school-network-rdp/">校园大内网远程桌面连接方案</a>
+			<div class="post-meta">
+				<div class="post-meta-detail post-meta-detail-time">
+					<i class="fa fa-clock-o" aria-hidden="true"></i>
+					<time title="发布于 2025-4-16 15:12:40 | 编辑于 2025-4-16 15:12:40">2025-4-16 15:12
+					</time>
+				</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-views">
+					<i class="fa fa-eye" aria-hidden="true"></i> 802</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-comments">
+					<i class="fa fa-comments-o" aria-hidden="true"></i> 0</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-categories">
+				<i class="fa fa-bookmark-o" aria-hidden="true"></i> <a href="https://itdong.me/category/uncategorized/" target="_blank" class="post-meta-detail-catagory-link">未分类</a></div>								</br><div class="post-meta-detail post-meta-detail-words">
+		<i class="fa fa-file-word-o" aria-hidden="true"></i><span title="包含 1 行代码"> 204 字</span>
+		</div>
+		<div class="post-meta-devide">|</div>
+		<div class="post-meta-detail post-meta-detail-words">
+			<i class="fa fa-hourglass-end" aria-hidden="true"></i>
+			1 分钟内
+		</div>
+				</div>
+		</header>
+
+				<div class="post-content">
+			内网的DDNS方案 现有的路由器的ddns很多都是直接拿到公网ip，但是这个公网ip实际上不能找到你&hellip;		</div>
+	
+	</article><article class="post card bg-white shadow-sm border-0 post-preview post-preview-layout-3" id="post-2294" class="post-2294 post type-post status-publish format-standard hentry category-uncategorized">
+				<header class="post-header">
+			<a class="post-title" href="https://itdong.me/remove-git-idea-folder/">清除已经推送到远程的.idea</a>
+			<div class="post-meta">
+				<div class="post-meta-detail post-meta-detail-time">
+					<i class="fa fa-clock-o" aria-hidden="true"></i>
+					<time title="发布于 2025-3-08 14:34:00 | 编辑于 2025-3-08 14:34:00">2025-3-08 14:34
+					</time>
+				</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-views">
+					<i class="fa fa-eye" aria-hidden="true"></i> 744</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-comments">
+					<i class="fa fa-comments-o" aria-hidden="true"></i> 0</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-categories">
+				<i class="fa fa-bookmark-o" aria-hidden="true"></i> <a href="https://itdong.me/category/uncategorized/" target="_blank" class="post-meta-detail-catagory-link">未分类</a></div>								</br><div class="post-meta-detail post-meta-detail-words">
+		<i class="fa fa-file-word-o" aria-hidden="true"></i><span title="包含 6 行代码"> 539 字</span>
+		</div>
+		<div class="post-meta-devide">|</div>
+		<div class="post-meta-detail post-meta-detail-words">
+			<i class="fa fa-hourglass-end" aria-hidden="true"></i>
+			3 分钟
+		</div>
+				</div>
+		</header>
+
+				<div class="post-content">
+			在开发过程中，有时不小心将不应该被提交到Git仓库中的内容（如.idea目录）推送到远程仓库了。如果&hellip;		</div>
+	
+	</article><article class="post card bg-white shadow-sm border-0 post-preview post-preview-layout-3" id="post-2259" class="post-2259 post type-post status-publish format-standard hentry category-uncategorized">
+				<header class="post-header">
+			<a class="post-title" href="https://itdong.me/shuzhibijin/">数值逼近期末复习笔记</a>
+			<div class="post-meta">
+				<div class="post-meta-detail post-meta-detail-time">
+					<i class="fa fa-clock-o" aria-hidden="true"></i>
+					<time title="发布于 2024-12-15 14:35:25 | 编辑于 2024-12-19 22:27:47">2024-12-15 14:35
+					</time>
+				</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-views">
+					<i class="fa fa-eye" aria-hidden="true"></i> 882</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-comments">
+					<i class="fa fa-comments-o" aria-hidden="true"></i> 0</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-categories">
+				<i class="fa fa-bookmark-o" aria-hidden="true"></i> <a href="https://itdong.me/category/uncategorized/" target="_blank" class="post-meta-detail-catagory-link">未分类</a></div>								</br><div class="post-meta-detail post-meta-detail-words">
+		<i class="fa fa-file-word-o" aria-hidden="true"></i><span> 1200 字</span>
+		</div>
+		<div class="post-meta-devide">|</div>
+		<div class="post-meta-detail post-meta-detail-words">
+			<i class="fa fa-hourglass-end" aria-hidden="true"></i>
+			7 分钟
+		</div>
+				</div>
+		</header>
+
+				<div class="post-content">
+			免责声明 仅可作为期末突击复习使用，以下过程可能存在不严谨不严格的部分，但是本科期末考试一般会给分 &hellip;		</div>
+	
+	</article><article class="post card bg-white shadow-sm border-0 post-preview post-preview-layout-3" id="post-2224" class="post-2224 post type-post status-publish format-standard hentry category-docker category-java category-springboot tag-docker tag-image tag-springboot">
+				<header class="post-header">
+			<a class="post-title" href="https://itdong.me/springboot-to-docker-image/">springboot项目打包docker示例</a>
+			<div class="post-meta">
+				<div class="post-meta-detail post-meta-detail-time">
+					<i class="fa fa-clock-o" aria-hidden="true"></i>
+					<time title="发布于 2024-11-19 17:18:49 | 编辑于 2024-11-20 18:18:36">2024-11-19 17:18
+					</time>
+				</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-views">
+					<i class="fa fa-eye" aria-hidden="true"></i> 1,069</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-comments">
+					<i class="fa fa-comments-o" aria-hidden="true"></i> 0</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-categories">
+				<i class="fa fa-bookmark-o" aria-hidden="true"></i> <a href="https://itdong.me/category/docker/" target="_blank" class="post-meta-detail-catagory-link">docker</a><span class="post-meta-detail-catagory-space">,</span><a href="https://itdong.me/category/java/" target="_blank" class="post-meta-detail-catagory-link">JAVA</a><span class="post-meta-detail-catagory-space">,</span><a href="https://itdong.me/category/springboot/" target="_blank" class="post-meta-detail-catagory-link">springboot</a></div>								</br><div class="post-meta-detail post-meta-detail-words">
+		<i class="fa fa-file-word-o" aria-hidden="true"></i><span title="包含 121 行代码"> 656 字</span>
+		</div>
+		<div class="post-meta-devide">|</div>
+		<div class="post-meta-detail post-meta-detail-words">
+			<i class="fa fa-hourglass-end" aria-hidden="true"></i>
+			9 分钟
+		</div>
+				</div>
+		</header>
+
+				<div class="post-content">
+			一般springboot项目会依赖mysql，redis等服务，所以我们写一个docker-comp&hellip;		</div>
+	
+			<div class="post-tags">
+			<i class="fa fa-tags" aria-hidden="true"></i>
+			<a href='https://itdong.me/tag/docker/' target='_blank' class='tag badge badge-secondary post-meta-detail-tag'>docker</a><a href='https://itdong.me/tag/image/' target='_blank' class='tag badge badge-secondary post-meta-detail-tag'>image</a><a href='https://itdong.me/tag/springboot/' target='_blank' class='tag badge badge-secondary post-meta-detail-tag'>springboot</a>		</div>
+	</article><article class="post card bg-white shadow-sm border-0 post-preview post-preview-layout-3" id="post-2214" class="post-2214 post type-post status-publish format-standard hentry category-python tag-python tag-154">
+				<header class="post-header">
+			<a class="post-title" href="https://itdong.me/aliyunpan-photo-download/">阿里云盘相册下载脚本</a>
+			<div class="post-meta">
+				<div class="post-meta-detail post-meta-detail-time">
+					<i class="fa fa-clock-o" aria-hidden="true"></i>
+					<time title="发布于 2024-11-10 13:55:04 | 编辑于 2025-11-13 11:49:35">2024-11-10 13:55
+					</time>
+				</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-views">
+					<i class="fa fa-eye" aria-hidden="true"></i> 1,268</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-comments">
+					<i class="fa fa-comments-o" aria-hidden="true"></i> 0</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-categories">
+				<i class="fa fa-bookmark-o" aria-hidden="true"></i> <a href="https://itdong.me/category/python/" target="_blank" class="post-meta-detail-catagory-link">python</a></div>								</br><div class="post-meta-detail post-meta-detail-words">
+		<i class="fa fa-file-word-o" aria-hidden="true"></i><span title="包含 324 行代码"> 507 字</span>
+		</div>
+		<div class="post-meta-devide">|</div>
+		<div class="post-meta-detail post-meta-detail-words">
+			<i class="fa fa-hourglass-end" aria-hidden="true"></i>
+			17 分钟
+		</div>
+				</div>
+		</header>
+
+				<div class="post-content">
+			在上次阿里云盘出现泄露之后，就已经不再想接着备份，但是有节假三万张照片，阿里云盘没有提供一键下载的功&hellip;		</div>
+	
+			<div class="post-tags">
+			<i class="fa fa-tags" aria-hidden="true"></i>
+			<a href='https://itdong.me/tag/python/' target='_blank' class='tag badge badge-secondary post-meta-detail-tag'>python</a><a href='https://itdong.me/tag/%e9%98%bf%e9%87%8c%e4%ba%91/' target='_blank' class='tag badge badge-secondary post-meta-detail-tag'>阿里云</a>		</div>
+	</article><article class="post card bg-white shadow-sm border-0 post-preview post-preview-layout-3" id="post-2209" class="post-2209 post type-post status-publish format-standard has-post-thumbnail hentry category-81 category-74 category-80 tag-frp tag-vpn tag-83">
+		<header class='post-header post-header-with-thumbnail'><img class='post-thumbnail lazyload' src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAABBJREFUeNpi+P//PwNAgAEACPwC/tuiTRYAAAAASUVORK5CYII=' data-original='https://itdong.me/wp-content/uploads/DALL·E-2024-11-06-22.14.22-A-sleek-modern-banner-image-for-a-website-background-themed-around-FRP-Fast-Reverse-Proxy-and-VPN.-The-background-is-a-gradient-from-deep-blue-to-b-e1730902624613.webp' alt='thumbnail' style='opacity: 0;'></img></header>		<header class="post-header">
+			<a class="post-title" href="https://itdong.me/go-to-school-vpn/">自建反向回校VPN</a>
+			<div class="post-meta">
+				<div class="post-meta-detail post-meta-detail-time">
+					<i class="fa fa-clock-o" aria-hidden="true"></i>
+					<time title="发布于 2024-11-06 22:09:38 | 编辑于 2024-11-06 22:17:11">2024-11-06 22:09
+					</time>
+				</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-views">
+					<i class="fa fa-eye" aria-hidden="true"></i> 1,361</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-comments">
+					<i class="fa fa-comments-o" aria-hidden="true"></i> 3</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-categories">
+				<i class="fa fa-bookmark-o" aria-hidden="true"></i> <a href="https://itdong.me/category/%e7%bd%91%e7%bb%9c/%e5%86%85%e7%bd%91%e7%a9%bf%e9%80%8f/" target="_blank" class="post-meta-detail-catagory-link">内网穿透</a><span class="post-meta-detail-catagory-space">,</span><a href="https://itdong.me/category/%e6%95%99%e7%a8%8b/" target="_blank" class="post-meta-detail-catagory-link">教程</a><span class="post-meta-detail-catagory-space">,</span><a href="https://itdong.me/category/%e7%bd%91%e7%bb%9c/" target="_blank" class="post-meta-detail-catagory-link">网络</a></div>								</br><div class="post-meta-detail post-meta-detail-words">
+		<i class="fa fa-file-word-o" aria-hidden="true"></i><span title="包含 13 行代码"> 413 字</span>
+		</div>
+		<div class="post-meta-devide">|</div>
+		<div class="post-meta-detail post-meta-detail-words">
+			<i class="fa fa-hourglass-end" aria-hidden="true"></i>
+			3 分钟
+		</div>
+				</div>
+		</header>
+
+				<div class="post-content">
+			前情提要 你离开了学校，但是有一些福利只能校内ip享用，比如一些许可证服务器，校内固定ip的服务，但&hellip;		</div>
+	
+			<div class="post-tags">
+			<i class="fa fa-tags" aria-hidden="true"></i>
+			<a href='https://itdong.me/tag/frp/' target='_blank' class='tag badge badge-secondary post-meta-detail-tag'>frp</a><a href='https://itdong.me/tag/vpn/' target='_blank' class='tag badge badge-secondary post-meta-detail-tag'>vpn</a><a href='https://itdong.me/tag/%e5%86%85%e7%bd%91%e7%a9%bf%e9%80%8f/' target='_blank' class='tag badge badge-secondary post-meta-detail-tag'>内网穿透</a>		</div>
+	</article><article class="post card bg-white shadow-sm border-0 post-preview post-preview-layout-3" id="post-2166" class="post-2166 post type-post status-publish format-standard hentry category-mworks tag-149">
+				<header class="post-header">
+			<a class="post-title" href="https://itdong.me/mworks-edu-register/">MWORKS教育版激活全流程</a>
+			<div class="post-meta">
+				<div class="post-meta-detail post-meta-detail-time">
+					<i class="fa fa-clock-o" aria-hidden="true"></i>
+					<time title="发布于 2024-10-16 12:00:47 | 编辑于 2024-10-27 11:27:00">2024-10-16 12:00
+					</time>
+				</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-views">
+					<i class="fa fa-eye" aria-hidden="true"></i> 1,642</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-comments">
+					<i class="fa fa-comments-o" aria-hidden="true"></i> 0</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-categories">
+				<i class="fa fa-bookmark-o" aria-hidden="true"></i> <a href="https://itdong.me/category/mworks/" target="_blank" class="post-meta-detail-catagory-link">Mworks</a></div>								</br><div class="post-meta-detail post-meta-detail-words">
+		<i class="fa fa-file-word-o" aria-hidden="true"></i><span> 237 字</span>
+		</div>
+		<div class="post-meta-devide">|</div>
+		<div class="post-meta-detail post-meta-detail-words">
+			<i class="fa fa-hourglass-end" aria-hidden="true"></i>
+			1 分钟内
+		</div>
+				</div>
+		</header>
+
+				<div class="post-content">
+			前情提要 下载站 https://www.tongyuan.cc/download 代替matlab&hellip;		</div>
+	
+			<div class="post-tags">
+			<i class="fa fa-tags" aria-hidden="true"></i>
+			<a href='https://itdong.me/tag/%e6%95%99%e8%82%b2%e7%89%88/' target='_blank' class='tag badge badge-secondary post-meta-detail-tag'>教育版</a>		</div>
+	</article><article class="post card bg-white shadow-sm border-0 post-preview post-preview-layout-3" id="post-2160" class="post-2160 post type-post status-publish format-standard hentry category-146 tag-147">
+				<header class="post-header">
+			<a class="post-title" href="https://itdong.me/cust-edu-mail/">长春理工大学教育邮箱申请全流程</a>
+			<div class="post-meta">
+				<div class="post-meta-detail post-meta-detail-time">
+					<i class="fa fa-clock-o" aria-hidden="true"></i>
+					<time title="发布于 2024-10-16 11:47:38 | 编辑于 2024-10-31 0:13:12">2024-10-16 11:47
+					</time>
+				</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-views">
+					<i class="fa fa-eye" aria-hidden="true"></i> 2,302</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-comments">
+					<i class="fa fa-comments-o" aria-hidden="true"></i> 0</div> <div class="post-meta-devide">|</div> <div class="post-meta-detail post-meta-detail-categories">
+				<i class="fa fa-bookmark-o" aria-hidden="true"></i> <a href="https://itdong.me/category/%e9%95%bf%e6%98%a5%e7%90%86%e5%b7%a5%e5%a4%a7%e5%ad%a6/" target="_blank" class="post-meta-detail-catagory-link">长春理工大学</a></div>								</br><div class="post-meta-detail post-meta-detail-words">
+		<i class="fa fa-file-word-o" aria-hidden="true"></i><span> 219 字</span>
+		</div>
+		<div class="post-meta-devide">|</div>
+		<div class="post-meta-detail post-meta-detail-words">
+			<i class="fa fa-hourglass-end" aria-hidden="true"></i>
+			1 分钟内
+		</div>
+				</div>
+		</header>
+
+				<div class="post-content">
+			登录长春理工统一身份认证，进入党群服务中心 点此登录 点击服务中心 找到X下面的，学生新用户注册申请&hellip;		</div>
+	
+			<div class="post-tags">
+			<i class="fa fa-tags" aria-hidden="true"></i>
+			<a href='https://itdong.me/tag/%e9%95%bf%e6%98%a5%e7%90%86%e5%b7%a5%e5%a4%a7%e5%ad%a6/' target='_blank' class='tag badge badge-secondary post-meta-detail-tag'>长春理工大学</a>		</div>
+	</article>		<nav><ul class="pagination"><li class="page-item active"><span class="page-link" style="cursor: default;">1</span></li><li class="page-item"><a class="page-link" href="https://itdong.me/page/2/">2</a></li><li class="page-item"><a class="page-link" href="https://itdong.me/page/3/">3</a></li><li class="page-item"><a class="page-link" href="https://itdong.me/page/4/">4</a></li><li class="page-item"><a class="page-link" href="https://itdong.me/page/5/">5</a></li><li class="page-item"><a class="page-link" href="https://itdong.me/page/6/">6</a></li><li class="page-item"><a class="page-link" href="https://itdong.me/page/7/">7</a></li><li class="page-item"><a aria-label="Next Page" class="page-link" href="https://itdong.me/page/2/"><i class="fa fa-angle-right" aria-hidden="true"></i></a></li><li class="page-item"><a aria-label="Last Page" class="page-link" href="https://itdong.me/page/10/"><i class="fa fa-angle-double-right" aria-hidden="true"></i></a></li></ul></nav><nav><ul class="pagination pagination-mobile"><li class="page-item active"><span class="page-link" style="cursor: default;">1</span></li><li class="page-item"><a class="page-link" href="https://itdong.me/page/2/">2</a></li><li class="page-item"><a class="page-link" href="https://itdong.me/page/3/">3</a></li><li class="page-item"><a class="page-link" href="https://itdong.me/page/4/">4</a></li><li class="page-item"><a class="page-link" href="https://itdong.me/page/5/">5</a></li><li class="page-item"><a aria-label="Next Page" class="page-link" href="https://itdong.me/page/2/"><i class="fa fa-angle-right" aria-hidden="true"></i></a></li><li class="page-item"><a aria-label="Last Page" class="page-link" href="https://itdong.me/page/10/"><i class="fa fa-angle-double-right" aria-hidden="true"></i></a></li></ul></nav>		
+					<footer id="footer" class="site-footer card shadow-sm border-0">
+						<div class=""><span class="my-face">Copyright ©  2022 - 2024  版权所有   <strong>栋dong</strong>  ( ๑´•ω•) "(ㆆᴗㆆ)</span></div><div>
+
+						</div><div>Theme <a href="https://github.com/solstice23/argon-theme" target="_blank"><strong>Argon</strong></a> By solstice23</div>	
+
+<!--耗时及占用内存开始-->
+<span id="momk"></span><span id="momk" style="color: #ff0000;"></span>
+<script type="text/javascript">
+function NewDate(str) {
+str = str.split('-');
+var date = new Date();
+date.setUTCFullYear(str[0], str[1] - 1, str[2]);
+date.setUTCHours(0, 0, 0, 0);
+return date;
+}
+function momxc() {
+    // 这里需要改时间
+    var birthDay =NewDate("2022-11-27");
+    var today=new Date();
+    var timeold=today.getTime()-birthDay.getTime();
+    var sectimeold=timeold/1000
+    var secondsold=Math.floor(sectimeold);
+    var msPerDay=24*60*60*1000; var e_daysold=timeold/msPerDay;
+    var daysold=Math.floor(e_daysold);
+    var e_hrsold=(daysold-e_daysold)*-24;
+    var hrsold=Math.floor(e_hrsold);
+    var e_minsold=(hrsold-e_hrsold)*-60;
+    var minsold=Math.floor((hrsold-e_hrsold)*-60); var seconds=Math.floor((minsold-e_minsold)*-60).toString();
+    document.getElementById("momk").innerHTML = "小破站已经安全运行："+daysold+"天"+hrsold+"小时"+minsold+"分"+seconds+"秒<br>";
+    setTimeout(momxc, 1000);
+}momxc();
+</script>
+<style>
+#momk{
+    animation:change 10s infinite;
+    font-weight:800; 
+}
+@keyframes change{
+    0%{color:#5cb85c;}
+    25%{color:#556bd8;}
+    50%{color:#e40707;}
+    75%{color:#66e616;}
+    100% {color:#67bd31;}
+}
+</style>
+				
+						
+
+						
+
+<script type="text/javascript">//点击特效
+		class Circle {
+			constructor({ origin, speed, color, angle, context }) {
+				this.origin = origin
+				this.position = { ...this.origin }
+				this.color = color
+				this.speed = speed
+				this.angle = angle
+				this.context = context
+				this.renderCount = 0
+			}
+		
+			draw() {
+				this.context.fillStyle = this.color
+				this.context.beginPath()
+				this.context.arc(this.position.x, this.position.y, 2, 0, Math.PI * 2)
+				this.context.fill()
+			}
+		
+			move() {
+				this.position.x = (Math.sin(this.angle) * this.speed) + this.position.x
+				this.position.y = (Math.cos(this.angle) * this.speed) + this.position.y + (this.renderCount * 0.3)
+				this.renderCount++
+			}
+		}
+		
+		class Boom {
+			constructor({ origin, context, circleCount = 10, area }) {
+				this.origin = origin
+				this.context = context
+				this.circleCount = circleCount
+				this.area = area
+				this.stop = false
+				this.circles = []
+			}
+		
+			randomArray(range) {
+				const length = range.length
+				const randomIndex = Math.floor(length * Math.random())
+				return range[randomIndex]
+			}
+		
+			randomColor() {
+				const range = ['8', '9', 'A', 'B', 'C', 'D', 'E', 'F']
+				return '#' + this.randomArray(range) + this.randomArray(range) + this.randomArray(range) + this.randomArray(range) + this.randomArray(range) + this.randomArray(range)
+			}
+		
+			randomRange(start, end) {
+				return (end - start) * Math.random() + start
+			}
+		
+			init() {
+				for (let i = 0; i < this.circleCount; i++) {
+					const circle = new Circle({
+						context: this.context,
+						origin: this.origin,
+						color: this.randomColor(),
+						angle: this.randomRange(Math.PI - 1, Math.PI + 1),
+						speed: this.randomRange(1, 6)
+					})
+					this.circles.push(circle)
+				}
+			}
+		
+			move() {
+				this.circles.forEach((circle, index) => {
+					if (circle.position.x > this.area.width || circle.position.y > this.area.height) {
+						return this.circles.splice(index, 1)
+					}
+					circle.move()
+				})
+				if (this.circles.length == 0) {
+					this.stop = true
+				}
+			}
+		
+			draw() {
+				this.circles.forEach(circle => circle.draw())
+			}
+		}
+		
+		class CursorSpecialEffects {
+			constructor() {
+				this.computerCanvas = document.createElement('canvas')
+				this.renderCanvas = document.createElement('canvas')
+		
+				this.computerContext = this.computerCanvas.getContext('2d')
+				this.renderContext = this.renderCanvas.getContext('2d')
+		
+				this.globalWidth = window.innerWidth
+				this.globalHeight = window.innerHeight
+		
+				this.booms = []
+				this.running = false
+			}
+		
+			handleMouseDown(e) {
+				const boom = new Boom({
+					origin: { x: e.clientX, y: e.clientY },
+					context: this.computerContext,
+					area: {
+						width: this.globalWidth,
+						height: this.globalHeight
+					}
+				})
+				boom.init()
+				this.booms.push(boom)
+				this.running || this.run()
+			}
+		
+			handlePageHide() {
+				this.booms = []
+				this.running = false
+			}
+		
+			init() {
+				const style = this.renderCanvas.style
+				style.position = 'fixed'
+				style.top = style.left = 0
+				style.zIndex = '999999999999999999999999999999999999999999'
+				style.pointerEvents = 'none'
+		
+				style.width = this.renderCanvas.width = this.computerCanvas.width = this.globalWidth
+				style.height = this.renderCanvas.height = this.computerCanvas.height = this.globalHeight
+		
+				document.body.append(this.renderCanvas)
+		
+				window.addEventListener('mousedown', this.handleMouseDown.bind(this))
+				window.addEventListener('pagehide', this.handlePageHide.bind(this))
+			}
+		
+			run() {
+				this.running = true
+				if (this.booms.length == 0) {
+					return this.running = false
+				}
+		
+				requestAnimationFrame(this.run.bind(this))
+		
+				this.computerContext.clearRect(0, 0, this.globalWidth, this.globalHeight)
+				this.renderContext.clearRect(0, 0, this.globalWidth, this.globalHeight)
+		
+				this.booms.forEach((boom, index) => {
+					if (boom.stop) {
+						return this.booms.splice(index, 1)
+					}
+					boom.move()
+					boom.draw()
+				})
+				this.renderContext.drawImage(this.computerCanvas, 0, 0, this.globalWidth, this.globalHeight)
+			}
+		}
+		
+		const cursorSpecialEffects = new CursorSpecialEffects()
+		cursorSpecialEffects.init()</script>
+						
+					</footer>
+				</main>
+			</div>
+		</div>
+		<script src="https://itdong.me/wp-content/themes/argon/argontheme.js?v1.3.5"></script>
+					<script>
+				window.MathJax = {
+					tex: {
+						inlineMath: [["$", "$"], ["\\\\(", "\\\\)"]],
+						displayMath: [['$$','$$']],
+						processEscapes: true,
+						packages: {'[+]': ['noerrors']}
+					},
+					options: {
+						skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre', 'code'],
+						ignoreHtmlClass: 'tex2jax_ignore',
+						processHtmlClass: 'tex2jax_process'
+					},
+					loader: {
+						load: ['[tex]/noerrors']
+					}
+				};
+			</script>
+			<script src="//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" id="MathJax-script" async></script>
+						
+					<link rel="stylesheet" href="https://itdong.me/wp-content/themes/argon/assets/vendor/highlight/styles/vs.css">
+		
+	</div>
+</div>
+<script type="speculationrules">
+{"prefetch":[{"source":"document","where":{"and":[{"href_matches":"/*"},{"not":{"href_matches":["/wp-*.php","/wp-admin/*","/wp-content/uploads/*","/wp-content/*","/wp-content/plugins/*","/wp-content/themes/argon/*","/*\\?(.+)"]}},{"not":{"selector_matches":"a[rel~=\"nofollow\"]"}},{"not":{"selector_matches":".no-prefetch, .no-prefetch a"}}]},"eagerness":"conservative"}]}
+</script>
+  <script id="module-katex"> (function($) { $(function() { if (typeof katex !== "undefined") { if ($(".language-katex").length > 0) { $(".language-katex").parent("pre").attr("style", "text-align: center; background: none;"); $(".language-katex").addClass("katex-container").removeClass("language-katex"); $(".katex-container").each(function() { var katexText = $(this).text(); var el = $(this).get(0); if ($(this).parent("code").length == 0) { try { katex.render(katexText, el) } catch (err) { $(this).html("<span class='err'>" + err) } } }); } if ($(".katex-inline").length > 0) { $(".katex-inline").each(function() { var katexText = $(this).text(); var el = $(this).get(0); if ($(this).parent("code").length == 0) { try { katex.render(katexText, el) } catch (err) { $(this).html("<span class='err'>" + err) } } }); } } }); })(jQuery); </script> <script id="timelineJS-js" src="https://itdong.me/wp-content/plugins/timeline-block-block/assets/js/timeline.min.js?ver=1.3.3"></script>
+<script id="wp-emoji-settings" type="application/json">
+{"baseUrl":"https://s.w.org/images/core/emoji/17.0.2/72x72/","ext":".png","svgUrl":"https://s.w.org/images/core/emoji/17.0.2/svg/","svgExt":".svg","source":{"concatemoji":"https://itdong.me/wp-includes/js/wp-emoji-release.min.js?ver=652903c1be1c469c852670f0b015bc18"}}
+</script>
+<script type="module">
+/*! This file is auto-generated */
+const a=JSON.parse(document.getElementById("wp-emoji-settings").textContent),o=(window._wpemojiSettings=a,"wpEmojiSettingsSupports"),s=["flag","emoji"];function i(e){try{var t={supportTests:e,timestamp:(new Date).valueOf()};sessionStorage.setItem(o,JSON.stringify(t))}catch(e){}}function c(e,t,n){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);t=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(n,0,0);const a=new Uint32Array(e.getImageData(0,0,e.canvas.width,e.canvas.height).data);return t.every((e,t)=>e===a[t])}function p(e,t){e.clearRect(0,0,e.canvas.width,e.canvas.height),e.fillText(t,0,0);var n=e.getImageData(16,16,1,1);for(let e=0;e<n.data.length;e++)if(0!==n.data[e])return!1;return!0}function u(e,t,n,a){switch(t){case"flag":return n(e,"\ud83c\udff3\ufe0f\u200d\u26a7\ufe0f","\ud83c\udff3\ufe0f\u200b\u26a7\ufe0f")?!1:!n(e,"\ud83c\udde8\ud83c\uddf6","\ud83c\udde8\u200b\ud83c\uddf6")&&!n(e,"\ud83c\udff4\udb40\udc67\udb40\udc62\udb40\udc65\udb40\udc6e\udb40\udc67\udb40\udc7f","\ud83c\udff4\u200b\udb40\udc67\u200b\udb40\udc62\u200b\udb40\udc65\u200b\udb40\udc6e\u200b\udb40\udc67\u200b\udb40\udc7f");case"emoji":return!a(e,"\ud83e\u1fac8")}return!1}function f(e,t,n,a){let r;const o=(r="undefined"!=typeof WorkerGlobalScope&&self instanceof WorkerGlobalScope?new OffscreenCanvas(300,150):document.createElement("canvas")).getContext("2d",{willReadFrequently:!0}),s=(o.textBaseline="top",o.font="600 32px Arial",{});return e.forEach(e=>{s[e]=t(o,e,n,a)}),s}function r(e){var t=document.createElement("script");t.src=e,t.defer=!0,document.head.appendChild(t)}a.supports={everything:!0,everythingExceptFlag:!0},new Promise(t=>{let n=function(){try{var e=JSON.parse(sessionStorage.getItem(o));if("object"==typeof e&&"number"==typeof e.timestamp&&(new Date).valueOf()<e.timestamp+604800&&"object"==typeof e.supportTests)return e.supportTests}catch(e){}return null}();if(!n){if("undefined"!=typeof Worker&&"undefined"!=typeof OffscreenCanvas&&"undefined"!=typeof URL&&URL.createObjectURL&&"undefined"!=typeof Blob)try{var e="postMessage("+f.toString()+"("+[JSON.stringify(s),u.toString(),c.toString(),p.toString()].join(",")+"));",a=new Blob([e],{type:"text/javascript"});const r=new Worker(URL.createObjectURL(a),{name:"wpTestEmojiSupports"});return void(r.onmessage=e=>{i(n=e.data),r.terminate(),t(n)})}catch(e){}i(n=f(s,u,c,p))}t(n)}).then(e=>{for(const n in e)a.supports[n]=e[n],a.supports.everything=a.supports.everything&&a.supports[n],"flag"!==n&&(a.supports.everythingExceptFlag=a.supports.everythingExceptFlag&&a.supports[n]);var t;a.supports.everythingExceptFlag=a.supports.everythingExceptFlag&&!a.supports.flag,a.supports.everything||((t=a.source||{}).concatemoji?r(t.concatemoji):t.wpemoji&&t.twemoji&&(r(t.twemoji),r(t.wpemoji)))});
+//# sourceURL=https://itdong.me/wp-includes/js/wp-emoji-loader.min.js
+</script>
+<!--春节灯笼
+<link href="https://fastly.jsdelivr.net/gh/huangwb8/bloghelper@latest/css/deng.css" rel="stylesheet">
+<div class="deng-box">
+<div class="deng">
+<div class="xian"></div>
+<div class="deng-a">
+<div class="deng-b"><div class="deng-t">早八</div></div>
+</div>
+<div class="shui shui-a"><div class="shui-c"></div><div class="shui-b"></div></div>
+</div>
+</div>
+ 
+<div class="deng-box1">
+<div class="deng">
+<div class="xian"></div>
+<div class="deng-a">
+<div class="deng-b"><div class="deng-t">快乐</div></div>
+</div>
+<div class="shui shui-a"><div class="shui-c"></div><div class="shui-b"></div></div>
+</div>
+</div>
+-->
+<!--文字抖动特效-->
+<link href="https://fastly.jsdelivr.net/gh/huangwb8/bloghelper@latest/css/myface.css" rel="stylesheet">
+<!--网站输入效果开始-->
+<script src="https://fastly.jsdelivr.net/gh/huangwb8/bloghelper@latest/js/input-with-fire.js"></script>
+
+</body>
+
+
+
+</html>
+<!--
+Performance optimized by Redis Object Cache. Learn more: https://wprediscache.com
+
+使用 Predis (v2.4.0) 从 Redis 检索了 3437 个对象 (738 KB)。
+-->
+
+<!-- Dynamic page generated in 0.376 seconds. -->
+<!-- Cached page generated by WP-Super-Cache on 2026-07-25 21:32:19 -->
+
+<!-- Compression = gzip -->
+<!-- super cache -->

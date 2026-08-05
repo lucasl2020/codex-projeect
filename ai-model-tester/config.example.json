@@ -1,0 +1,117 @@
+{
+  "providers": [
+    {
+      "id": "openai",
+      "label": "OpenAI",
+      "type": "openai",
+      "baseUrl": "https://api.openai.com",
+      "apiKey": "${OPENAI_API_KEY}"
+    },
+    {
+      "id": "anthropic",
+      "label": "Anthropic",
+      "type": "anthropic",
+      "baseUrl": "https://api.anthropic.com",
+      "apiKey": "${ANTHROPIC_API_KEY}"
+    },
+    {
+      "id": "gemini",
+      "label": "Google Gemini",
+      "type": "gemini",
+      "baseUrl": "https://generativelanguage.googleapis.com",
+      "apiKey": "${GEMINI_API_KEY}"
+    },
+    {
+      "id": "deepseek",
+      "label": "DeepSeek",
+      "type": "openai-compatible",
+      "baseUrl": "https://api.deepseek.com",
+      "apiKey": "${DEEPSEEK_API_KEY}",
+      "modelsPath": "/models",
+      "chatPath": "/chat/completions"
+    },
+    {
+      "id": "grok",
+      "label": "Grok / xAI",
+      "type": "openai-compatible",
+      "baseUrl": "https://api.x.ai/v1",
+      "apiKey": "${XAI_API_KEY}"
+    },
+    {
+      "id": "kimi",
+      "label": "Kimi / Moonshot CN",
+      "type": "openai-compatible",
+      "baseUrl": "https://api.moonshot.cn/v1",
+      "apiKey": "${MOONSHOT_API_KEY}"
+    },
+    {
+      "id": "kimi-global",
+      "label": "Kimi / Moonshot Global",
+      "type": "openai-compatible",
+      "baseUrl": "https://api.moonshot.ai/v1",
+      "apiKey": "${MOONSHOT_GLOBAL_API_KEY}"
+    },
+    {
+      "id": "glm",
+      "label": "GLM / BigModel",
+      "type": "openai-compatible",
+      "baseUrl": "https://open.bigmodel.cn/api/paas/v4",
+      "apiKey": "${BIGMODEL_API_KEY}"
+    },
+    {
+      "id": "qwen",
+      "label": "Qwen / DashScope",
+      "type": "openai-compatible",
+      "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+      "apiKey": "${DASHSCOPE_API_KEY}"
+    },
+    {
+      "id": "siliconflow",
+      "label": "SiliconFlow",
+      "type": "openai-compatible",
+      "baseUrl": "https://api.siliconflow.cn/v1",
+      "apiKey": "${SILICONFLOW_API_KEY}"
+    },
+    {
+      "id": "volcengine-ark",
+      "label": "Volcengine Ark",
+      "type": "openai-compatible",
+      "baseUrl": "https://ark.cn-beijing.volces.com/api/v3",
+      "apiKey": "${VOLCENGINE_ARK_API_KEY}"
+    },
+    {
+      "id": "baichuan",
+      "label": "Baichuan",
+      "type": "openai-compatible",
+      "baseUrl": "https://api.baichuan-ai.com/v1",
+      "apiKey": "${BAICHUAN_API_KEY}"
+    },
+    {
+      "id": "openrouter",
+      "label": "OpenRouter",
+      "type": "openai-compatible",
+      "baseUrl": "https://openrouter.ai/api/v1",
+      "apiKey": "${OPENROUTER_API_KEY}",
+      "headers": {
+        "HTTP-Referer": "http://127.0.0.1:8787",
+        "X-Title": "AI Model Tester"
+      }
+    },
+    {
+      "id": "ollama",
+      "label": "Ollama Local",
+      "type": "ollama",
+      "baseUrl": "http://127.0.0.1:11434",
+      "apiKey": ""
+    },
+    {
+      "id": "relay",
+      "label": "Custom Relay",
+      "type": "openai-compatible",
+      "baseUrl": "https://your-relay.example.com/v1",
+      "apiKey": "${CUSTOM_RELAY_API_KEY}",
+      "modelsPath": "/models",
+      "chatPath": "/chat/completions"
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+.env
+wordpress/wp-content/uploads/
+wordpress/wp-content/cache/
+wordpress/wp-content/upgrade/
+wordpress/wp-content/debug.log
+backups/

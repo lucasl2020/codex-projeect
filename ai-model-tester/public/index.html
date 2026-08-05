@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>模型接口测试台</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <div class="bg-grid"></div>
+    <main class="app">
+      <header class="header">
+        <div class="brand">
+          <div class="logo" aria-hidden="true">M</div>
+          <div>
+            <h1>模型接口测试台</h1>
+            <p class="subtitle">本地代理 · 厂商旁填 key · 明文可见 · 支持定时巡检</p>
+          </div>
+        </div>
+        <div class="header-meta" id="configNote">读取配置中...</div>
+      </header>
+
+      <section class="layout">
+        <aside class="card side">
+          <div class="card-head">
+            <div>
+              <p class="step">STEP 01</p>
+              <h2>接口目录</h2>
+              <p class="hint">选择厂商，再配置本次使用的 Key</p>
+            </div>
+            <button class="btn ghost" id="refreshProviders" type="button">同步配置</button>
+          </div>
+
+          <details class="relay-panel">
+            <summary>
+              <span class="relay-mark" aria-hidden="true">↗</span>
+              <span class="relay-summary-copy">
+                <strong>临时中转站</strong>
+                <small>临时连接兼容 OpenAI 的接口</small>
+              </span>
+              <span class="relay-toggle" aria-hidden="true"></span>
+            </summary>
+            <div class="relay-fields">
+              <label class="field">
+                <span>缓存标识</span>
+                <input id="relayCacheLabel" type="text" placeholder="例如：公司中转、备用线路" autocomplete="off">
+              </label>
+              <label class="field">
+                <span>Base URL</span>
+                <input id="relayBaseUrl" type="url" placeholder="https://your-relay.example.com/v1">
+              </label>
+              <label class="field">
+                <span>API Key（明文）</span>
+                <input id="relayApiKey" type="text" placeholder="sk-... 明文可见，点击保存后缓存">
+              </label>
+              <p class="relay-cache-warning">缓存保存在当前浏览器，API Key 将以明文存储，请勿在公共设备使用。</p>
+              <div class="relay-actions">
+                <button class="btn" id="saveRelayCache" type="button">保存 / 更新缓存</button>
+                <button class="btn primary" id="useRelay" type="button">使用此中转站</button>
+              </div>
+              <details class="relay-subpanel relay-advanced">
+                <summary>
+                  <span>
+                    <strong>路径配置</strong>
+                    <small>默认兼容 OpenAI，可按需修改</small>
+                  </span>
+                  <span class="relay-subpanel-toggle" aria-hidden="true"></span>
+                </summary>
+                <div class="relay-subpanel-body field-row">
+                  <label class="field">
+                    <span>模型路径</span>
+                    <input id="relayModelsPath" type="text" value="/models">
+                  </label>
+                  <label class="field">
+                    <span>测试路径</span>
+                    <input id="relayChatPath" type="text" value="/chat/completions">
+                  </label>
+                </div>
+              </details>
+              <details class="relay-subpanel relay-cache-box" id="relayCacheBox">
+                <summary>
+                  <span class="relay-cache-title">本地缓存 <span id="relayCacheCount">0</span></span>
+                  <span class="relay-subpanel-toggle" aria-hidden="true"></span>
+                </summary>
+                <div class="relay-subpanel-body">
+                  <div class="relay-cache-head">
+                    <small>仅保存在当前浏览器和端口</small>
+                    <button class="btn danger-text" id="clearRelayCache" type="button">一键清空</button>
+                  </div>
+                  <div class="relay-cache-list" id="relayCacheList"></div>
+                </div>
+              </details>
+            </div>
+          </details>
+
+          <div class="custom-provider-slot" id="customProviderSlot" hidden></div>
+
+          <section class="provider-directory" aria-labelledby="officialProvidersTitle">
+            <div class="provider-section-head">
+              <div>
+                <h3 id="officialProvidersTitle">官方厂商</h3>
+                <p>页面 Key 优先，留空使用配置文件</p>
+              </div>
+              <span class="provider-count" id="providerCount">0 个</span>
+            </div>
+            <label class="provider-search">
+              <span aria-hidden="true">⌕</span>
+              <input id="providerSearch" type="search" placeholder="搜索厂商或接口地址" autocomplete="off">
+            </label>
+            <div class="provider-list" id="providerList"></div>
+          </section>
+        </aside>
+
+        <section class="card models">
+          <div class="card-head">
+            <div>
+              <p class="step">STEP 02</p>
+              <h2>拉取并勾选模型</h2>
+              <p class="hint" id="modelHint">先选接口，再拉取模型</p>
+            </div>
+            <div class="actions">
+              <button class="btn" id="loadModels" type="button">拉取模型</button>
+              <button class="btn ghost" id="selectAllModels" type="button">全选</button>
+              <button class="btn ghost" id="clearModels" type="button">清空</button>
+            </div>
+          </div>
+
+          <div class="key-source-banner" id="keySourceHint">未选择接口</div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th class="check-col">选择</th>
+                  <th>模型名</th>
+                  <th>来源</th>
+                  <th>标识</th>
+                </tr>
+              </thead>
+              <tbody id="modelRows">
+                <tr>
+                  <td colspan="4" class="empty">暂无模型</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="card tester">
+          <div class="card-head">
+            <div>
+              <p class="step">STEP 03</p>
+              <h2>测试 / 定时巡检</h2>
+              <p class="hint" id="selectedModel">尚未勾选模型</p>
+            </div>
+            <button class="btn primary" id="runTest" type="button">立即测试</button>
+          </div>
+
+          <label class="field pad">
+            <span>测试问题</span>
+            <textarea id="prompt" rows="4">今天的日期</textarea>
+          </label>
+
+          <div class="field-row pad">
+            <label class="field">
+              <span>温度</span>
+              <input id="temperature" type="number" min="0" max="2" step="0.1" value="0.2">
+            </label>
+            <label class="field">
+              <span>输出上限</span>
+              <input id="maxTokens" type="number" min="1" max="8192" step="1" value="512">
+            </label>
+          </div>
+
+          <div class="schedule-box">
+            <div class="schedule-title">
+              <strong>定时任务</strong>
+              <span id="scheduleStatus" class="pill off">未开启</span>
+            </div>
+            <div class="schedule-grid">
+              <label class="field">
+                <span>每隔</span>
+                <input id="scheduleEvery" type="number" min="1" max="10080" step="1" value="30">
+              </label>
+              <label class="field">
+                <span>单位</span>
+                <select id="scheduleUnit">
+                  <option value="minutes" selected>分钟</option>
+                  <option value="hours">小时</option>
+                </select>
+              </label>
+              <label class="check-inline">
+                <input id="scheduleAutoLoad" type="checkbox">
+                <span>每次先重新拉取模型</span>
+              </label>
+            </div>
+            <div class="schedule-actions">
+              <button class="btn primary" id="startSchedule" type="button">启动定时</button>
+              <button class="btn ghost" id="stopSchedule" type="button">停止</button>
+            </div>
+            <p class="tiny" id="scheduleHint">按当前勾选的模型循环测试；页面保持打开才会继续跑。</p>
+            <p class="tiny" id="scheduleMeta">下次执行：-</p>
+          </div>
+
+          <div class="results" id="results">
+            <div class="empty-results">勾选模型后可立即测试，或开启定时巡检。</div>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
