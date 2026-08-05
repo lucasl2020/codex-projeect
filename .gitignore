@@ -23,5 +23,5 @@ browser-profile/
 Thumbs.db
 .DS_Store
 
-# === 敏感凭证提醒：如需彻底排除，取消下行注释 ===
-# 显示codex配置信息/codex-plus-key-fix.md
+# === 敏感凭证：含明文 API Key，禁止入库 ===
+显示codex配置信息/codex-plus-key-fix.md
