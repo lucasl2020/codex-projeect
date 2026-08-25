@@ -1709,12 +1709,12 @@ class SlideComparisonSolver:
             self._init_solver()
 
             result = self._solver.slide_comparison(full_image, gap_image)
-            # result: {"target": [x, y, w, h]}
-            target = result.get("target", [0, 0, 0, 0])
-            target_x = target[0]
-            target_y = target[1]
-            target_w = target[2]
-            target_h = target[3]
+            # ddddocr 返回 {"target": [x, y], "target_x": x, "target_y": y}
+            target = result.get("target") or []
+            target_x = result.get("target_x", target[0] if len(target) > 0 else 0)
+            target_y = result.get("target_y", target[1] if len(target) > 1 else 0)
+            target_w = target[2] if len(target) > 2 else None
+            target_h = target[3] if len(target) > 3 else None
 
             logger.info(f"图片差异缺口: x={target_x}, y={target_y}, w={target_w}, h={target_h}")
 
@@ -1745,3 +1745,378 @@ class SlideComparisonSolver:
                 captcha_type=CaptchaType.SLIDE,
                 error=f"图片差异滑块识别异常: {e}",
             )
+
+
+# ===========================================================================
+# 旋转验证码求解器
+# ===========================================================================
+class RotateCaptchaSolver:
+    """
+    旋转验证码求解器（调整图片/文字方向）。
+
+    适用于"拖动滑块让文字转正"类验证码，也支持量化到
+    0/90/180/270 度的"点击旋转按钮"类验证码。
+
+    原理（轻量，无模型）：
+      文字/含明显结构的内容在转正后，边缘方向会集中于水平/垂直。
+      对图像做 Canny 边缘检测 + Hough 直线检测，按线段长度加权统计
+      方向直方图，主方向偏离水平的角度即为需要转正的角度。
+
+    依赖：opencv-python + numpy（ddddocr 的传递依赖，通常已安装）。
+
+    局限：
+      边缘方向直方图依赖图像存在明显的直线/文字结构，适合文字旋转码。
+      对纯自然场景的"图片正立判断"（如把一只猫转正）效果有限，
+      此类语义旋转码建议走 CLIP 方向分类或付费打码平台。
+    """
+
+    def __init__(self, use_gpu: bool = False):
+        self.use_gpu = use_gpu
+
+    def solve(self, image_bytes: bytes, quantize: bool = False, **kwargs) -> CaptchaResult:
+        """
+        识别旋转验证码的转正角度。
+
+        :param image_bytes: 旋转验证码图片二进制
+        :param quantize:    True 时把结果量化到 0/90/180/270（点击旋转按钮类）
+                            False 时返回连续角度（拖动滑块类）
+        :return: CaptchaResult，answer 为需要顺时针旋转的角度（度）
+        """
+        try:
+            import math
+            import numpy as np
+            import cv2
+        except ImportError as e:
+            return CaptchaResult(
+                success=False,
+                captcha_type=CaptchaType.ROTATE,
+                error=f"旋转识别需要 opencv-python 与 numpy: {e}",
+            )
+
+        try:
+            img = cv2.imdecode(np.frombuffer(image_bytes, np.uint8), cv2.IMREAD_GRAYSCALE)
+            if img is None:
+                return CaptchaResult(
+                    success=False,
+                    captcha_type=CaptchaType.ROTATE,
+                    error="无法解码图片",
+                )
+
+            edges = cv2.Canny(img, 50, 150)
+            lines = cv2.HoughLinesP(
+                edges, 1, np.pi / 180, threshold=50,
+                minLineLength=30, maxLineGap=10,
+            )
+            if lines is None or len(lines) == 0:
+                return CaptchaResult(
+                    success=False,
+                    captcha_type=CaptchaType.ROTATE,
+                    error="未检测到有效边缘方向",
+                )
+
+            # 按线段长度加权的方向直方图（角度映射到 [0, 180)）
+            hist = np.zeros(180, dtype=np.float64)
+            for x1, y1, x2, y2 in lines.reshape(-1, 4):
+                dx, dy = x2 - x1, y2 - y1
+                length = math.hypot(dx, dy)
+                if length < 1:
+                    continue
+                angle = math.degrees(math.atan2(dy, dx)) % 180.0
+                hist[int(round(angle)) % 180] += length
+
+            # 平滑后取主方向
+            kernel = np.ones(5) / 5.0
+            smoothed = np.convolve(hist, kernel, mode="same")
+            main_angle = float(np.argmax(smoothed))
+
+            # 需要顺时针旋转的角度（把主方向转到水平）
+            clockwise = -main_angle if main_angle <= 90 else 180 - main_angle
+
+            if quantize:
+                clockwise = int(round(clockwise / 90.0)) * 90 % 360
+            else:
+                clockwise = round(clockwise, 1)
+
+            logger.info(
+                f"旋转验证码主方向: {main_angle:.1f}°, 顺时针转正: {clockwise}°"
+            )
+
+            return CaptchaResult(
+                success=True,
+                captcha_type=CaptchaType.ROTATE,
+                answer=clockwise,
+                details={
+                    "main_angle": round(main_angle, 1),
+                    "clockwise": clockwise,
+                    "quantized": bool(quantize),
+                    "algorithm": "edge_direction_histogram",
+                },
+            )
+
+        except Exception as e:
+            return CaptchaResult(
+                success=False,
+                captcha_type=CaptchaType.ROTATE,
+                error=f"旋转识别异常: {e}",
+            )
+
+
+# ===========================================================================
+# GeeTest v4 浏览器内自动化求解器
+# ===========================================================================
+class GeeTestBrowserSolver:
+    """
+    GeeTest v4 浏览器内自动化求解器（DrissionPage 驱动，无需第三方打码平台）。
+
+    复用真实浏览器 profile（user_data_dir）在真实 Chrome 中自动完成
+    GeeTest v4 滑块验证：截图识别缺口 + 拟人轨迹拖动。
+
+    工作流程:
+        1. 连接真实浏览器访问目标页面
+        2. 等待 GeeTest 验证面板出现
+        3. 截取背景图与滑块图（canvas）
+        4. SlideCaptchaSolver 识别缺口 + 生成人类轨迹
+        5. 按轨迹分步拖动滑块
+        6. 轮询验证结果，失败重试
+
+    注意:
+        GeeTest v4 的 DOM 结构随版本与站点变化，默认选择器集中定义在
+        SELECTORS 类属性中，可针对具体站点覆盖调整。
+
+    依赖:
+        pip install DrissionPage ddddocr
+    """
+
+    # GeeTest 常见 DOM 选择器（可按站点覆盖）
+    SELECTORS = {
+        "bg_canvas": "css:.geetest_canvas_bg canvas, canvas.geetest_canvas_bg",
+        "slice_canvas": "css:.geetest_canvas_slice canvas, canvas.geetest_canvas_slice",
+        "slider_button": "css:.geetest_slider_button",
+    }
+
+    def __init__(
+        self,
+        use_gpu: bool = False,
+        headless: bool = False,
+        user_data_dir: Optional[str] = None,
+        browser_path: Optional[str] = None,
+    ):
+        self.use_gpu = use_gpu
+        self.headless = headless
+        self.user_data_dir = user_data_dir
+        self.browser_path = browser_path
+        self._slide_solver = None
+
+    @property
+    def slide(self):
+        if self._slide_solver is None:
+            from .captcha import SlideCaptchaSolver
+            self._slide_solver = SlideCaptchaSolver(use_gpu=self.use_gpu)
+        return self._slide_solver
+
+    @staticmethod
+    def scale_distance(canvas_distance, canvas_width, track_width):
+        """
+        把 canvas 缺口距离换算成实际拖动距离。
+
+        GeeTest 背景 canvas 宽度与滑块可拖动轨道宽度通常不一致，
+        需按比例换算。纯函数，便于单测。
+
+        :param canvas_distance: 识别出的缺口距离（canvas 像素）
+        :param canvas_width:    背景 canvas 实际渲染宽度
+        :param track_width:     滑块可拖动的轨道宽度
+        :return: 实际需要拖动的像素距离
+        """
+        if not canvas_distance or not canvas_width or not track_width or track_width <= 0:
+            return canvas_distance
+        return round(canvas_distance * track_width / canvas_width, 2)
+
+    def solve_slide(
+        self,
+        page_url: str,
+        max_retries: int = 3,
+        verify_wait_ms: int = 1500,
+    ) -> CaptchaResult:
+        """
+        在浏览器中自动完成 GeeTest v4 滑块验证。
+
+        :param page_url:       目标页面 URL
+        :param max_retries:    最大重试次数
+        :param verify_wait_ms: 拖动后等待验证结果的时长（毫秒）
+        :return: CaptchaResult，成功时 details 含 attempts / gap_distance / drag_distance
+        """
+        try:
+            from DrissionPage import ChromiumPage, ChromiumOptions
+        except ImportError:
+            return CaptchaResult(
+                success=False,
+                captcha_type=CaptchaType.GEETEST_V4,
+                error="DrissionPage 未安装 (pip install DrissionPage)",
+            )
+
+        page = None
+        try:
+            options = ChromiumOptions()
+            if self.browser_path:
+                options.set_browser_path(self.browser_path)
+            if self.user_data_dir:
+                options.set_user_data_path(self.user_data_dir)
+            options.headless(self.headless)
+            options.set_argument("--disable-blink-features=AutomationControlled")
+            page = ChromiumPage(options)
+            page.get(page_url)
+
+            for attempt in range(max_retries):
+                bg, slider, button = self._capture_slide(page)
+                if bg is None or slider is None or button is None:
+                    return CaptchaResult(
+                        success=False,
+                        captcha_type=CaptchaType.GEETEST_V4,
+                        error="未定位到 GeeTest 滑块元素（DOM 可能已变化，请覆盖 SELECTORS）",
+                    )
+
+                result = self.slide.solve(bg, slider, algorithm="match")
+                if not result.success:
+                    return CaptchaResult(
+                        success=False,
+                        captcha_type=CaptchaType.GEETEST_V4,
+                        error=f"缺口识别失败: {result.error}",
+                    )
+
+                gap = int(result.answer)
+                track = result.details.get("track") or self.slide._generate_track(gap)
+
+                canvas_width = self._canvas_width(page, self.SELECTORS["bg_canvas"])
+                track_width = self._track_width(page, self.SELECTORS["slider_button"])
+                drag_distance = self.scale_distance(gap, canvas_width, track_width)
+                track = self._rescale_track(track, gap, drag_distance)
+
+                logger.info(
+                    f"GeeTest 滑块第 {attempt + 1} 次: 缺口 {gap}px, "
+                    f"实际拖动 {drag_distance}px"
+                )
+                self._drag_slider(page, button, track)
+
+                if self._passed(page, verify_wait_ms):
+                    return CaptchaResult(
+                        success=True,
+                        captcha_type=CaptchaType.GEETEST_V4,
+                        answer={"gap_distance": gap, "drag_distance": drag_distance},
+                        details={"attempts": attempt + 1},
+                    )
+
+            return CaptchaResult(
+                success=False,
+                captcha_type=CaptchaType.GEETEST_V4,
+                error=f"超过最大重试次数 {max_retries}",
+            )
+
+        except Exception as e:
+            return CaptchaResult(
+                success=False,
+                captcha_type=CaptchaType.GEETEST_V4,
+                error=f"GeeTest 浏览器求解异常: {e}",
+            )
+        finally:
+            if page is not None:
+                try:
+                    page.quit()
+                except Exception:
+                    pass
+
+    def _capture_slide(self, page):
+        """截取背景图与滑块图，返回 (bg_bytes, slider_bytes, button_ele)"""
+        bg = self._canvas_bytes(page, self.SELECTORS["bg_canvas"])
+        slider = self._canvas_bytes(page, self.SELECTORS["slice_canvas"])
+        button = page.ele(self.SELECTORS["slider_button"], timeout=3)
+        return bg, slider, button
+
+    def _canvas_bytes(self, page, selector):
+        """从 canvas 元素提取 PNG bytes（通过 toDataURL）"""
+        js = (
+            "(() => {"
+            "  const el = document.querySelector(%s);"
+            "  return el && el.toDataURL ? el.toDataURL('image/png') : '';"
+            "})()"
+        ) % json.dumps(selector.split("css:", 1)[-1].split(",", 1)[0].strip())
+        data = page.run_js(js, timeout=3)
+        if not data or "," not in data:
+            return None
+        return base64.b64decode(data.split(",", 1)[1])
+
+    def _canvas_width(self, page, selector):
+        js = (
+            "(() => { const el = document.querySelector(%s);"
+            " return el ? el.width : 0; })()"
+        ) % json.dumps(selector.split("css:", 1)[-1].split(",", 1)[0].strip())
+        return int(page.run_js(js, timeout=3) or 0)
+
+    def _track_width(self, page, selector):
+        js = (
+            "(() => { const el = document.querySelector(%s);"
+            " const p = el && el.parentElement;"
+            " return p ? p.clientWidth : 0; })()"
+        ) % json.dumps(selector.split("css:", 1)[-1].split(",", 1)[0].strip())
+        return int(page.run_js(js, timeout=3) or 0)
+
+    @staticmethod
+    def _rescale_track(track, from_distance, to_distance):
+        """把轨迹按比例缩放到实际拖动距离（保持总位移 ≈ to_distance）"""
+        if not track or from_distance <= 0 or to_distance == from_distance:
+            return track
+        ratio = to_distance / from_distance
+        scaled = []
+        for step in track:
+            scaled.append({
+                "x": step["x"] * ratio,
+                "y": step["y"],
+                "time_ms": step.get("time_ms", 20),
+            })
+        return scaled
+
+    def _drag_slider(self, page, button, track):
+        """按轨迹分步拖动滑块（CDP 级鼠标事件，isTrusted=true）"""
+        try:
+            ac = page.actions
+            ac.move_to(button)
+            ac.hold()
+            for step in track:
+                ac.move(step["x"], step["y"], duration=max(0.01, step.get("time_ms", 20) / 1000))
+            ac.release()
+        except Exception:
+            # 兜底：JS 派发鼠标事件序列（isTrusted=false，风控可能识别）
+            self._drag_slider_js(page, button, track)
+
+    def _drag_slider_js(self, page, button, track):
+        js = (
+            "(() => {"
+            "  const el = arguments[0];"
+            "  const r = el.getBoundingClientRect();"
+            "  let x = r.x + r.width / 2, y = r.y + r.height / 2;"
+            "  const fire = (t, cx, cy) => el.dispatchEvent(new PointerEvent(t, {"
+            "    bubbles: true, cancelable: true, clientX: cx, clientY: cy, pointerType: 'mouse'}));"
+            "  fire('pointerdown', x, y); fire('mousedown', x, y);"
+            "  for (const s of %s) { x += s.x; y += s.y;"
+            "    fire('pointermove', x, y); fire('mousemove', x, y);"
+            "    const end = Date.now() + (s.time_ms || 20); while (Date.now() < end) {}"
+            "  }"
+            "  fire('pointerup', x, y); fire('mouseup', x, y); return true;"
+            "})()"
+        ) % json.dumps(track)
+        page.run_js(js, timeout=10)
+
+    def _passed(self, page, wait_ms: int) -> bool:
+        """拖动后判断验证是否通过（面板消失或出现成功状态）"""
+        import time as _time
+        _time.sleep(max(0.3, wait_ms / 1000))
+        js = (
+            "(() => {"
+            "  const panel = document.querySelector('.geetest_panel_box, .geetest_captcha,"
+            "    .geetest_panel, .geetest_popup');"
+            "  if (!panel) return true;"
+            "  const cls = panel.className || '';"
+            "  return /success|\\u6210\\u529f|\\u901a\\u8fc7/i.test(cls);"
+            "})()"
+        )
+        return bool(page.run_js(js, timeout=3))
+

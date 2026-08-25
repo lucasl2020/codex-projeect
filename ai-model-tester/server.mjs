@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { getRelayClientProfile } from './public/client-profiles.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -155,15 +156,21 @@ function applyProviderOverrides(provider, body = {}) {
 }
 
 function normalizeCustomProvider(input) {
+  const clientProfile = getRelayClientProfile(input.clientProfile);
   const provider = {
     id: '__relay__',
     label: String(input.label || '临时中转站').slice(0, 80),
     type: input.type || 'openai-compatible',
     baseUrl: cleanBaseUrl(input.baseUrl),
     apiKey: typeof input.apiKey === 'string' ? input.apiKey.trim() : '',
-    headers: resolveHeaders(input.headers || {}),
-    modelsPath: cleanPath(input.modelsPath || ''),
-    chatPath: cleanPath(input.chatPath || ''),
+    clientProfile: clientProfile.id,
+    requestStyle: clientProfile.requestStyle,
+    headers: {
+      ...clientProfile.headers,
+      ...resolveHeaders(input.headers || {}),
+    },
+    modelsPath: cleanPath(input.modelsPath || clientProfile.modelsPath || ''),
+    chatPath: cleanPath(input.chatPath || clientProfile.chatPath),
   };
   ensureProviderReady(provider);
   return provider;
@@ -334,6 +341,23 @@ function buildChatRequest(provider, input) {
     };
   }
 
+  if (provider.requestStyle === 'responses') {
+    return {
+      url: urlJoin(provider.baseUrl, provider.chatPath || '/responses'),
+      options: {
+        method: 'POST',
+        headers: baseHeaders(provider),
+        body: JSON.stringify({
+          model,
+          input: prompt,
+          temperature,
+          max_output_tokens: maxTokens,
+          stream: false,
+        }),
+      },
+    };
+  }
+
   return {
     url: urlJoin(provider.baseUrl, provider.chatPath || '/v1/chat/completions'),
     options: {
@@ -399,6 +423,14 @@ function extractAnswer(provider, payload) {
   }
   if (provider.type === 'ollama') {
     return payload?.response || payload?.message?.content || '';
+  }
+  if (provider.requestStyle === 'responses') {
+    if (typeof payload?.output_text === 'string') return payload.output_text;
+    return payload?.output
+      ?.flatMap((item) => item?.content || [])
+      ?.map((part) => part?.text || '')
+      ?.join('')
+      ?.trim() || '';
   }
   return payload?.choices?.[0]?.message?.content || payload?.choices?.[0]?.text || '';
 }

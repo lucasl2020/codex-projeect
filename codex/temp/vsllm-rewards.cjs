@@ -312,6 +312,15 @@ async function loginWithBrowser() {
     executablePath: findChrome(),
     headless: false,
     viewport: { width: 1440, height: 1000 },
+    // Reduce automated-browser fingerprints so Google Login does not flag
+    // this Chrome as an unsafe/untrusted browser.
+    ignoreDefaultArgs: ['--enable-automation'],
+    args: [
+      '--disable-blink-features=AutomationControlled',
+      '--no-first-run',
+      '--no-default-browser-check',
+      '--disable-infobars',
+    ],
   });
   const page = context.pages()[0] || await context.newPage();
   page.setDefaultTimeout(30000);

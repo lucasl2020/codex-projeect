@@ -21,6 +21,10 @@ export function isIncompleteApiResult(result) {
   return itemCount < Math.ceil(sourceTotal / 2);
 }
 
+export function shouldReplaceProducts(result, products) {
+  return !isIncompleteApiResult({ ...result, products });
+}
+
 /**
  * Crawl a single site row using a shared browser pool.
  * @param {object} site
@@ -88,7 +92,7 @@ export async function crawlSite(site, opts = {}) {
     }
 
     const products = (result.products || []).filter((p) => p && p.name);
-    const incompleteApi = isIncompleteApiResult({ ...result, products });
+    const replaceSnapshot = shouldReplaceProducts(result, products);
     const patch = {
       last_crawl_at: new Date().toISOString(),
       last_error: null,
@@ -103,14 +107,17 @@ export async function crawlSite(site, opts = {}) {
       patch.type = result.suggestedType;
     }
 
-    if (products.length > 0 && !incompleteApi) {
+    if (replaceSnapshot) {
       replaceProducts(site.id, products);
+    }
+
+    if (products.length > 0 && replaceSnapshot) {
       if (site.type === 'unknown' || site.type === 'nav') {
         patch.type = 'shop';
       }
       patch.last_status = 'ok';
       finishCrawlRun(run.id, { status: 'ok', items_found: products.length });
-    } else if (incompleteApi) {
+    } else if (!replaceSnapshot) {
       patch.last_status = 'partial';
       patch.last_error = `incomplete API result: ${products.length}/${result.sourceTotal}`;
       finishCrawlRun(run.id, {
@@ -119,7 +126,6 @@ export async function crawlSite(site, opts = {}) {
         error: patch.last_error,
       });
     } else {
-      // do not wipe products on empty extract
       const status = site.type === 'nav' || result.suggestedType === 'nav' ? 'ok' : 'partial';
       if (result.suggestedType === 'nav' && site.type === 'unknown') {
         patch.type = 'nav';
@@ -137,7 +143,7 @@ export async function crawlSite(site, opts = {}) {
     return {
       ok: true,
       siteId: site.id,
-      items: incompleteApi ? 0 : products.length,
+      items: replaceSnapshot ? products.length : 0,
       type: getSite(site.id)?.type,
       adapter: result.adapter,
       currentUrl: result.currentUrl || site.url,

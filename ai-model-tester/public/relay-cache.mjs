@@ -4,8 +4,49 @@ function identifierKey(value) {
   return String(value || '').trim().toLocaleLowerCase('zh-CN');
 }
 
+const PINYIN_BOUNDARIES = '阿八嚓哒妸发旮哈讥咔垃妈拿哦啪期然撒塌挖昔压匝';
+const PINYIN_INITIALS = 'ABCDEFGHJKLMNOPQRSTWXYZ';
+
+function pinyinInitials(value) {
+  return [...String(value || '')]
+    .map((char) => {
+      if (/^[a-z0-9]$/i.test(char)) return char.toLowerCase();
+      for (let index = PINYIN_BOUNDARIES.length - 1; index >= 0; index -= 1) {
+        if (char.localeCompare(PINYIN_BOUNDARIES[index], 'zh-CN') >= 0) {
+          return PINYIN_INITIALS[index] || '';
+        }
+      }
+      return '';
+    })
+    .join('');
+}
+
+function compact(value) {
+  return String(value || '').toLocaleLowerCase('zh-CN').replace(/[\s\-_./:]+/g, '');
+}
+
+function fuzzyIncludes(query, target) {
+  const needle = compact(query);
+  const haystack = compact(target);
+  if (!needle) return true;
+  if (haystack.includes(needle)) return true;
+  let cursor = 0;
+  for (const char of needle) {
+    cursor = haystack.indexOf(char, cursor);
+    if (cursor < 0) return false;
+    cursor += 1;
+  }
+  return true;
+}
+
 export function sameRelayIdentifier(left, right) {
   return identifierKey(left) === identifierKey(right);
+}
+
+export function matchesRelayCache(entry, query) {
+  if (!query) return true;
+  const identifier = String(entry?.identifier || '');
+  return fuzzyIncludes(query, identifier) || fuzzyIncludes(query, pinyinInitials(identifier));
 }
 
 function normalizeEntry(entry) {
@@ -18,6 +59,9 @@ function normalizeEntry(entry) {
     identifier,
     baseUrl,
     apiKey,
+    clientProfile: String(entry.clientProfile || 'openai'),
+    modelsPath: String(entry.modelsPath || '').trim(),
+    chatPath: String(entry.chatPath || '').trim(),
     updatedAt: Number.isFinite(Number(entry.updatedAt)) ? Number(entry.updatedAt) : 0,
   };
 }

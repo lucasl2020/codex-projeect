@@ -22,6 +22,66 @@ const URLS = {
 };
 let nextAnyRouterRetryAt = 0;
 
+// 任务配置（task-config.json 存 { "defaults": ["ikuuu", ...] }）。
+const TASK_ORDER = [
+  { task: 'anyrouter', label: 'anyrouter' },
+  { task: 'ikuuu', label: 'iKuuu' },
+  { task: 'chy', label: 'CHY' },
+  { task: 'nodeseek', label: 'NodeSeek' },
+  { task: 'deepflood', label: 'DeepFlood' },
+  { task: 'nodebuf', label: 'NodeBuf' },
+  { task: 'allapihub', label: 'All API Hub' },
+];
+const TASK_CONFIG_FILE = process.env.TASK_CONFIG_FILE || path.join(ROOT, 'task-config.json');
+
+function taskNames() { return TASK_ORDER.map(item => item.task); }
+function readTaskConfig() {
+  try {
+    const data = JSON.parse(fs.readFileSync(TASK_CONFIG_FILE, 'utf8'));
+    return Array.isArray(data && data.defaults) ? data.defaults : [];
+  } catch { return []; }
+}
+function writeTaskConfig(defaults) {
+  fs.writeFileSync(TASK_CONFIG_FILE, JSON.stringify({ defaults }, null, 2), 'utf8');
+}
+function parseTaskTokens(input) {
+  const tokens = String(input || '').split(/[,，\s]+/).map(token => token.trim()).filter(Boolean);
+  const names = taskNames();
+  const indexToName = new Map(TASK_ORDER.map((item, index) => [String(index + 1), item.task]));
+  const result = [];
+  for (const token of tokens) {
+    const name = names.includes(token) ? token : indexToName.get(token);
+    if (name && !result.includes(name)) result.push(name);
+  }
+  return result;
+}
+function defaultEnabledTasks() {
+  const saved = readTaskConfig().filter(name => taskNames().includes(name));
+  return saved.length ? saved : taskNames().slice();
+}
+function listTasks() {
+  const defaults = defaultEnabledTasks();
+  console.log('可执行任务列表：');
+  TASK_ORDER.forEach((item, index) => {
+    const marker = defaults.includes(item.task) ? ' [默认开启]' : '';
+    console.log(`${index + 1}. ${item.label} (${item.task})${marker}`);
+  });
+  console.log('\n示例：--tasks 1,2,3  或  --tasks ikuuu,nodebuf');
+}
+function setDefaultTasks(input) {
+  const tasks = parseTaskTokens(input);
+  if (tasks.length === 0) {
+    console.log('未识别到有效任务，已忽略。可用任务：' + taskNames().join(', '));
+    return;
+  }
+  writeTaskConfig(tasks);
+  console.log('已保存默认任务：' + TASK_ORDER.map(item => `${item.task}:${tasks.includes(item.task) ? '开' : '关'}`).join('；'));
+}
+function clearDefaultTasks() {
+  writeTaskConfig(taskNames().slice());
+  console.log('已恢复全部任务为默认。');
+}
+
 function findChrome() {
   const candidates = [
     process.env.CHROME_PATH,
@@ -47,11 +107,22 @@ function parseJson(text) {
 function readState() {
   try { return JSON.parse(fs.readFileSync(STATE_FILE, 'utf8')); } catch { return { tasks: {} }; }
 }
-function markDone(task) {
+function markDone(task, quota) {
   const state = readState();
   state.tasks ||= {};
   state.tasks[task] = today();
+  if (quota) {
+    state.quotas ||= {};
+    state.quotas[task] = quota;
+  }
   fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2), 'utf8');
+}
+function lastQuota(task) {
+  return readState().quotas?.[task] || '';
+}
+function skippedMessage(task) {
+  const quota = lastQuota(task);
+  return quota ? '今日已完成，跳过；' + quota : '今日已完成，跳过';
 }
 function isDone(task) {
   return readState().tasks?.[task] === today();
@@ -86,6 +157,16 @@ async function runLocalCfBypass(url, {
   spawnImpl = spawn,
   fsApi = fs,
 } = {}) {
+  // 优先走本地 HTTP API 服务（cf-captcha-server），失败回退 spawn Python helper
+  let cfSolver = null;
+  try { cfSolver = require('./cf-solver'); } catch { cfSolver = null; }
+  if (cfSolver && await cfSolver.health(2000)) {
+    const api = await cfSolver.bypass(url, {
+      headless,
+      timeout: Math.max(10, Math.floor(timeoutMs / 1000)),
+    });
+    if (api && api.success) return api;
+  }
   if (!helperPath || !fsApi.existsSync(helperPath)) {
     return { success: false, error: 'local cf_bypass helper not found' };
   }
@@ -121,17 +202,28 @@ async function runLocalCfBypass(url, {
 }
 async function applyCfBypassCookies(context, targetUrl, bypass) {
   if (!bypass?.success || !bypass.cookies || typeof context?.addCookies !== 'function') return false;
-  const origin = new URL(targetUrl).origin;
+  const host = new URL(targetUrl).hostname;
+  const domain = '.' + host;
+  const cfNames = /^(cf_clearance|__cf_bm|cf_chl_[a-z0-9_]*|__cf_chl_[a-z0-9_]*)$/i;
   const cookies = Object.entries(bypass.cookies)
-    .filter(([name, value]) => name && value != null && String(value).length)
-    .map(([name, value]) => ({
-      name,
-      value: String(value),
-      url: origin,
-    }));
+    .filter(([name, value]) => cfNames.test(name) && value != null && String(value).length)
+    .map(([name, value]) => ({ name, value: String(value), domain, path: '/' }));
   if (!cookies.length) return false;
+  if (typeof context.clearCookies === 'function') {
+    await context.clearCookies({ domain: host });
+    await context.clearCookies({ domain });
+  }
   await context.addCookies(cookies);
   return true;
+}
+async function findChyClaimButton(page) {
+  return page.locator('a[href="/claim"], a[href$="/claim"], button[data-action="claim"], [data-claim]').first();
+}
+async function isChyLoggedOutPage(page) {
+  const body = await page.locator('body').innerText().catch(() => '');
+  if (/登录即可获取|使用 LinuxDO 登录|请先登录/.test(body)) return true;
+  const loginLink = await page.locator('a[href="/login"], a[href$="/login"]').first().count().catch(() => 0);
+  return loginLink > 0;
 }
 async function ensureCloudflareCleared(page, {
   url,
@@ -207,7 +299,7 @@ function anyRouterAlreadyDone(data) {
   return /\u5df2\u7b7e\u5230|\u4eca\u65e5\u5df2|already.*(sign|check)/i.test(messageOf(data));
 }
 function ikuuuSuccess(data) {
-  return data?.ret === 1 || /\u5df2\u7b7e\u5230|\u7b7e\u5230\u6210\u529f|already/i.test(messageOf(data));
+  return data?.ret === 1 || /\u5df2(?:\u7ecf)?\u7b7e\u5230|\u7b7e\u5230\u8fc7|\u7b7e\u5230\u6210\u529f|already/i.test(messageOf(data));
 }
 function attendanceAlreadyDone(data, text = '') {
   const message = messageOf(data) || String(text).trim();
@@ -252,7 +344,7 @@ function extractQuota(value) {
   return walk(value, 0);
 }
 function extractAttendanceQuota(value) {
-  const wanted = ['current', 'quota', 'balance', 'credits', 'credit', 'points'];
+  const wanted = ['quota', 'balance', 'credits', 'credit'];
   const seen = new Set();
   function numberOf(item) {
     if (typeof item === 'number') return Number.isFinite(item) ? item : undefined;
@@ -281,7 +373,7 @@ function extractAttendanceQuota(value) {
 }
 function extractAttendanceQuotaFromText(value) {
   const text = String(value || '').replace(/,/g, '').replace(/\s+/g, ' ');
-  const labelled = /(?:\u5f53\u524d|\u6211\u7684|\u5269\u4f59|\u603b\u8ba1|\u4f59\u989d)?\s*(?:\u9e21\u817f|\u79ef\u5206|quota|balance|credits?|points?)\s*(?:\u4f59\u989d|\u6570|\u603b\u6570)?\s*[:\uff1a]?\s*(-?\d+(?:\.\d+)?)/i.exec(text);
+  const labelled = /(?:\u5f53\u524d|\u6211\u7684|\u5269\u4f59|\u603b\u8ba1|\u4f59\u989d)?\s*(?:\u9e21\u817f|\u79ef\u5206|quota|balance|credits?|points?)\s*(?:\u4f59\u989d|\u6570|\u603b\u6570)?\s*[:\uff1a\s]+(-?\d+(?:\.\d+)?)/i.exec(text);
   if (labelled) return Number(labelled[1]);
   const reverse = /(-?\d+(?:\.\d+)?)\s*(?:\u4e2a)?\s*(?:\u9e21\u817f|\u79ef\u5206|quota|balance|credits?|points?)/gi;
   for (const match of text.matchAll(reverse)) {
@@ -296,7 +388,7 @@ function formatAttendanceQuota(value) {
 }
 function attendanceQuotaSummary(before, after) {
   if (!Number.isFinite(before) && !Number.isFinite(after)) return '';
-  if (Number.isFinite(before) && Number.isFinite(after)) {
+  if (Number.isFinite(before) && Number.isFinite(after) && before !== after) {
     return '\u7b7e\u5230\u524d\u989d\u5ea6\uff1a' + before +
       '\uff1b\u7b7e\u5230\u540e\u989d\u5ea6\uff1a' + after +
       '\uff1b\u989d\u5ea6\u53d8\u5316\uff1a' + (after - before);
@@ -358,6 +450,26 @@ function extractNodeBufAccountPoints(data) {
 async function readPageTrafficQuota(page) {
   const body = await page.locator('body').innerText().catch(() => '');
   return extractTrafficQuotaFromText(body);
+}
+// 从签到接口响应里直接抽取额度（MB），作为页面额度读取失败时的回退。
+function extractApiQuota(data) {
+  if (!data || typeof data !== 'object') return undefined;
+  const msg = String(data.msg || data.message || '');
+  const match = msg.match(/(\d+(?:\.\d+)?)\s*(TB|GB|MB|KB|T|G|M|K)/i);
+  if (match) {
+    const amount = parseFloat(match[1]);
+    const unit = match[2].toUpperCase();
+    if (unit === 'TB' || unit === 'T') return amount * 1024 * 1024;
+    if (unit === 'GB' || unit === 'G') return amount * 1024;
+    if (unit === 'KB' || unit === 'K') return amount / 1024;
+    return amount;
+  }
+  if (data.quota !== undefined) return Number(data.quota);
+  if (data.data && typeof data.data === 'object') {
+    if (data.data.quota !== undefined) return Number(data.data.quota);
+    if (data.data.balance !== undefined) return Number(data.data.balance);
+  }
+  return undefined;
 }
 async function responseJson(response) {
   return response ? parseJson(await response.text().catch(() => '')) : null;
@@ -430,15 +542,21 @@ async function runIkuuu(context) {
     await page.goto(URLS.ikuuu, { waitUntil: 'domcontentloaded', timeout: 60000 });
     if (isLoginUrl(page.url())) throw new Error('Not logged in; run the setup command first.');
     const beforeQuota = await readPageTrafficQuota(page);
-    const finish = async (message) => {
+    const finish = async (message, directQuota) => {
       let afterQuota;
       if (typeof page.reload === 'function') {
         await page.reload({ waitUntil: 'domcontentloaded', timeout: 60000 }).catch(() => {});
       }
-      afterQuota = await readPageTrafficQuota(page);
-      const quota = trafficQuotaSummary(beforeQuota, afterQuota);
+      afterQuota = await readPageTrafficQuota(page).catch(() => undefined);
+      const apiQuota = directQuota !== undefined ? directQuota : extractApiQuota(data);
+      let quota;
+      if (beforeQuota !== undefined || afterQuota !== undefined) {
+        quota = trafficQuotaSummary(beforeQuota, afterQuota);
+      } else if (apiQuota !== undefined) {
+        quota = '当前额度：' + formatTrafficQuota(apiQuota);
+      }
       if (quota) log('ikuuu', quota);
-      return { ok: true, message: message + (quota ? '\uff1b' + quota : '') };
+      return { ok: true, message: message + (quota ? '\uff1b' + quota : ''), quota: quota || '' };
     };
     const result = await page.evaluate(async () => {
       const response = await fetch('/user/checkin', {
@@ -452,6 +570,9 @@ async function runIkuuu(context) {
       return { status: response.status, text: await response.text() };
     });
     const data = parseJson(result.text);
+    if (!data && /^\s*(<(!doctype|html)|<\?xml)/i.test(result.text)) {
+      throw new Error('ikuuu 登录已失效（checkin 返回登录页），请运行「重新登录全部网站.cmd」后重试。');
+    }
     log('ikuuu', `POST /user/checkin HTTP ${result.status}${messageOf(data) ? `; ${messageOf(data)}` : ''}`);
     if (ikuuuSuccess(data)) return finish(messageOf(data) || '\u7b7e\u5230\u6210\u529f');
 
@@ -543,7 +664,7 @@ async function runNodeBuf(context) {
     if (nodeBufCheckInSuccess(dashboardResult.status, dashboard)) {
       log('nodebuf', 'GET /api/account/points\uff1a\u4eca\u65e5\u5df2\u7b7e\u5230');
       const quota = attendanceQuotaSummary(beforeQuota, beforeQuota);
-      return { ok: true, message: '\u4eca\u65e5\u5df2\u7b7e\u5230' + (quota ? '\uff1b' + quota : '') };
+      return { ok: true, message: '\u4eca\u65e5\u5df2\u7b7e\u5230' + (quota ? '\uff1b' + quota : ''), quota: quota || '' };
     }
     if (dashboardResult.status < 200 || dashboardResult.status >= 300 || !dashboard?.summary) {
       throw new Error(`NodeBuf \u79ef\u5206\u4fe1\u606f\u63a5\u53e3\u5f02\u5e38\uff08HTTP ${dashboardResult.status}\uff09\u3002`);
@@ -581,6 +702,7 @@ async function runNodeBuf(context) {
       message: (reward?.granted
         ? `\u7b7e\u5230\u6210\u529f\uff1b\u83b7\u5f97 ${reward.points} \u79ef\u5206`
         : '\u7b7e\u5230\u6210\u529f') + (quota ? '\uff1b' + quota : ''),
+      quota: quota || '',
     };
   } finally {
     await page.close();
@@ -625,7 +747,7 @@ async function runChy(context) {
       }
       const quota = trafficQuotaSummary(beforeQuota, afterQuota);
       if (quota) log('chy', quota);
-      return { ok: true, message: message + (quota ? '\uff1b' + quota : '') };
+      return { ok: true, message: message + (quota ? '\uff1b' + quota : ''), quota: quota || '' };
     };
 
     const claimText = /\u9886\u53d6\u4eca\u65e5\s*5\s*GB|\u9886\u53d6\u4eca\u65e5.*5\s*GB|\u9886\u53d6.*5\s*GB|\u4eca\u65e5\u9886\u53d6|\u9886\u53d6\u6d41\u91cf|Claim\s*5\s*GB/i;
@@ -672,8 +794,8 @@ async function runChy(context) {
 }
 
 async function readAttendanceQuota(page) {
-  const body = await page.locator('body').innerText().catch(() => '');
-  return extractAttendanceQuotaFromText(body);
+  const text = await page.evaluate(() => document.body.innerText, 'quota').catch(() => '');
+  return extractAttendanceQuotaFromText(text);
 }
 function attendanceRequestPlans() {
   const accept = 'application/json, text/plain, */*';
@@ -721,7 +843,158 @@ async function findAttendanceButton(page) {
   }
   return null;
 }
+// --- DrissionPage 集成：用真实 Chrome + 持久 profile 绕过 Cloudflare ---
+function parseDrissionAttendanceJson(text) {
+  const data = parseJson(String(text || '').trim());
+  if (!data || typeof data !== 'object') return { ok: false, error: 'invalid drission json' };
+  return {
+    ok: data.ok === true,
+    already: data.already === true,
+    dryRun: data.dry_run === true,
+    message: data.message || '',
+    beforeQuota: Number.isFinite(data.before_quota) ? data.before_quota : undefined,
+    afterQuota: Number.isFinite(data.after_quota) ? data.after_quota : undefined,
+    error: data.error || '',
+  };
+}
+function defaultDrissionHelperPath() {
+  return process.env.DRISSION_HELPER || path.join(ROOT, 'drission-attendance-json.py');
+}
+let _drissionPython = null;
+function resolveDrissionPython() {
+  if (_drissionPython) return _drissionPython;
+  const { spawnSync } = require('node:child_process');
+  const candidates = [
+    process.env.PYTHON_PATH,
+    'python',
+    'D:////devloop-tools////python////python.exe',
+    'C:////Python314////python.exe',
+    'C:////Python313////python.exe',
+  ].filter(Boolean);
+  for (const cand of candidates) {
+    try {
+      const r = spawnSync(cand, ['-c', 'import DrissionPage'], { windowsHide: true, timeout: 8000 });
+      if (r.status === 0) { _drissionPython = cand; return cand; }
+    } catch {}
+  }
+  _drissionPython = process.env.PYTHON_PATH || 'python';
+  return _drissionPython;
+}
+
+async function runLocalDrissionAttendance(site, {
+  helperPath = defaultDrissionHelperPath(),
+  pythonPath = process.env.PYTHON_PATH || 'python',
+  timeoutMs = 180000,
+  spawnImpl = spawn,
+  fsApi = fs,
+} = {}) {
+  if (!helperPath || !fsApi.existsSync(helperPath)) {
+    return { ok: false, error: 'drission helper not found: ' + helperPath };
+  }
+  const args = [helperPath, site.url, '--quota-url', site.origin, '--user-data-dir', site.profileDir];
+  const child = spawnImpl(pythonPath, args, { windowsHide: false });
+  let stdout = '';
+  let stderr = '';
+  child.stdout?.on('data', chunk => { stdout += String(chunk); });
+  child.stderr?.on('data', chunk => { stderr += String(chunk); });
+  const code = await new Promise((resolve, reject) => {
+    const timer = setTimeout(() => { try { child.kill('SIGKILL'); } catch {} resolve('timeout'); }, timeoutMs);
+    child.on('close', c => { clearTimeout(timer); resolve(c); });
+    child.on('error', err => { clearTimeout(timer); reject(err); });
+  });
+  const result = parseDrissionAttendanceJson(stdout);
+  if (!result.ok && /No module named DrissionPage|ModuleNotFoundError/i.test(stderr) && pythonPath !== resolveDrissionPython()) {
+    log('drission', `默认 python 缺 DrissionPage，回退到 ${resolveDrissionPython()}`);
+    return runLocalDrissionAttendance(site, { helperPath, pythonPath: resolveDrissionPython(), timeoutMs, spawnImpl, fsApi });
+  }
+  if (!result.ok && stderr) log('drission', `helper stderr: ${stderr.slice(0, 300)}`);
+  return result;
+}
+function cloudflareOriginErrorCode(title, body) {
+  const visible = `${title || ''}\n${body || ''}`;
+  const m = /\b(520|521|522|523|524|525|526|530)\b/.exec(visible);
+  if (!m) return undefined;
+  if (/connection timed out|web server is down|host error|origin.*(?:error|unreachable|timed out)|bad gateway|gateway time-?out|源站.*(?:错误|超时|不可达)/i.test(visible)) {
+    return m[1];
+  }
+  return undefined;
+}
+function isCloudflareChallengePage(title, h1, body) {
+  if (cloudflareOriginErrorCode(title, `${h1 || ''}\n${body || ''}`)) return false;
+  const head = `${title || ''}\n${h1 || ''}`;
+  if (/just a moment|checking your browser|cf-browser-verification|正在进行安全验证|请稍候|turnstile/i.test(head)) return true;
+  if (/cf_chl_|__cf_chl|cf-browser-verification/i.test(body || '')) return true;
+  return false;
+}
+function extractNodeBufProfilePointsFromText(text) {
+  const m = String(text || '').match(/积分\s*(\d+(?:\.\d+)?)/);
+  return m ? Number(m[1]) : undefined;
+}
+function extractAnyRouterBalanceFromText(text) {
+  const m = String(text || '').match(/\$(\d+(?:\.\d+)?)/);
+  return m ? Number(m[1]) : undefined;
+}
+async function runCfApiAttendance(context, site) {
+  // 全自动路径：用 curl_cffi 绕过 Cloudflare，直接调签到接口，不开浏览器、无需人工。
+  const helperPath = process.env.CF_ATTENDANCE_HELPER || path.join(ROOT, 'cf-attendance-json.py');
+  if (!fs.existsSync(helperPath)) return { ok: false, message: 'cf-attendance helper not found' };
+  const cookies = await context.cookies(site.origin).catch(() => []);
+  const args = [helperPath, site.url, '--origin', site.origin, '--cookies', JSON.stringify(cookies), '--timeout', '60'];
+  const child = spawn(resolveDrissionPython(), args, { windowsHide: false });
+  let stdout = '';
+  let stderr = '';
+  child.stdout?.on('data', c => { stdout += String(c); });
+  child.stderr?.on('data', c => { stderr += String(c); });
+  await new Promise(resolve => {
+    const timer = setTimeout(() => { try { child.kill('SIGKILL'); } catch {} resolve(); }, 90000);
+    child.on('close', () => { clearTimeout(timer); resolve(); });
+    child.on('error', () => { clearTimeout(timer); resolve(); });
+  });
+  const r = parseJson(stdout.trim()) || { ok: false, error: 'invalid cf-attendance output' };
+  log(site.task, `cf-attendance: ${r.ok ? 'ok' : 'fail'} ${r.message || r.error || (stderr ? stderr.slice(0,120) : '')}`);
+  if (r.ok) {
+    const quota = attendanceQuotaSummary(r.before_quota, r.after_quota);
+    return { ok: true, message: (r.message || '接口签到成功') + (quota ? '；' + quota : ''), quota: quota || '' };
+  }
+  return { ok: false, message: r.error || r.message || 'cf-attendance 失败' };
+}
+
+async function runProfileExclusiveAttendance(context, sites, {
+  profileDir = PROFILE_DIR,
+  attemptImpl = attempt,
+  runAttendanceImpl = (ctx, site) => runLuckyAttendance(ctx, site),
+  launchContextImpl = launchContext,
+} = {}) {
+  await context.close();
+  const results = [];
+  for (const site of sites) {
+    const result = await attemptImpl(null, site.task, async () =>
+      runAttendanceImpl(null, { ...site, drissionFirst: true, drissionOnly: true, profileDir }));
+    results.push(result);
+  }
+  const reopened = await launchContextImpl();
+  return { context: reopened, results };
+}
+
 async function runLuckyAttendance(context, site) {
+  const runDrission = site.runDrissionAttendance || (s => runLocalDrissionAttendance(s));
+  const drissionSite = { url: site.url, origin: site.origin, profileDir: site.profileDir };
+  if (site.drissionOnly) {
+    const r = await runDrission(drissionSite);
+    if (r.ok) {
+      const quota = attendanceQuotaSummary(r.beforeQuota, r.afterQuota);
+      return { ok: true, message: (r.message || '签到成功') + (quota ? '；' + quota : '') };
+    }
+    throw new Error(r.error || 'DrissionPage 签到失败');
+  }
+  if (site.drissionFirst) {
+    const r = await runDrission(drissionSite);
+    if (r.ok) {
+      const quota = attendanceQuotaSummary(r.beforeQuota, r.afterQuota);
+      return { ok: true, message: (r.message || '签到成功') + (quota ? '；' + quota : '') };
+    }
+    throw new Error(r.error || 'DrissionPage 签到失败');
+  }
   const page = await context.newPage();
   const actionResponses = [];
   const sameOrigin = url => url.startsWith(site.origin) && !url.includes('/cdn-cgi/');
@@ -739,13 +1012,30 @@ async function runLuckyAttendance(context, site) {
     await page.goto(site.url, { waitUntil: 'domcontentloaded', timeout: 60000 });
     actionResponses.length = 0;
     if (isLoginUrl(page.url())) throw new Error('Not logged in; run the setup command first.');
-    await ensureCloudflareCleared(page, {
-      url: site.url,
-      context,
-      task: site.task,
-      bypassCloudflare: site.bypassCloudflare,
-      waitMs: site.waitMs,
-    });
+    const cfTitle = await page.title?.().catch?.(() => '') || '';
+    const cfBody = await page.locator('body').innerText().catch(() => '');
+    const originCode = cloudflareOriginErrorCode(cfTitle, cfBody);
+    if (originCode) {
+      throw new Error(`Cloudflare ${originCode} 源站错误，这不是验证码问题。`);
+    }
+    if (isCloudflareChallengePage(cfTitle, '', cfBody)) {
+      if (site.drissionFallback) {
+        let r;
+        try { r = await runDrission(drissionSite); } catch (e) { r = { ok: false, error: String(e) }; }
+        if (r.ok) {
+          const quota = attendanceQuotaSummary(r.beforeQuota, r.afterQuota);
+          return { ok: true, message: (r.message || '签到成功') + (quota ? '；' + quota : '') };
+        }
+        throw new Error('DrissionPage 回退失败：' + (r.error || 'unknown'));
+      }
+      await ensureCloudflareCleared(page, {
+        url: site.url,
+        context,
+        task: site.task,
+        bypassCloudflare: site.bypassCloudflare,
+        waitMs: site.waitMs,
+      });
+    }
     // SPA banner may render after challenge clearance
     await page.waitForTimeout?.(1500);
     for (let i = 0; i < 5; i++) {
@@ -904,16 +1194,21 @@ async function runOptionalAllApiHubTask() {
   }
 }
 
-async function attempt(context, task, fn) {
-  if (isDone(task)) {
+async function attempt(context, task, fn, { alwaysRun = false } = {}) {
+  const alreadyDone = isDone(task);
+  if (alreadyDone && !alwaysRun) {
     log(task, 'already completed today; skipped');
-    return { task, ok: true, status: 'skipped', message: '今日已完成，跳过' };
+    return { task, ok: true, status: 'skipped', message: skippedMessage(task) };
   }
   try {
     const outcome = await fn(context);
     const ok = outcome === true || outcome?.ok === true;
     if (!ok) throw new Error(outcome?.message || 'The site did not confirm success.');
-    markDone(task);
+    if (alreadyDone) {
+      log(task, 'already completed today; skipped');
+      return { task, ok: true, status: 'skipped', message: outcome?.message || skippedMessage(task) };
+    }
+    markDone(task, outcome?.quota);
     log(task, 'completed today');
     return {
       task,
@@ -922,6 +1217,10 @@ async function attempt(context, task, fn) {
       message: outcome?.message || '\u6267\u884c\u6210\u529f',
     };
   } catch (error) {
+    if (alreadyDone) {
+      log(task, 'already completed today; skipped');
+      return { task, ok: true, status: 'skipped', message: skippedMessage(task) };
+    }
     log(task, `failed: ${error.message}`);
     return { task, ok: false, status: 'failed', message: error.message };
   }
@@ -961,32 +1260,50 @@ function nextDailyRun() {
 }
 function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
 
-async function runOnce() {
-  log('scheduler', `starting ${today()}`);
-  const context = await launchContext();
-  const results = [];
+async function runOnce(enabledTasks = null) {
+  const enabled = enabledTasks && enabledTasks.length ? enabledTasks : defaultEnabledTasks();
+  log('scheduler', `starting ${today()}; tasks: [${enabled.join(', ')}]`);
+  if (!enabled.length) {
+    log('scheduler', '未选择任何任务，跳过；可用 --set-default-tasks 配置');
+    printSummary([]);
+    return [];
+  }
+  let context = await launchContext();
+  let results = [];
   try {
-    const anyRouterResult = await attempt(context, 'anyrouter', runAnyRouter);
-    results.push(anyRouterResult);
-    nextAnyRouterRetryAt = anyRouterResult.ok ? 0 : Date.now() + HOUR;
-    results.push(await attempt(context, 'ikuuu', runIkuuu));
-    results.push(await attempt(context, 'chy', runChy));
-    results.push(await attempt(context, 'nodeseek', context2 => runLuckyAttendance(context2, {
-      task: 'nodeseek',
-      url: URLS.nodeseek,
-      origin: 'https://www.nodeseek.com/',
-    })));
-    results.push(await attempt(context, 'deepflood', context2 => runLuckyAttendance(context2, {
-      task: 'deepflood',
-      url: URLS.deepflood,
-      origin: 'https://www.deepflood.com/',
-    })));
-    results.push(await attempt(context, 'nodebuf', runNodeBuf));
+    if (enabled.includes('anyrouter')) {
+      const r = await attempt(context, 'anyrouter', runIkuuu);
+      results.push(r);
+      nextAnyRouterRetryAt = r.ok ? 0 : Date.now() + HOUR;
+    }
+    if (enabled.includes('ikuuu')) results.push(await attempt(context, 'ikuuu', runIkuuu));
+    if (enabled.includes('chy')) results.push(await attempt(context, 'chy', runChy));
+    const exclusiveSites = [
+      { task: 'nodeseek', url: URLS.nodeseek, origin: 'https://www.nodeseek.com/' },
+      { task: 'deepflood', url: URLS.deepflood, origin: 'https://www.deepflood.com/' },
+    ].filter(site => enabled.includes(site.task));
+    if (exclusiveSites.length) {
+      const stillNeeded = [];
+      for (const site of exclusiveSites) {
+        const r = await attempt(context, site.task, ctx => runCfApiAttendance(ctx, site), { alwaysRun: true });
+        results.push(r);
+        if (!r.ok) stillNeeded.push(site);
+      }
+      if (stillNeeded.length) {
+        const exclusive = await runProfileExclusiveAttendance(context, stillNeeded);
+        context = exclusive.context;
+        const drMap = new Map(exclusive.results.map(r => [r.task, r]));
+        results = results.map(r => drMap.has(r.task) ? drMap.get(r.task) : r);
+      }
+    }
+    if (enabled.includes('nodebuf')) results.push(await attempt(context, 'nodebuf', runNodeBuf));
   } finally {
     await context.close();
   }
-  const allApiHubResult = await runOptionalAllApiHubTask();
-  if (allApiHubResult) results.push(allApiHubResult);
+  if (enabled.includes('allapihub')) {
+    const allApiHubResult = await runOptionalAllApiHubTask();
+    if (allApiHubResult) results.push(allApiHubResult);
+  }
   printSummary(results);
   return results;
 }
@@ -1029,9 +1346,18 @@ async function setup() {
   log('setup', `session saved in ${PROFILE_DIR}`);
 }
 async function main() {
-  const args = new Set(process.argv.slice(2));
-  if (args.has('--setup')) return setup();
-  if (args.has('--daemon')) return daemon();
+  const args = process.argv.slice(2);
+  const argSet = new Set(args);
+  if (argSet.has('--setup')) return setup();
+  if (argSet.has('--daemon')) return daemon();
+  if (argSet.has('--list-tasks')) { listTasks(); return; }
+  if (argSet.has('--clear-default-tasks')) { clearDefaultTasks(); return; }
+  const setIdx = args.indexOf('--set-default-tasks');
+  if (setIdx !== -1) {
+    const input = args.slice(setIdx + 1).filter(t => !t.startsWith('--')).join(' ');
+    setDefaultTasks(input);
+    return;
+  }
   const results = await runOnce();
   if (results.some(result => !result.ok)) process.exitCode = 1;
 }
@@ -1052,6 +1378,16 @@ module.exports = {
   runLocalCfBypass,
   runLuckyAttendance,
   runNodeBuf,
+  applyCfBypassCookies,
+  cloudflareOriginErrorCode,
+  findChyClaimButton,
+  isChyLoggedOutPage,
+  extractAnyRouterBalanceFromText,
+  extractNodeBufProfilePointsFromText,
+  isCloudflareChallengePage,
+  parseDrissionAttendanceJson,
+  runLocalDrissionAttendance,
+  runProfileExclusiveAttendance,
   runOptionalAllApiHubQuickCheckin,
   tryNodeBufAutoLogin,
 };

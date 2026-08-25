@@ -56,6 +56,8 @@ from .advanced_solvers import (
     ImageClassifier,
     ReCaptchaImageSolver,
     SlideComparisonSolver,
+    RotateCaptchaSolver,
+    GeeTestBrowserSolver,
 )
 
 # ---- Cloudflare 模块 ----
@@ -100,6 +102,8 @@ __all__ = [
     "ImageClassifier",
     "ReCaptchaImageSolver",
     "SlideComparisonSolver",
+    "RotateCaptchaSolver",
+    "GeeTestBrowserSolver",
 
     # Cloudflare
     "BypassResult",

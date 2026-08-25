@@ -3,7 +3,7 @@
 """
 Cloudflare 验证绕过脚本
 ======================
-集成多种策略，自动检测并绕过 Cloudflare 的 5 秒盾 / JS Challenge / Turnstile 验证。
+集成多种策略，检测 Cloudflare 挑战并尝试获取正常页面。
 
 策略按效率从高到低自动降级：
   1. curl_cffi      —— TLS 指纹伪装（轻量级，能过低安全级别 CF 站）
@@ -12,12 +12,10 @@ Cloudflare 验证绕过脚本
   4. DrissionPage   —— CDP 协议操控真实 Chrome（成功率最高，推荐）
   5. Playwright     —— 浏览器自动化兜底方案
 
-当遇到 Cloudflare Turnstile 验证码时，自动调用 captcha_solver 模块处理：
-  - Turnstile 无感验证 → 第三方打码平台 (2captcha/capsolver/yescaptcha)
-  - 图形验证码         → ddddocr OCR 识别
-  - 算术验证码         → OCR + 表达式求值
-  - 点选验证码         → ddddocr 目标检测
-  - 滑块验证码         → ddddocr 缺口检测 + 轨迹模拟
+验证码能力由 captcha_solver 模块独立提供，bypass() 不会自动提交或验证 token：
+  - Turnstile token       → 必须由获授权站点的服务端调用 Siteverify 验证
+  - 图形 / 算术验证码    → ddddocr OCR 识别
+  - 点选 / 滑块验证码    → ddddocr 目标或缺口检测
 
 参考来源：
   - https://zhuanlan.zhihu.com/p/2060717235057047145
@@ -50,7 +48,7 @@ import time
 import json
 import logging
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from urllib.parse import urlparse
 
 # ---------------------------------------------------------------------------
@@ -73,13 +71,14 @@ logger.setLevel(logging.INFO)
 @dataclass
 class BypassResult:
     """绕过结果"""
-    success: bool = False
+    success: bool = False         # 仅表示未检测到已知 CF 验证特征，不代表业务操作成功
     cookies: Dict[str, str] = field(default_factory=dict)
     user_agent: str = ""
     strategy: str = ""           # 使用的策略名称
     html: str = ""               # 绕过后拿到的页面 HTML
     response: Any = None         # 原始响应对象（策略不同类型不同）
-    error: str = ""              # 失败原因
+    error: str = ""              # failure reason
+    turnstile_completed: bool = False  # client-side token exists; server acceptance is separate
 
 
 # ---------------------------------------------------------------------------
@@ -109,6 +108,9 @@ class CloudflareBypasser:
         r"__cf_chl_jschl_tk__",
         r"challenge-platform",
         r"cdn-cgi/challenge-platform",
+        r"cf-turnstile",
+        r"challenges\.cloudflare\.com/turnstile",
+        r"cf-turnstile-response",
         r"Please allow up to 5 seconds",
         r"ray id",
         r"cf-mitigated",
@@ -116,6 +118,15 @@ class CloudflareBypasser:
 
     # CF 相关 Cookie 名称
     CF_COOKIE_NAMES = {"cf_clearance", "__cf_bm", "__cf_chl_tk", "cf_chl_rc"}
+
+    CURL_IMPERSONATION_PREFERENCES = (
+        "chrome146",
+        "chrome145",
+        "chrome136",
+        "chrome133a",
+        "chrome124",
+        "chrome120",
+    )
 
     def __init__(
         self,
@@ -215,7 +226,7 @@ class CloudflareBypasser:
         # ---- 先用 curl_cffi 探测是否真的有 CF 防护 ----
         is_cf, probe_resp = self._probe_cloudflare(url)
         if not is_cf:
-            logger.info("未检测到 Cloudflare 验证，直接返回响应")
+            logger.info("未检测到已知 Cloudflare 验证特征，直接返回响应")
             return BypassResult(
                 success=True,
                 cookies={},
@@ -246,7 +257,7 @@ class CloudflareBypasser:
                 try:
                     result = strategy_func(url)
                     if result.success:
-                        logger.info(f"✅ 策略 [{strategy_name}] 成功绕过 Cloudflare!")
+                        logger.info(f"策略 [{strategy_name}] 返回了未检测到已知 CF 验证特征的页面")
                         return result
                     else:
                         logger.warning(f"策略 [{strategy_name}] 失败: {result.error}")
@@ -266,14 +277,11 @@ class CloudflareBypasser:
     # ===================================================================
 
     def _probe_cloudflare(self, url: str):
-        """
-        用 curl_cffi 探测目标是否受 CF 保护。
-        返回 (is_cf: bool, html: str)
-        """
+        """探测响应是否仍处于 Cloudflare 验证。"""
         try:
             from curl_cffi import requests as cf_requests
         except ImportError:
-            logger.debug("curl_cffi 未安装，跳过探测，假设存在 CF 验证")
+            logger.debug("curl_cffi 未安装，无法完成探测，按存在 CF 验证处理")
             return True, ""
 
         try:
@@ -285,23 +293,19 @@ class CloudflareBypasser:
                 allow_redirects=True,
             )
 
-            # 状态码 403/503 + CF 特征 → 确认是 CF 验证
-            if resp.status_code in (403, 503) and self._is_cf_challenge_html(resp.text):
+            if self._is_cf_challenge_response(resp):
                 return True, resp.text
-
-            # 状态码 200 但内容是挑战页
-            if resp.status_code == 200 and self._is_cf_challenge_html(resp.text):
+            # 禁止把 HTTP 错误页误报为直连成功。
+            if resp.status_code >= 400:
                 return True, resp.text
-
-            # 正常响应
             return False, resp.text
 
         except Exception as e:
-            logger.debug(f"探测异常: {e}")
+            logger.debug(f"Cloudflare 探测异常: {e}")
             return True, ""
 
     def _is_cf_challenge_html(self, html: str) -> bool:
-        """检测 HTML 是否为 CF 挑战页"""
+        """检测 HTML 是否包含 CF 挑战页或 Turnstile 验证。"""
         if not html:
             return False
         html_lower = html.lower()
@@ -310,9 +314,96 @@ class CloudflareBypasser:
                 return True
         return False
 
+    def _is_cf_challenge_response(self, response: Any) -> bool:
+        """优先使用官方 cf-mitigated 响应头，再检查 HTML 特征。"""
+        headers = getattr(response, "headers", {}) or {}
+        mitigated = ""
+        try:
+            mitigated = headers.get("cf-mitigated", "")
+        except AttributeError:
+            pass
+        if not mitigated and hasattr(headers, "items"):
+            for name, value in headers.items():
+                if str(name).lower() == "cf-mitigated":
+                    mitigated = value
+                    break
+        if str(mitigated).lower() == "challenge":
+            return True
+        return self._is_cf_challenge_html(getattr(response, "text", "") or "")
+
     # ===================================================================
     #  策略 1: curl_cffi —— TLS 指纹伪装
     # ===================================================================
+
+    @classmethod
+    def _filter_curl_impersonations(cls, supported) -> List[str]:
+        """Return supported Chrome profiles in preference order."""
+        if supported is None:
+            return list(cls.CURL_IMPERSONATION_PREFERENCES)
+        selected = [
+            name for name in cls.CURL_IMPERSONATION_PREFERENCES
+            if name in supported
+        ]
+        return selected or ["chrome120"]
+
+    def _get_curl_impersonations(self) -> List[str]:
+        try:
+            from curl_cffi.requests import BrowserType
+            supported = {item.value for item in BrowserType}
+        except (ImportError, AttributeError):
+            supported = None
+        return self._filter_curl_impersonations(supported)
+
+    @staticmethod
+    def _has_turnstile_widget_in_html(html: str) -> bool:
+        """Check whether HTML contains an embedded Turnstile widget."""
+        if not html:
+            return False
+        return bool(re.search(
+            r"cf-turnstile|challenges\.cloudflare\.com/turnstile|"
+            r"cf-turnstile-response",
+            html,
+            re.IGNORECASE,
+        ))
+
+    @staticmethod
+    def _has_turnstile_token_in_html(html: str) -> bool:
+        """Check whether serialized browser HTML contains a non-empty token."""
+        if not html:
+            return False
+        for tag in re.findall(r"<input\b[^>]*>", html, re.IGNORECASE):
+            if not re.search(
+                r"\bname\s*=\s*[\"']cf-turnstile-response[\"']",
+                tag,
+                re.IGNORECASE,
+            ):
+                continue
+            value = re.search(
+                r"\bvalue\s*=\s*[\"']([^\"']+)[\"']",
+                tag,
+                re.IGNORECASE,
+            )
+            if value and value.group(1).strip():
+                return True
+        return False
+
+    def _is_browser_challenge_complete(
+        self,
+        html: str,
+        turnstile_token: str = "",
+        turnstile_required: bool = False,
+        has_cf_clearance: bool = False,
+    ) -> bool:
+        """A completed client widget is not proof of server-side acceptance."""
+        token_complete = (
+            bool(turnstile_token.strip())
+            or self._has_turnstile_token_in_html(html)
+        )
+        if token_complete:
+            return True
+        if turnstile_required:
+            return has_cf_clearance and not self._is_cf_challenge_html(html)
+        return not self._is_cf_challenge_html(html)
 
     def _try_curl_cffi(self, url: str) -> BypassResult:
         """
@@ -325,7 +416,7 @@ class CloudflareBypasser:
             return BypassResult(success=False, error="curl_cffi 未安装 (pip install curl_cffi)")
 
         # 依次尝试多个浏览器指纹
-        impersonate_list = ["chrome120", "chrome124", "safari17_0", "firefox120", "edge101"]
+        impersonate_list = self._get_curl_impersonations()
         proxies = {"https": self.proxy, "http": self.proxy} if self.proxy else None
 
         # 模拟真实浏览器的请求头
@@ -336,9 +427,6 @@ class CloudflareBypasser:
             "Accept-Encoding": "gzip, deflate, br",
             "Cache-Control": "no-cache",
             "Pragma": "no-cache",
-            "Sec-Ch-Ua": '"Chromium";v="120", "Not(A:Brand";v="24", "Google Chrome";v="120"',
-            "Sec-Ch-Ua-Mobile": "?0",
-            "Sec-Ch-Ua-Platform": '"Windows"',
             "Sec-Fetch-Dest": "document",
             "Sec-Fetch-Mode": "navigate",
             "Sec-Fetch-Site": "none",
@@ -357,7 +445,7 @@ class CloudflareBypasser:
                     allow_redirects=True,
                 )
 
-                if resp.status_code == 200 and not self._is_cf_challenge_html(resp.text):
+                if resp.status_code == 200 and not self._is_cf_challenge_response(resp):
                     cookies = dict(resp.cookies)
                     ua = resp.request.headers.get("User-Agent", "")
                     return BypassResult(
@@ -401,7 +489,7 @@ class CloudflareBypasser:
             proxies = {"http": self.proxy, "https": self.proxy} if self.proxy else None
             resp = scraper.get(url, proxies=proxies, timeout=self.timeout)
 
-            if resp.status_code == 200 and not self._is_cf_challenge_html(resp.text):
+            if resp.status_code == 200 and not self._is_cf_challenge_response(resp):
                 cookies = dict(resp.cookies)
                 ua = resp.request.headers.get("User-Agent", "")
                 return BypassResult(
@@ -540,11 +628,34 @@ class CloudflareBypasser:
             # CF 挑战通常 5-15 秒，这里循环检测
             max_wait = self.timeout
             start_time = time.time()
+            turnstile_token = ""
+            turnstile_required = self._has_turnstile_widget_in_html(page.html or "")
 
             while time.time() - start_time < max_wait:
                 current_html = page.html or ""
-                if not self._is_cf_challenge_html(current_html):
-                    logger.info("CF 挑战已完成，页面已加载")
+                turnstile_required = (
+                    turnstile_required
+                    or self._has_turnstile_widget_in_html(current_html)
+                )
+                try:
+                    turnstile_token = page.run_js(
+                        "return Array.from(document.querySelectorAll("
+                        "'input[name=\"cf-turnstile-response\"]'"
+                        ")).map(x => x.value || '').find(Boolean) || '';"
+                    ) or ""
+                except Exception:
+                    turnstile_token = ""
+                if self._is_browser_challenge_complete(
+                    current_html,
+                    turnstile_token,
+                    turnstile_required=turnstile_required,
+                ):
+                    logger.info(
+                        "Browser-side Turnstile token detected; "
+                        "server-side Siteverify is still required"
+                        if turnstile_token else
+                        "CF challenge completed, page loaded"
+                    )
                     break
                 time.sleep(2)
             else:
@@ -572,14 +683,24 @@ class CloudflareBypasser:
                 logger.info(f"获取到 CF Cookie: {list(cf_cookies.keys())}")
 
             html = page.html or ""
+            turnstile_completed = (
+                bool(turnstile_token.strip())
+                or self._has_turnstile_token_in_html(html)
+            )
 
-            if not self._is_cf_challenge_html(html):
+            if self._is_browser_challenge_complete(
+                html,
+                turnstile_token,
+                turnstile_required=turnstile_required,
+                has_cf_clearance="cf_clearance" in cookies_dict,
+            ):
                 return BypassResult(
                     success=True,
                     cookies=cookies_dict,
                     user_agent=ua,
                     strategy="drissionpage",
                     html=html,
+                    turnstile_completed=turnstile_completed,
                 )
             else:
                 return BypassResult(success=False, error="DrissionPage 拿到的仍是挑战页")
@@ -670,6 +791,8 @@ class CloudflareBypasser:
 
                 logger.info("Playwright 浏览器已启动，正在访问目标页面...")
                 page.goto(url, wait_until="domcontentloaded", timeout=self.timeout * 1000)
+                turnstile_token = ""
+                turnstile_required = self._has_turnstile_widget_in_html(page.content())
 
                 # 如果有 cf-clearance 库，使用它的重试机制
                 if has_cf_clearance:
@@ -680,9 +803,32 @@ class CloudflareBypasser:
                     # 手动等待 CF 挑战完成
                     max_wait = self.timeout
                     start_time = time.time()
+                    turnstile_token = ""
                     while time.time() - start_time < max_wait:
                         content = page.content()
-                        if not self._is_cf_challenge_html(content):
+                        turnstile_required = (
+                            turnstile_required
+                            or self._has_turnstile_widget_in_html(content)
+                        )
+                        try:
+                            turnstile_token = page.evaluate(
+                                """() => Array.from(document.querySelectorAll(
+                                    'input[name=\"cf-turnstile-response\"]'
+                                )).map(x => x.value || '').find(Boolean) || ''"""
+                            ) or ""
+                        except Exception:
+                            turnstile_token = ""
+                        if self._is_browser_challenge_complete(
+                            content,
+                            turnstile_token,
+                            turnstile_required=turnstile_required,
+                        ):
+                            logger.info(
+                                "Browser-side Turnstile token detected; "
+                                "server-side Siteverify is still required"
+                                if turnstile_token else
+                                "CF challenge completed, page loaded"
+                            )
                             break
                         time.sleep(2)
 
@@ -706,14 +852,28 @@ class CloudflareBypasser:
                 # 提取 UA
                 ua = page.evaluate("() => navigator.userAgent") or ""
                 html = page.content()
+                turnstile_required = (
+                    turnstile_required
+                    or self._has_turnstile_widget_in_html(html)
+                )
+                turnstile_completed = (
+                    bool(turnstile_token.strip())
+                    or self._has_turnstile_token_in_html(html)
+                )
 
-                if not self._is_cf_challenge_html(html):
+                if self._is_browser_challenge_complete(
+                    html,
+                    turnstile_token,
+                    turnstile_required=turnstile_required,
+                    has_cf_clearance="cf_clearance" in cookies_dict,
+                ):
                     return BypassResult(
                         success=True,
                         cookies=cookies_dict,
                         user_agent=ua,
                         strategy="playwright",
                         html=html,
+                        turnstile_completed=turnstile_completed,
                     )
                 else:
                     return BypassResult(success=False, error="Playwright 拿到的仍是挑战页")
@@ -848,7 +1008,7 @@ class CachedCloudflareBypasser(CloudflareBypasser):
                     proxies=proxies,
                     timeout=self.timeout,
                 )
-                if resp.status_code == 200 and not self._is_cf_challenge_html(resp.text):
+                if resp.status_code == 200 and not self._is_cf_challenge_response(resp):
                     logger.info("缓存 Cookie 仍然有效")
                     return BypassResult(
                         success=True,

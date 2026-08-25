@@ -2,9 +2,11 @@ import {
   clearRelayCaches,
   deleteRelayCache,
   readRelayCaches,
+  matchesRelayCache,
   upsertRelayCache,
   writeRelayCaches,
 } from './relay-cache.mjs';
+import { RELAY_CLIENT_PROFILES } from './client-profiles.mjs';
 
 const state = {
   providers: [],
@@ -43,8 +45,12 @@ const els = {
   temperature: document.querySelector('#temperature'),
   toast: document.querySelector('#toast'),
   relayCacheLabel: document.querySelector('#relayCacheLabel'),
+  relayCacheSuggestions: document.querySelector('#relayCacheSuggestions'),
   relayBaseUrl: document.querySelector('#relayBaseUrl'),
   relayApiKey: document.querySelector('#relayApiKey'),
+  relayClientProfile: document.querySelector('#relayClientProfile'),
+  relayClientProfileHint: document.querySelector('#relayClientProfileHint'),
+  relayClientProfileDetail: document.querySelector('#relayClientProfileDetail'),
   saveRelayCache: document.querySelector('#saveRelayCache'),
   clearRelayCache: document.querySelector('#clearRelayCache'),
   relayCacheBox: document.querySelector('#relayCacheBox'),
@@ -65,6 +71,7 @@ const els = {
   scheduleMeta: document.querySelector('#scheduleMeta'),
 };
 
+renderRelayClientProfiles();
 bindEvents();
 updateRelayCacheUi();
 loadProviders();
@@ -73,6 +80,13 @@ updateScheduleUi();
 function bindEvents() {
   els.refreshProviders.addEventListener('click', loadProviders);
   els.providerSearch.addEventListener('input', renderProviders);
+  els.relayCacheLabel.addEventListener('input', renderRelayCacheSuggestions);
+  els.relayCacheLabel.addEventListener('focus', renderRelayCacheSuggestions);
+  els.relayCacheLabel.addEventListener('blur', hideRelayCacheSuggestionsLater);
+  els.relayCacheLabel.addEventListener('keydown', handleRelayCacheSearchKeydown);
+  els.relayCacheSuggestions.addEventListener('click', handleRelayCacheSuggestion);
+  els.relayCacheSuggestions.addEventListener('keydown', handleRelayCacheSuggestionKeydown);
+  els.relayClientProfile.addEventListener('change', () => updateRelayClientProfileHint(true));
   els.loadModels.addEventListener('click', () => loadModels());
   els.runTest.addEventListener('click', () => runTest({ source: 'manual' }));
   els.useRelay.addEventListener('click', useRelay);
@@ -100,6 +114,80 @@ function bindEvents() {
     if (state.schedule.running) startSchedule(true);
     else updateScheduleUi();
   });
+}
+
+function renderRelayClientProfiles(selectedId = 'openai') {
+  els.relayClientProfile.replaceChildren();
+  for (const profile of RELAY_CLIENT_PROFILES) {
+    const option = document.createElement('option');
+    option.value = profile.id;
+    option.textContent = profile.label;
+    option.selected = profile.id === selectedId;
+    els.relayClientProfile.append(option);
+  }
+  updateRelayClientProfileHint();
+}
+
+function updateRelayClientProfileHint(syncPath = false) {
+  const profile = RELAY_CLIENT_PROFILES.find((item) => item.id === els.relayClientProfile.value);
+  const usageMap = {
+    openai: '普通中转站保持此项。',
+    codex: '仅在中转站限制 Codex 客户端时选择。',
+    cursor: '调用 Cursor 官方 API 时选择，请使用 Cursor 颁发的 Key。',
+  };
+  const usage = profile ? (usageMap[profile.id] || '为当前中转站选择匹配的客户端模式。') : '';
+  els.relayClientProfileHint.textContent = profile ? usage + ' ' + profile.description : '';
+  renderRelayClientProfileDetail(profile);
+  if (syncPath && profile) {
+    els.relayChatPath.value = profile.chatPath;
+  }
+}
+
+function renderRelayClientProfileDetail(profile) {
+  const box = els.relayClientProfileDetail;
+  box.replaceChildren();
+  if (!profile) return;
+
+  const addRow = (label, value) => {
+    const row = document.createElement('div');
+    row.className = 'relay-profile-row';
+    const labelEl = document.createElement('span');
+    labelEl.className = 'relay-profile-label';
+    labelEl.textContent = label;
+    const valueEl = document.createElement('code');
+    valueEl.textContent = value;
+    row.append(labelEl, valueEl);
+    box.append(row);
+  };
+
+  addRow('请求路径', profile.chatPath);
+  addRow('请求格式', profile.requestStyle);
+
+  const headers = Object.entries(profile.headers || {});
+  const headRow = document.createElement('div');
+  headRow.className = 'relay-profile-row';
+  const headLabel = document.createElement('span');
+  headLabel.className = 'relay-profile-label';
+  headLabel.textContent = '额外请求头';
+  headRow.append(headLabel);
+  box.append(headRow);
+
+  if (headers.length === 0) {
+    const none = document.createElement('code');
+    none.textContent = '无';
+    headRow.append(none);
+  } else {
+    for (const [key, value] of headers) {
+      const item = document.createElement('div');
+      item.className = 'relay-profile-header';
+      const keyEl = document.createElement('code');
+      keyEl.textContent = key;
+      const valueEl = document.createElement('code');
+      valueEl.textContent = value;
+      item.append(keyEl, document.createTextNode(': '), valueEl);
+      box.append(item);
+    }
+  }
 }
 
 async function loadProviders() {
@@ -183,6 +271,10 @@ function providerCard(provider, isCustom) {
     renderProviders();
     renderModels();
     updateSelection();
+    requestAnimationFrame(() => {
+      const activeCard = els.providerList.querySelector('.provider-card.active');
+      activeCard?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    });
   });
   card.append(top);
 
@@ -431,12 +523,16 @@ function saveRelayCache() {
     identifier: els.relayCacheLabel.value.trim(),
     baseUrl: els.relayBaseUrl.value.trim(),
     apiKey: els.relayApiKey.value.trim(),
+    clientProfile: els.relayClientProfile.value,
+    modelsPath: els.relayModelsPath.value.trim(),
+    chatPath: els.relayChatPath.value.trim(),
   };
   try {
     const next = upsertRelayCache(state.relayCaches, entry);
     writeRelayCaches(next);
     state.relayCaches = next;
     updateRelayCacheUi();
+    renderRelayCacheSuggestions();
     showToast('已保存缓存“' + entry.identifier + '”。');
   } catch (error) {
     showToast(error.message || '无法写入浏览器本地缓存。', true);
@@ -447,6 +543,94 @@ function updateRelayCacheUi() {
   els.relayCacheCount.textContent = String(state.relayCaches.length);
   els.clearRelayCache.disabled = state.relayCaches.length === 0;
   renderRelayCacheList();
+  renderRelayCacheSuggestions();
+}
+
+function renderRelayCacheSuggestions() {
+  const query = els.relayCacheLabel.value.trim();
+  const matches = state.relayCaches
+    .filter((entry) => matchesRelayCache(entry, query))
+    .slice(0, 8);
+  els.relayCacheSuggestions.replaceChildren();
+  if (document.activeElement !== els.relayCacheLabel) {
+    els.relayCacheSuggestions.hidden = true;
+    return;
+  }
+  if (matches.length === 0) {
+    const empty = document.createElement('p');
+    empty.className = 'relay-cache-suggestion-empty';
+    empty.textContent = state.relayCaches.length === 0
+      ? '暂无缓存，请填写配置后点击“保存 / 更新缓存”。'
+      : '没有匹配的缓存标识。';
+    els.relayCacheSuggestions.append(empty);
+  }
+  for (const entry of matches) {
+    const option = document.createElement('button');
+    option.type = 'button';
+    option.className = 'relay-cache-suggestion';
+    option.setAttribute('role', 'option');
+    option.dataset.identifier = entry.identifier;
+    option.innerHTML = '<strong>' + escapeHtml(entry.identifier) + '</strong>' +
+      '<small>' + escapeHtml(entry.baseUrl) + '</small>';
+    els.relayCacheSuggestions.append(option);
+  }
+  els.relayCacheSuggestions.hidden = false;
+}
+
+function hideRelayCacheSuggestionsLater() {
+  setTimeout(() => {
+    if (!els.relayCacheSuggestions.contains(document.activeElement)) {
+      els.relayCacheSuggestions.hidden = true;
+    }
+  }, 100);
+}
+
+function handleRelayCacheSearchKeydown(event) {
+  if (event.key === 'Escape') {
+    els.relayCacheSuggestions.hidden = true;
+    return;
+  }
+  if (event.key !== 'ArrowDown') return;
+  renderRelayCacheSuggestions();
+  const first = els.relayCacheSuggestions.querySelector('button[data-identifier]');
+  if (!first) return;
+  event.preventDefault();
+  first.focus();
+}
+
+function handleRelayCacheSuggestionKeydown(event) {
+  const options = [...els.relayCacheSuggestions.querySelectorAll('button[data-identifier]')];
+  const current = options.indexOf(document.activeElement);
+  if (event.key === 'Escape') {
+    event.preventDefault();
+    els.relayCacheSuggestions.hidden = true;
+    els.relayCacheLabel.focus();
+    return;
+  }
+  if (!['ArrowDown', 'ArrowUp'].includes(event.key) || current < 0) return;
+  event.preventDefault();
+  const offset = event.key === 'ArrowDown' ? 1 : -1;
+  options[(current + offset + options.length) % options.length].focus();
+}
+
+function handleRelayCacheSuggestion(event) {
+  const option = event.target.closest('button[data-identifier]');
+  if (!option) return;
+  const entry = state.relayCaches.find((item) => item.identifier === option.dataset.identifier);
+  if (!entry) return;
+  fillRelayCache(entry);
+  els.relayCacheSuggestions.hidden = true;
+}
+
+function fillRelayCache(entry) {
+  els.relayCacheLabel.value = entry.identifier;
+  els.relayBaseUrl.value = entry.baseUrl;
+  els.relayApiKey.value = entry.apiKey;
+  renderRelayClientProfiles(entry.clientProfile || 'openai');
+  els.relayModelsPath.value = entry.modelsPath || '/models';
+  const profile = RELAY_CLIENT_PROFILES.find((item) => item.id === els.relayClientProfile.value);
+  els.relayChatPath.value = entry.chatPath || profile?.chatPath || '';
+  els.relayCacheLabel.closest('details').open = true;
 }
 
 function renderRelayCacheList() {
@@ -480,6 +664,10 @@ function renderRelayCacheList() {
     const key = document.createElement('code');
     key.className = 'relay-cache-key';
     key.textContent = 'Key：' + entry.apiKey;
+    const profile = document.createElement('code');
+    profile.className = 'relay-cache-address';
+    const profileConfig = RELAY_CLIENT_PROFILES.find((item) => item.id === entry.clientProfile);
+    profile.textContent = '客户端：' + (profileConfig?.label || entry.clientProfile || '通用 OpenAI');
 
     const actions = document.createElement('div');
     actions.className = 'relay-cache-item-actions';
@@ -497,7 +685,7 @@ function renderRelayCacheList() {
     deleteButton.textContent = '删除';
     actions.append(useButton, deleteButton);
 
-    item.append(head, address, key, actions);
+    item.append(head, address, key, profile, actions);
     fragment.append(item);
   }
   els.relayCacheList.append(fragment);
@@ -510,10 +698,7 @@ function handleRelayCacheAction(event) {
   if (button.dataset.cacheAction === 'use') {
     const entry = state.relayCaches.find((item) => item.identifier === identifier);
     if (!entry) return;
-    els.relayCacheLabel.value = entry.identifier;
-    els.relayBaseUrl.value = entry.baseUrl;
-    els.relayApiKey.value = entry.apiKey;
-    els.relayCacheLabel.closest('details').open = true;
+    fillRelayCache(entry);
     useRelay();
     return;
   }
@@ -553,6 +738,7 @@ function useRelay() {
     label: els.relayCacheLabel.value.trim() || '临时中转站',
     type: 'openai-compatible',
     baseUrl,
+    clientProfile: els.relayClientProfile.value,
     hasKey: true,
     isLocal: false,
     supportsModels: true,
@@ -580,8 +766,9 @@ function selectedProviderPayload() {
         type: 'openai-compatible',
         baseUrl: els.relayBaseUrl.value.trim(),
         apiKey: els.relayApiKey.value.trim(),
+        clientProfile: els.relayClientProfile.value,
         modelsPath: els.relayModelsPath.value.trim() || '/models',
-        chatPath: els.relayChatPath.value.trim() || '/chat/completions',
+        chatPath: els.relayChatPath.value.trim(),
       },
     };
   }

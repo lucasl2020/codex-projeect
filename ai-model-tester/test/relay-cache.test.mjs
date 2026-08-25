@@ -5,6 +5,7 @@ import {
   clearRelayCaches,
   deleteRelayCache,
   readRelayCaches,
+  matchesRelayCache,
   sameRelayIdentifier,
   upsertRelayCache,
   writeRelayCaches,
@@ -41,6 +42,9 @@ test('相同缓存标识忽略大小写并更新原记录', () => {
     identifier: '公司中转',
     baseUrl: 'https://new.example.com/v1',
     apiKey: 'sk-new',
+    clientProfile: 'openai',
+    modelsPath: '',
+    chatPath: '',
     updatedAt: 200,
   });
 });
@@ -72,9 +76,22 @@ test('缓存可写入、读取并一键清空', () => {
   const entries = [{ identifier: '测试', baseUrl: 'https://api.example.com', apiKey: 'sk-test', updatedAt: 1 }];
 
   writeRelayCaches(entries, storage);
-  assert.deepEqual(readRelayCaches(storage), entries);
+  assert.deepEqual(readRelayCaches(storage), [{
+    ...entries[0],
+    clientProfile: 'openai',
+    modelsPath: '',
+    chatPath: '',
+  }]);
   clearRelayCaches(storage);
   assert.deepEqual(readRelayCaches(storage), []);
+});
+
+test('缓存标识支持中文、拼音首字母和模糊匹配', () => {
+  const entry = { identifier: '公司中转', baseUrl: 'https://relay.example.com', apiKey: 'sk-test' };
+  assert.equal(matchesRelayCache(entry, '公司'), true);
+  assert.equal(matchesRelayCache(entry, 'gszz'), true);
+  assert.equal(matchesRelayCache(entry, 'gzz'), true);
+  assert.equal(matchesRelayCache(entry, '备用'), false);
 });
 
 test('损坏或不完整的本地缓存不会阻断页面', () => {

@@ -16,6 +16,10 @@ config.local.json
 browser-profile/
 *.log
 
+# === 浏览器 profile（登录态/缓存，禁止提交）===
+edge-profile/
+edge-profile-test/
+
 # === WorkBuddy 工作区数据 ===
 .workbuddy/
 

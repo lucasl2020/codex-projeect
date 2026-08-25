@@ -3,7 +3,9 @@
 """基础导入测试"""
 
 import sys
-import pytest
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
 def test_import_package():

@@ -21,6 +21,22 @@ test('默认问题是今天的日期', () => {
   assert.equal(DEFAULT_PROMPT, '今天的日期');
 });
 
+test('首页默认展示中转站缓存搜索和客户端模式', async () => {
+  const app = createApp();
+  await new Promise((resolve) => app.listen(0, '127.0.0.1', resolve));
+  try {
+    const { port } = app.address();
+    const response = await fetch(`http://127.0.0.1:${port}/`);
+    const html = await response.text();
+    assert.equal(response.status, 200);
+    assert.match(html, /<details class="relay-panel" open>/);
+    assert.match(html, /缓存标识 \/ 搜索缓存/);
+    assert.match(html, /客户端模式（按需）/);
+  } finally {
+    await new Promise((resolve) => app.close(resolve));
+  }
+});
+
 test('配置读取会解析环境变量且公开 provider 不泄漏 key', async () => {
   process.env.TEST_AI_KEY = 'sk-test-secret';
   const dir = await mkdtemp(path.join(tmpdir(), 'ai-model-tester-'));
@@ -117,6 +133,48 @@ test('请求体可携带临时中转站配置', () => {
   assert.equal(provider.type, 'openai-compatible');
   assert.equal(provider.baseUrl, 'https://relay.example.com/v1');
   assert.equal(buildModelRequest(provider).url, 'https://relay.example.com/v1/models');
+});
+
+test('Codex 客户端模式使用 Responses API 和 Codex 标识', () => {
+  const provider = providerFromBody({ providers: [] }, {
+    customProvider: {
+      baseUrl: 'https://relay.example.com/v1',
+      apiKey: 'sk-relay',
+      clientProfile: 'codex',
+    },
+  });
+  const request = buildChatRequest(provider, { model: 'gpt-5-codex', prompt: 'hi' });
+  const body = JSON.parse(request.options.body);
+  assert.equal(request.url, 'https://relay.example.com/v1/responses');
+  assert.equal(request.options.headers.originator, 'codex_cli_rs');
+  assert.match(request.options.headers['user-agent'], /codex_cli_rs/);
+  assert.equal(body.input, 'hi');
+  assert.equal(body.max_output_tokens, 512);
+});
+
+test('Cursor 客户端模式使用 Chat Completions 和 Cursor 标识', () => {
+  const provider = providerFromBody({ providers: [] }, {
+    customProvider: {
+      baseUrl: 'https://api.cursor.com',
+      apiKey: 'cur-test',
+      clientProfile: 'cursor',
+    },
+  });
+  const modelRequest = buildModelRequest(provider);
+  assert.equal(modelRequest.url, 'https://api.cursor.com/v1/models');
+  assert.equal(modelRequest.options.headers.authorization, 'Bearer cur-test');
+
+  const request = buildChatRequest(provider, { model: 'gpt-5', prompt: 'hi' });
+  assert.equal(request.url, 'https://api.cursor.com/v1/chat/completions');
+  assert.match(request.options.headers['user-agent'], /cursor/i);
+  assert.match(request.options.headers['user-agent'], /^(?!.*\bcodex\b).*$/i);
+  assert.match(request.options.headers['user-agent'], /^(?!.*\bopenai\b).*$/i);
+  assert.equal(request.options.headers.authorization, 'Bearer cur-test');
+  assert.equal(request.options.headers.originator, undefined);
+  const body = JSON.parse(request.options.body);
+  assert.equal(body.model, 'gpt-5');
+  assert.equal(body.messages[0].content, 'hi');
+  assert.equal(body.max_tokens, 512);
 });
 
 test('错误脱敏会隐藏常见 token', () => {
@@ -364,4 +422,3 @@ test('页面 key 覆盖会真正用于上游 Authorization', async () => {
     await new Promise((resolve) => upstream.close(resolve));
   }
 });
-

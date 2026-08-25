@@ -11,6 +11,15 @@ Cloudflare：NodeSeek/DeepFlood/CHY 若落到“Just a moment / 安全验证”�
 
 Cloudflare / 验证码：检测到安全验证时调用 `cf-bypass-json.py`（`D:\codex-projeect\6a6ff848a2c537419fd0b6cf`）。可用 `python cf-bypass-json.py --diagnose` 检查依赖。
 
+可选：启动本地 `cf-captcha-server` HTTP API 服务后，脚本会优先通过同目录 `cf-solver.js` 走 HTTP 调用（更快，且支持 cf_clearance 缓存），服务不可达时自动回退到上面的 `cf-bypass-json.py`：
+
+```powershell
+cd D:\codex-projeect\验证码识别\cf_captcha_solver_pkg
+python -m cf_captcha_solver.server --port 8000
+```
+
+服务地址可用环境变量 `CF_SOLVER_URL` 覆盖（默认 `http://localhost:8000`）。
+
 额度显示策略：AnyRouter 使用只读 `GET /api/user/self`；NodeBuf 使用只读 `GET /api/account/points` 的账户总积分字段；iKuuu/CHY 仅在页面正文能解析“剩余/可用流量”时显示；NodeSeek/DeepFlood 仅在页面或签到响应能解析鸡腿/积分时显示。没有可靠来源时跳过，不猜测写接口，也不重复签到。
 5. DeepFlood 使用相同的双接口回退流程。
 6. NodeBuf 先调用 `GET /api/account/points` 判断今日状态；未签到时调用页面“立即签到”按钮当前使用的 `POST /api/account/points/check-in`。该请求无请求体，复用浏览器登录 Cookie。若被重定向到登录页，有界面模式会等待 Chrome 密码管理器自动填充已保存的账号密码，再点击页面原生登录按钮；脚本不会读取密码内容。

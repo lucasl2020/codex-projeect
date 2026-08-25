@@ -10,7 +10,12 @@ import sys
 import traceback
 from pathlib import Path
 
-HELPER_DIR = Path(r"D:\codex-projeect\6a6ff848a2c537419fd0b6cf")
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+if hasattr(sys.stderr, "reconfigure"):
+    sys.stderr.reconfigure(encoding="utf-8")
+
+HELPER_DIR = Path(os.environ.get("CF_HELPER_DIR", r"D:\codex-projeect\验证码识别"))
 sys.path.insert(0, str(HELPER_DIR))
 
 

@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "Authorized Turnstile Probe",
+  "version": "0.1.0",
+  "description": "Observe Turnstile state on authorized demo pages without solving or injecting tokens.",
+  "content_scripts": [
+    {
+      "matches": [
+        "https://nopecha.com/*",
+        "https://seleniumbase.io/*",
+        "https://core.particle.network/*",
+        "https://2captcha.com/*"
+      ],
+      "js": ["content.js"],
+      "run_at": "document_idle",
+      "all_frames": true
+    }
+  ]
+}

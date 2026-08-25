@@ -2,7 +2,7 @@
 
 > Cloudflare 验证绕过 + 验证码自动识别一体化 Python 库
 
-支持 15+ 种验证码类型，包括文字/算术/点选/滑块等本地 OCR 识别，以及 hCaptcha/reCAPTCHA/Turnstile/FunCaptcha/GeeTest/AWS WAF 等第三方验证码求解。
+支持 15+ 种验证码类型，包括文字/算术/点选/滑块/旋转等本地 OCR 识别，以及 hCaptcha/reCAPTCHA/Turnstile/FunCaptcha/GeeTest/AWS WAF 等第三方验证码求解；另提供 GeeTest v4 浏览器内自动化求解。
 
 ## 安装
 
@@ -63,6 +63,7 @@ if result.success:
 | 顺序点选验证码 | 检测 + OCR + 排序 | `[captcha]` |
 | 滑块验证码 (边缘匹配) | ddddocr 缺口检测 + 轨迹 | `[captcha]` |
 | 滑块验证码 (图片差异) | ddddocr slide_comparison | `[captcha]` |
+| 旋转验证码 (调整方向) | Canny + Hough 边缘方向直方图 | `[captcha]` |
 | hCaptcha 九宫格 | ONNX MoE 模型本地分类 | `[hcaptcha]` |
 | hCaptcha 浏览器自动化 | Playwright + ONNX 自动点击 | `[hcaptcha-browser]` |
 | reCAPTCHA 图片分类 | ONNX/ddddocr 图片分类 | `[hcaptcha]` 或 `[captcha]` |
@@ -216,6 +217,24 @@ result = v4_solver.solve_via_api(
 )
 ```
 
+#### GeeTest v4 浏览器内自动化（本地，无需打码平台）
+
+```python
+from cf_captcha_solver import GeeTestBrowserSolver
+
+# 复用真实浏览器 profile，在浏览器内自动完成 GeeTest v4 滑块验证
+solver = GeeTestBrowserSolver(
+    headless=False,
+    user_data_dir=r"C:\path\to\chrome-profile",  # 复用登录态
+)
+
+result = solver.solve_slide("https://example.com/page_with_geetest")
+# result.answer = {"gap_distance": 150, "drag_distance": 130}
+```
+
+注意：GeeTest v4 的 DOM 结构随版本与站点变化，默认选择器集中定义在
+`GeeTestBrowserSolver.SELECTORS`，可针对具体站点覆盖调整。
+
 #### FunCaptcha (Arkose Labs)
 
 ```python
@@ -284,6 +303,24 @@ result = solver.solve(
 # result.details["track"]  # 滑动轨迹
 ```
 
+#### 旋转验证码 (调整方向)
+
+```python
+from cf_captcha_solver import RotateCaptchaSolver
+
+solver = RotateCaptchaSolver()
+
+# 连续角度（拖动滑块类），answer 为需要顺时针旋转的角度
+result = solver.solve(image_bytes)
+
+# 量化到 0/90/180/270（点击旋转按钮类）
+result = solver.solve(image_bytes, quantize=True)
+# result.answer = 90  # 需顺时针旋转 90 度
+```
+
+基于 Canny 边缘检测 + Hough 直线方向直方图，无模型依赖，适合文字旋转码；
+纯自然场景的"图片正立判断"建议走 CLIP 方向分类或付费打码平台。
+
 #### 通用图像分类器
 
 ```python
@@ -324,6 +361,7 @@ captcha-solver text --image captcha.png
 captcha-solver math --image math.png
 captcha-solver slide --bg bg.png --slider slider.png
 captcha-solver click --image click.png --text "星空大海"
+captcha-solver rotate --image rotate.png
 
 # Cloudflare 绕过
 cf-bypass https://example.com
@@ -336,6 +374,17 @@ captcha-solver detect --html page.html
 ## 合规提醒
 
 仅供技术研究和学习使用。绕过安全机制可能违反目标网站服务条款，请在合法合规的前提下使用。
+
+## 已知问题与待验证
+
+以下能力已实现，但受外部依赖限制尚未完成端到端验证，使用前请知悉：
+
+| 项 | 状态 | 说明 |
+|---|---|---|
+| 第三方打码平台（reCAPTCHA v2/v3、hCaptcha、Turnstile、FunCaptcha、GeeTest v3/v4、AWS WAF） | 待验证 | 需注册 2captcha / capsolver / yescaptcha 获取 API Key，暂未跑通真实请求 |
+| GeeTest v4 浏览器内自动化 | 待联调 | `GeeTestBrowserSolver` 的 DOM 选择器与拖动参数需真实 GeeTest v4 站点校准 |
+| 算术验证码（减号） | 识别不稳 | ddddocr 对 `-` 运算符易识别丢失，如 `12-7` 可能识别为 `127` |
+| 点选验证码（图标类） | 待真实样本 | 通用目标检测对图标敏感度不足，文字点选可用，图标点选需 YOLO 类模型或真实样本调优 |
 
 ## 非 Python 程序调用（HTTP API）
 
@@ -423,8 +472,8 @@ cf_captcha_solver_pkg/
 ├── cf_captcha_solver/          # 源码包
 │   ├── __init__.py             # 公共 API 导出
 │   ├── api.py                  # 统一入口 solve() / bypass()
-│   ├── captcha.py              # 验证码识别模块 (文字/算术/点选/滑块/第三方)
-│   ├── advanced_solvers.py     # 高级求解器 (hCaptcha/GeeTest/FunCaptcha/AWS WAF)
+│   ├── captcha.py              # 验证码识别模块 (文字/算术/点选/滑块/旋转/第三方)
+│   ├── advanced_solvers.py     # 高级求解器 (hCaptcha/GeeTest/旋转/FunCaptcha/AWS WAF)
 │   ├── cloudflare.py           # Cloudflare 绕过模块
 │   ├── cli.py                  # 命令行工具
 │   └── server.py               # HTTP API 服务（FastAPI）

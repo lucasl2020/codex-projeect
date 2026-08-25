@@ -41,6 +41,15 @@ node server.mjs
 4. 页面 key 明文显示，只随请求发给本地服务，不写回文件。
 5. 临时中转站 key 也是明文输入。
 
+## 中转站客户端模式
+
+- `通用 OpenAI`：使用 `/chat/completions`。
+- `Codex 客户端`：使用 `/responses`，并发送 Codex 的 `User-Agent`、`originator` 和 `openai-beta` 标识。
+- `Cursor 官方`：使用 `/v1/chat/completions` 与 `/v1/models`，并附带 Cursor 客户端的 `User-Agent`，需配合 Cursor 颁发的 Key。
+- 缓存标识支持中文、拼音首字母和非连续模糊匹配，点击建议会回填地址、Key、路径及客户端模式。
+
+新增第二或更多客户端模式时，只需编辑 `public/client-profiles.mjs`，在 `RELAY_CLIENT_PROFILES` 中追加一项。若新模式使用现有的 `chat-completions` 或 `responses` 请求格式，无需修改其他代码；只需在 `profile` 中给出 `chatPath`、`modelsPath`（可选）和 `headers` 等字段，UI 与服务端会自动继承这些默认值。
+
 ## 使用流程
 
 1. 左侧选择接口，或使用临时中转站。

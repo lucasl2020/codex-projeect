@@ -58,12 +58,29 @@ describe('repositories', () => {
     assert.ok(hits.some((h) => h.name === 'A2'));
   });
 
-  it('does not require products wipe path here — replace only on success', () => {
+  it('can replace a successful crawl with an empty snapshot', () => {
     const site = createSite('https://example.org/shop/b');
     replaceProducts(site.id, [{ name: 'Keep', price: 1, price_raw: '1', warranty_days: 7 }]);
     assert.equal(listProductsBySite(site.id).length, 1);
-    // empty replace would wipe — worker must not call replaceProducts on failure
     replaceProducts(site.id, []);
     assert.equal(listProductsBySite(site.id).length, 0);
   });
+
+  it('replaces a shop snapshot including removals and image changes', () => {
+    const site = createSite('https://example.net/shop/c');
+    replaceProducts(site.id, [
+      { name: 'Updated', price: 1, image_url: null },
+      { name: 'Delisted', price: 2, image_url: 'https://example.net/old.png' },
+    ]);
+
+    replaceProducts(site.id, [
+      { name: 'Updated', price: 1, image_url: 'https://example.net/new.png' },
+    ]);
+
+    const products = listProductsBySite(site.id);
+    assert.equal(products.length, 1);
+    assert.equal(products[0].name, 'Updated');
+    assert.equal(products[0].image_url, 'https://example.net/new.png');
+  });
+
 });

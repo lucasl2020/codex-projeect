@@ -203,9 +203,9 @@ class CaptchaDetector:
             img = Image.open(BytesIO(image_bytes))
             w, h = img.size
 
-            # 极小图片 (图标) → 可能是滑块缺口
+            # 小尺寸独立图片更常见于文字验证码
             if w < 100 and h < 100:
-                return CaptchaType.SLIDE
+                return CaptchaType.TEXT
 
             # 宽幅图片 (通常点选验证码较宽)
             if w > 300 and h > 100:
@@ -241,11 +241,12 @@ class TextCaptchaSolver:
 
     def __init__(self, use_beta: bool = False, use_gpu: bool = False):
         self.ocr = None
+        self._default_charset = None
         self.use_beta = use_beta
         self.use_gpu = use_gpu
 
     def _init_ocr(self):
-        """延迟初始化 ddddocr（首次调用时加载模型）"""
+        """延迟初始化 ddddocr，并保存完整字符集。"""
         if self.ocr is not None:
             return
         try:
@@ -257,9 +258,37 @@ class TextCaptchaSolver:
                 use_gpu=self.use_gpu,
                 show_ad=False,
             )
+            get_charset = getattr(self.ocr, "get_charset", None)
+            if get_charset is not None:
+                self._default_charset = get_charset()
             logger.info("ddddocr OCR 模型已加载")
-        except ImportError:
-            raise ImportError("ddddocr 未安装 (pip install ddddocr)")
+        except ImportError as e:
+            raise ImportError(
+                f"ddddocr 加载失败，请安装 ddddocr 及其运行时依赖: {e}"
+            ) from e
+
+    def _reset_charset(self):
+        """恢复 OCR 的完整字符集，避免限制状态泄漏。"""
+        if self.ocr is None or self._default_charset is None:
+            return
+        try:
+            self.ocr.set_ranges(self._default_charset)
+        except Exception as e:
+            logger.warning("恢复 ddddocr 字符集失败: %s", e)
+
+    @staticmethod
+    def _fit_to_charset(text: str, charset: str) -> str:
+        """过滤字符，并在字符集只允许单一大小写时进行归一化。"""
+        allowed = set(charset)
+        result = []
+        for char in text or "":
+            if char in allowed:
+                result.append(char)
+            elif char.upper() in allowed and char.lower() not in allowed:
+                result.append(char.upper())
+            elif char.lower() in allowed and char.upper() not in allowed:
+                result.append(char.lower())
+        return "".join(result)
 
     def solve(self, image_bytes: bytes, charset: str = "") -> CaptchaResult:
         """
@@ -271,23 +300,19 @@ class TextCaptchaSolver:
         """
         try:
             self._init_ocr()
-
-            # 仅在调用方明确限制字符集时再 set_ranges。
-            # 新版 ddddocr 对 set_ranges(6) 可能直接返回空串。
             if charset:
-                try:
-                    self.ocr.set_ranges(charset)
-                except Exception:
-                    pass
+                self.ocr.set_ranges(charset)
+                restricted = self._fit_to_charset(
+                    self.ocr.classification(image_bytes, png_fix=True), charset
+                )
 
-            result = self.ocr.classification(image_bytes)
-            if (not result) and charset:
-                # 回退一次：不限字符集再识别
-                try:
-                    self.ocr.set_ranges(0)
-                except Exception:
-                    pass
-                result = self.ocr.classification(image_bytes)
+                self._reset_charset()
+                unrestricted = self.ocr.classification(image_bytes, png_fix=True)
+                normalized = self._fit_to_charset(unrestricted, charset)
+                result = normalized if len(normalized) > len(restricted) else restricted
+            else:
+                self._reset_charset()
+                result = self.ocr.classification(image_bytes, png_fix=True)
 
             if result and len(result) > 0:
                 return CaptchaResult(
@@ -309,6 +334,8 @@ class TextCaptchaSolver:
                 captcha_type=CaptchaType.TEXT,
                 error=f"文字验证码识别异常: {e}",
             )
+        finally:
+            self._reset_charset()
 
     def solve_with_probability(self, image_bytes: bytes) -> CaptchaResult:
         """
@@ -319,7 +346,10 @@ class TextCaptchaSolver:
         """
         try:
             self._init_ocr()
-            result = self.ocr.classification(image_bytes, probability=True)
+            self._reset_charset()
+            result = self.ocr.classification(
+                image_bytes, png_fix=True, probability=True
+            )
 
             if isinstance(result, dict) and "probability" in result:
                 # 从概率分布中取最优
@@ -349,6 +379,8 @@ class TextCaptchaSolver:
                 captcha_type=CaptchaType.TEXT,
                 error=f"概率识别异常: {e}",
             )
+        finally:
+            self._reset_charset()
 
 
 # ===========================================================================

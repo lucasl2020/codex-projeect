@@ -153,7 +153,7 @@ export function deleteSite(id) {
 }
 
 /**
- * Replace products for a site (only call on successful extraction with items).
+ * Replace the complete product snapshot for a successfully crawled site.
  * @param {number} siteId
  * @param {object[]} products
  */

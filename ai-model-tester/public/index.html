@@ -31,19 +31,26 @@
             <button class="btn ghost" id="refreshProviders" type="button">同步配置</button>
           </div>
 
-          <details class="relay-panel">
+          <details class="relay-panel" open>
             <summary>
               <span class="relay-mark" aria-hidden="true">↗</span>
               <span class="relay-summary-copy">
                 <strong>临时中转站</strong>
-                <small>临时连接兼容 OpenAI 的接口</small>
+                <small>缓存模糊搜索 · 支持 Codex / Cursor 等客户端</small>
               </span>
               <span class="relay-toggle" aria-hidden="true"></span>
             </summary>
             <div class="relay-fields">
               <label class="field">
-                <span>缓存标识</span>
-                <input id="relayCacheLabel" type="text" placeholder="例如：公司中转、备用线路" autocomplete="off">
+                <span>缓存标识 / 搜索缓存</span>
+                <input id="relayCacheLabel" type="text" placeholder="输入中文或拼音首字母搜索缓存" autocomplete="off">
+                <div class="relay-cache-suggestions" id="relayCacheSuggestions" role="listbox" aria-label="缓存搜索建议" hidden></div>
+              </label>
+              <label class="field">
+                <span>客户端模式（按需）</span>
+                <select id="relayClientProfile"></select>
+                <small class="field-note" id="relayClientProfileHint">普通中转站保持“通用 OpenAI”；仅受限中转站需要切换。</small>
+                <div class="relay-client-profile-detail" id="relayClientProfileDetail"></div>
               </label>
               <label class="field">
                 <span>Base URL</span>
