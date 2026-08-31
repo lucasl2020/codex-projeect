@@ -451,6 +451,25 @@ async function readPageTrafficQuota(page) {
   const body = await page.locator('body').innerText().catch(() => '');
   return extractTrafficQuotaFromText(body);
 }
+async function waitForPageTrafficQuota(page, timeoutMs = 15000) {
+  const deadline = Date.now() + timeoutMs;
+  let last;
+  let stable = 0;
+  while (Date.now() < deadline) {
+    const quota = await readPageTrafficQuota(page).catch(() => undefined);
+    if (quota !== undefined) {
+      if (quota === last) {
+        stable += 1;
+        if (stable >= 2) return quota;
+      } else {
+        stable = 0;
+      }
+      last = quota;
+    }
+    await page.waitForTimeout?.(500);
+  }
+  return last;
+}
 // 从签到接口响应里直接抽取额度（MB），作为页面额度读取失败时的回退。
 function extractApiQuota(data) {
   if (!data || typeof data !== 'object') return undefined;
@@ -541,13 +560,13 @@ async function runIkuuu(context) {
   try {
     await page.goto(URLS.ikuuu, { waitUntil: 'domcontentloaded', timeout: 60000 });
     if (isLoginUrl(page.url())) throw new Error('Not logged in; run the setup command first.');
-    const beforeQuota = await readPageTrafficQuota(page);
+    const beforeQuota = await waitForPageTrafficQuota(page);
     const finish = async (message, directQuota) => {
       let afterQuota;
       if (typeof page.reload === 'function') {
         await page.reload({ waitUntil: 'domcontentloaded', timeout: 60000 }).catch(() => {});
       }
-      afterQuota = await readPageTrafficQuota(page).catch(() => undefined);
+      afterQuota = await waitForPageTrafficQuota(page).catch(() => undefined);
       const apiQuota = directQuota !== undefined ? directQuota : extractApiQuota(data);
       let quota;
       if (beforeQuota !== undefined || afterQuota !== undefined) {
@@ -1272,7 +1291,7 @@ async function runOnce(enabledTasks = null) {
   let results = [];
   try {
     if (enabled.includes('anyrouter')) {
-      const r = await attempt(context, 'anyrouter', runIkuuu);
+      const r = await attempt(context, 'anyrouter', runAnyRouter);
       results.push(r);
       nextAnyRouterRetryAt = r.ok ? 0 : Date.now() + HOUR;
     }

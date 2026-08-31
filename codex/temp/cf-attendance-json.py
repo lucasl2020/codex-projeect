@@ -53,12 +53,27 @@ def is_success(text):
     return bool(re.search(r"签到成功|获得.*鸡腿|鸡腿.*成功|签到收益|成功.*鸡腿", str(text or ""), re.I))
 
 
+def _port_open(host, port, timeout=0.6):
+    import socket
+    try:
+        with socket.create_connection((host, port), timeout=timeout):
+            return True
+    except Exception:
+        return False
+
+
 def resolve_proxy():
     p = (os.environ.get("HTTPS_PROXY") or os.environ.get("https_proxy")
          or os.environ.get("HTTP_PROXY") or os.environ.get("http_proxy")
          or os.environ.get("ALL_PROXY") or os.environ.get("all_proxy"))
     if p:
         return {"http": p, "https": p}
+    # 无环境变量时回退到本机常用代理端口（Clash/V2Ray 等）。部分站点（如 nodeseek）
+    # 直连超时，只有走代理才能访问其余额接口；deepflood 直连可用，仍按原逻辑直接请求。
+    for port in ("7897", "7890", "10809", "1080"):
+        if _port_open("127.0.0.1", int(port)):
+            proxy = "http://127.0.0.1:" + port
+            return {"http": proxy, "https": proxy}
     return None
 
 
