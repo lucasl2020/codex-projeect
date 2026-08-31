@@ -19,6 +19,8 @@ const URLS = {
   nodeseek: 'https://www.nodeseek.com/board',
   deepflood: 'https://www.deepflood.com/board',
   nodebuf: 'https://nodebuf.com/user/points',
+  hvoy: 'https://www.hvoy.ai/',
+  hybgzs: 'https://cdk.hybgzs.com/dashboard',
 };
 let nextAnyRouterRetryAt = 0;
 
@@ -30,6 +32,8 @@ const TASK_ORDER = [
   { task: 'nodeseek', label: 'NodeSeek' },
   { task: 'deepflood', label: 'DeepFlood' },
   { task: 'nodebuf', label: 'NodeBuf' },
+  { task: 'hvoy', label: '禾维AI' },
+  { task: 'hybgzs', label: '黑白福利站' },
   { task: 'allapihub', label: 'All API Hub' },
 ];
 const TASK_CONFIG_FILE = process.env.TASK_CONFIG_FILE || path.join(ROOT, 'task-config.json');
@@ -728,6 +732,135 @@ async function runNodeBuf(context) {
   }
 }
 
+// --- hvoy.ai：每日签到（无验证码，直接 GET 接口） ---
+async function runHvoy(context) {
+  const page = await context.newPage();
+  try {
+    await page.goto(URLS.hvoy, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    const result = await page.evaluate(async () => {
+      const session = await fetch('/__free-token/session', { credentials: 'include' })
+        .then(r => r.json()).catch(() => null);
+      const res = await fetch('/__free-token/daily-check-in', { credentials: 'include' });
+      return { status: res.status, text: await res.text(), session };
+    });
+    const data = parseJson(result.text);
+    log('hvoy', `GET /__free-token/daily-check-in HTTP ${result.status}`);
+    if (!data || data.ok !== true) {
+      if (result.status === 401 || result.status === 403 || result.session?.authenticated === false) {
+        throw new Error('hvoy 未登录；请先运行「重新登录全部网站.cmd」。');
+      }
+      throw new Error('hvoy 签到失败：' + (data?.error || data?.message || result.text.slice(0, 200)));
+    }
+    const points = result.session?.user?.pointsBalance;
+    const quota = Number.isFinite(points) ? '\u79ef\u5206\uff1a' + points : '';
+    return { ok: true, message: '\u7b7e\u5230\u6210\u529f' + (quota ? '\uff1b' + quota : ''), quota: quota || '' };
+  } finally {
+    await page.close();
+  }
+}
+
+// --- cdk.hybgzs.com：每日签到 + 大转盘（需人机验证，走浏览器点击 + Turnstile 自动通过） ---
+async function hybgzsStats(page) {
+  const res = await page.evaluate(async () => {
+    const r = await fetch('/api/dashboard/stats', { credentials: 'include' });
+    return { status: r.status, text: await r.text() };
+  });
+  return { status: res.status, data: parseJson(res.text) };
+}
+function clickWaitPost(page, matcher, timeout = 45000) {
+  return page.waitForResponse(
+    res => res.request().method() === 'POST' && res.url().includes(matcher),
+    { timeout },
+  ).catch(() => null);
+}
+async function doHybgzsCheckin(page) {
+  await page.goto('https://cdk.hybgzs.com/gas-station/checkin', { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForTimeout?.(2500);
+  const btn = page.locator('button').filter({ hasText: /立即签到|^签到$/ }).first();
+  if (!(await btn.count())) return { result: 'fail', message: '未找到签到按钮' };
+  const promise = clickWaitPost(page, '/api/checkin');
+  await btn.click({ timeout: 15000 }).catch(() => {});
+  const resp = await promise;
+  if (!resp) return { result: 'fail', message: '人机验证未自动通过（未发起签到请求）' };
+  let data = null;
+  try { data = await resp.json(); } catch {}
+  const status = resp.status();
+  if (status >= 200 && status < 300 && data?.success === true) {
+    return { result: 'success', message: '签到成功' };
+  }
+  const err = String(data?.error || data?.message || '');
+  if (/已签|签到过|今日已|已完成/.test(err)) return { result: 'done', message: '今日已签到' };
+  return { result: 'fail', message: '签到失败：' + (err || ('HTTP ' + status)) };
+}
+async function doHybgzsWheel(page) {
+  await page.goto('https://cdk.hybgzs.com/entertainment/wheel', { waitUntil: 'domcontentloaded', timeout: 60000 });
+  await page.waitForTimeout?.(2500);
+  const spin = page.locator('[data-testid="wheel-spin-button"]').first();
+  if (!(await spin.count())) return { result: 'fail', message: '未找到抽奖按钮' };
+  const promise = clickWaitPost(page, '/api/wheel');
+  await spin.click({ timeout: 15000 }).catch(() => {});
+  const resp = await promise;
+  if (!resp) return { result: 'fail', message: '人机验证未自动通过（未发起抽奖请求）' };
+  let data = null;
+  try { data = await resp.json(); } catch {}
+  const status = resp.status();
+  if (status >= 200 && status < 300 && data?.success === true) {
+    const prize = data?.data?.prize;
+    const name = prize?.name || '';
+    const remain = data?.data?.remainingSpins;
+    return { result: 'success', message: '抽中 ' + (name || '奖励') + (Number.isFinite(remain) ? '（剩余' + remain + '次）' : '') };
+  }
+  const err = String(data?.error || data?.message || '');
+  if (/次数|用完|无.*次/.test(err)) return { result: 'done', message: '今日免费次数已用完' };
+  return { result: 'fail', message: '抽奖失败：' + (err || ('HTTP ' + status)) };
+}
+async function runHybgzs(context) {
+  const page = await context.newPage();
+  try {
+    await page.goto(URLS.hybgzs, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await page.waitForTimeout?.(2000);
+    let stats = await hybgzsStats(page);
+    if (stats.status === 401 || stats.status === 403) {
+      throw new Error('cdk.hybgzs.com 未登录；请先运行「重新登录全部网站.cmd」。');
+    }
+    const s = stats.data?.data || {};
+    const checkinDone = s.checkinStatus?.hasCheckedToday === true;
+    const consecutive = s.checkinStatus?.consecutiveDays ?? 0;
+    const remainingSpins = Number(s.wheelStatus?.remainingSpins ?? 0);
+
+    const parts = [];
+    let failed = false;
+
+    if (checkinDone) {
+      parts.push('签到：今日已签到（连续' + consecutive + '天）');
+    } else {
+      const r = await doHybgzsCheckin(page);
+      parts.push('签到：' + r.message);
+      if (r.result === 'fail') failed = true;
+    }
+
+    if (remainingSpins <= 0) {
+      parts.push('转盘：今日免费次数已用完');
+    } else {
+      const r = await doHybgzsWheel(page);
+      parts.push('转盘：' + r.message);
+      if (r.result === 'fail') failed = true;
+    }
+
+    stats = await hybgzsStats(page);
+    const balance = stats.data?.data?.walletBalance;
+    const quota = Number.isFinite(balance) ? '\u94b1\u5305\u989d\u5ea6\uff1a' + balance : '';
+
+    return {
+      ok: !failed,
+      message: parts.join('\uff1b') + (quota ? '\uff1b' + quota : ''),
+      quota: quota || '',
+    };
+  } finally {
+    await page.close();
+  }
+}
+
 async function runChy(context) {
   const page = await context.newPage();
   const requests = [];
@@ -1252,6 +1385,8 @@ function printSummary(results) {
     nodeseek: 'NodeSeek',
     deepflood: 'DeepFlood',
     nodebuf: 'NodeBuf',
+    hvoy: '禾维AI',
+    hybgzs: '黑白福利站',
     allapihub: 'All API Hub',
   };
   console.log('\n========== 本次执行结果 ==========');
@@ -1316,6 +1451,8 @@ async function runOnce(enabledTasks = null) {
       }
     }
     if (enabled.includes('nodebuf')) results.push(await attempt(context, 'nodebuf', runNodeBuf));
+    if (enabled.includes('hvoy')) results.push(await attempt(context, 'hvoy', runHvoy));
+    if (enabled.includes('hybgzs')) results.push(await attempt(context, 'hybgzs', runHybgzs));
   } finally {
     await context.close();
   }
@@ -1351,6 +1488,8 @@ async function setup() {
     URLS.nodeseek,
     URLS.deepflood,
     URLS.nodebuf,
+    URLS.hvoy,
+    URLS.hybgzs,
   ], { stdio: 'ignore', windowsHide: false });
   await new Promise((resolve, reject) => {
     chrome.once('spawn', resolve);
