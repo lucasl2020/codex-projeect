@@ -584,3 +584,9 @@ python tests/test_imports.py
 | [2captcha](https://2captcha.com) | 商业打码平台 |
 | [capsolver](https://capsolver.com) | 商业打码平台 |
 | [yescaptcha](https://yescaptcha.com) | 商业打码平台 |
+
+## 打包为独立程序（免装 Python）
+
+在仓库根目录运行 `build-release.ps1`，会在 `release\验证码识别\` 生成 `cf-captcha-server.exe`（onedir，已内嵌 ddddocr 模型与 onnxruntime）。运行后同样在 `--port`（默认 8000）监听，直接访问 `http://localhost:8000/docs` 即可调用，无需安装 Python 环境。
+
+> 说明：本地 OCR / 目标检测 / 滑块识别与 HTTP API 完全自包含；基于浏览器的 Cloudflare 绕过策略（DrissionPage / Playwright）仍需目标机有可用浏览器。

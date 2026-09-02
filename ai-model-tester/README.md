@@ -64,3 +64,7 @@ node server.mjs
 ```powershell
 node --test
 ```
+
+## 打包为独立程序
+
+在仓库根目录运行 `build-release.ps1`，会在 `release\ai-model-tester\` 生成便携版（自带 `node.exe` 与 `public/` 静态资源），双击其中的 `start.cmd` 即可在未安装 Node.js 的 Windows 机器上运行。

@@ -73,3 +73,7 @@ npm run install-browser
 ## 说明
 
 仅供个人本机比价整理；站点结构差异大，通用解析可能部分失败，失败不会清空该站上次成功商品。
+
+## 打包为独立程序
+
+在仓库根目录运行 `build-release.ps1`，会在 `release\crawler\` 生成便携版：自带 `node.exe`、`node_modules` 与 **内嵌 Chromium 浏览器**（无需再 `npm run install-browser`），双击其中的 `start.cmd` 即可在未安装 Node.js 的 Windows 机器上直接爬取。

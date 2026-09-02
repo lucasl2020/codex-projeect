@@ -14,7 +14,7 @@
 ## 命令行
 
 ```powershell
-cd D:\codex-projeect\codex\temp\trae-auto-checkin
+cd D:\codex-projeect\trae-auto-checkin
 python -m pip install -r requirements.txt
 python .\trae_checkin.py
 python .\trae_checkin.py --status-only
@@ -34,3 +34,7 @@ python .\trae_checkin.py --skip-workbuddy
 - WorkBuddy 真实接口为：
   - `POST https://copilot.tencent.com/v2/billing/meter/checkin-activity-status`
   - `POST https://copilot.tencent.com/v2/billing/meter/daily-checkin`
+
+## 打包为独立程序
+
+在仓库根目录运行 `build-release.ps1`，会在 `release\trae-auto-checkin\` 生成单文件 `trae_checkin.exe`，已内嵌 Python 运行时与 `pycryptodome`，双击即可签到（可附加 `--status-only` 等参数），无需安装 Python。

@@ -15,6 +15,9 @@ config.local.json
 *.db-journal
 browser-profile/
 *.log
+build/
+dist/
+release/
 
 # === 浏览器 profile（登录态/缓存，禁止提交）===
 edge-profile/
