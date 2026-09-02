@@ -30,5 +30,9 @@ edge-profile-test/
 Thumbs.db
 .DS_Store
 
+# === 调试产物（探针脚本 / 临时图片）===
+codex/temp/_*
+typora-to-obsidian/Obsidian
+
 # === 敏感凭证：含明文 API Key，禁止入库 ===
 显示codex配置信息/codex-plus-key-fix.md

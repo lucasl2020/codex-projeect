@@ -19,7 +19,7 @@ const URLS = {
   nodeseek: 'https://www.nodeseek.com/board',
   deepflood: 'https://www.deepflood.com/board',
   nodebuf: 'https://nodebuf.com/user/points',
-  hvoy: 'https://www.hvoy.ai/',
+  hvoy: 'https://www.hvoyai.com/',
   hybgzs: 'https://cdk.hybgzs.com/dashboard',
 };
 let nextAnyRouterRetryAt = 0;
@@ -505,12 +505,22 @@ async function getAnyRouterSelf(context) {
 }
 async function launchContext(headless = HEADLESS) {
   fs.mkdirSync(PROFILE_DIR, { recursive: true });
-  return chromium.launchPersistentContext(PROFILE_DIR, {
+  const context = await chromium.launchPersistentContext(PROFILE_DIR, {
     executablePath: findChrome(),
     headless,
     viewport: null,
     acceptDownloads: false,
     ignoreDefaultArgs: ['--disable-extensions'],
+    args: ['--disable-blink-features=AutomationControlled'],
+  });
+  await applyStealth(context);
+  return context;
+}
+
+// 隐藏自动化特征（navigator.webdriver 等），绕过 cdk.hybgzs.com 等站点的反自动化检测
+async function applyStealth(context) {
+  await context.addInitScript(() => {
+    Object.defineProperty(Navigator.prototype, 'webdriver', { get: () => false, configurable: true });
   });
 }
 
@@ -732,28 +742,169 @@ async function runNodeBuf(context) {
   }
 }
 
-// --- hvoy.ai：每日签到（无验证码，直接 GET 接口） ---
+// --- hvoy.ai：每日签到（需过腾讯滑块验证，自动识别缺口并拟人拖动） ---
+const HVOY_HOLE_HELPER = path.join(ROOT, '_hole_x.py');
+const HVOY_BG_PATH = path.join(ROOT, '_hv_bg.jpg');
+const HVOY_PIECE_PATH = path.join(ROOT, '_hv_piece.png');
+
+// 调用 python cv2 脚本定位拼图缺口（返回自然坐标中心 + 自然宽度）
+function hvDetectHole(bgPath, piecePath) {
+  const { execFileSync } = require('node:child_process');
+  try {
+    const out = execFileSync(process.env.PYTHON_PATH || 'python', [HVOY_HOLE_HELPER, bgPath, piecePath], {
+      encoding: 'utf8', windowsHide: true, timeout: 30000,
+    });
+    const line = String(out).split('\n').find(l => l.startsWith('{'));
+    return line ? parseJson(line) : null;
+  } catch {
+    return null;
+  }
+}
+
+// 拟人拖拽：缓动轨迹 + 随机微抖动 + 末端小幅回退修正
+async function hvDragSlider(page, fromX, fromY, toX) {
+  const D = toX - fromX;
+  await page.mouse.move(fromX, fromY, { steps: 6 });
+  await page.waitForTimeout(120 + Math.random() * 160);
+  await page.mouse.down();
+  await page.waitForTimeout(80 + Math.random() * 80);
+  const N = 40;
+  let lastX = fromX;
+  for (let i = 1; i <= N; i++) {
+    const t = i / N;
+    const ease = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const x = fromX + D * ease;
+    const y = fromY + (Math.random() - 0.5) * 2.2;
+    await page.mouse.move(x, y, { steps: 1 + Math.floor(Math.random() * 3) });
+    await page.waitForTimeout(6 + Math.random() * 14);
+    lastX = x;
+  }
+  await page.mouse.move(lastX - 2 - Math.random() * 2, fromY, { steps: 2 });
+  await page.waitForTimeout(40 + Math.random() * 60);
+  await page.mouse.move(toX, fromY, { steps: 2 });
+  await page.waitForTimeout(120 + Math.random() * 120);
+  await page.mouse.up();
+}
+
+// 解一次腾讯滑块，成功触发拖动返回 true
+async function hvSolveCaptcha(page) {
+  const block = page.locator('.tencent-captcha-dy__slider-block');
+  await block.waitFor({ state: 'visible', timeout: 15000 }).catch(() => {});
+  if (!(await block.count())) return false;
+
+  const geo = await page.evaluate(() => {
+    const q = s => document.querySelector(s);
+    const bg = q('.tencent-captcha-dy__verify-bg-img');
+    const fg = q('.tencent-captcha-dy__fg-item');
+    const bl = q('.tencent-captcha-dy__slider-block');
+    if (!bg || !fg || !bl) return null;
+    const bgm = getComputedStyle(bg).backgroundImage.match(/url\(["']?(.*?)["']?\)/);
+    const fgm = getComputedStyle(fg).backgroundImage.match(/url\(["']?(.*?)["']?\)/);
+    const rect = e => { const r = e.getBoundingClientRect(); return { x: r.x, y: r.y, w: r.width, h: r.height }; };
+    return {
+      bgUrl: bgm ? bgm[1] : null,
+      pieceUrl: fgm ? fgm[1] : null,
+      bgRect: rect(bg), fgRect: rect(fg), blockRect: rect(bl),
+      fgLeft: parseFloat(getComputedStyle(fg).left) || 0,
+    };
+  });
+  if (!geo || !geo.bgUrl) return false;
+
+  const bgResp = await page.request.get(geo.bgUrl).catch(() => null);
+  if (!bgResp || !bgResp.ok()) return false;
+  fs.writeFileSync(HVOY_BG_PATH, await bgResp.body());
+
+  let hasPiece = false;
+  if (geo.pieceUrl) {
+    const pieceResp = await page.request.get(geo.pieceUrl).catch(() => null);
+    if (pieceResp && pieceResp.ok()) {
+      fs.writeFileSync(HVOY_PIECE_PATH, await pieceResp.body());
+      hasPiece = true;
+    }
+  }
+
+  const hole = hvDetectHole(HVOY_BG_PATH, hasPiece ? HVOY_PIECE_PATH : null);
+  if (!hole || hole.error || !hole.cx || !hole.W) {
+    log('hvoy', '缺口识别失败：' + JSON.stringify(hole));
+    return false;
+  }
+  log('hvoy', `缺口定位 method=${hole.method} cx=${hole.cx} cy=${hole.cy} conf=${hole.conf ?? '-'}`);
+
+  const scale = geo.bgRect.w / hole.W;
+  const drag = hole.cx * scale - (geo.fgLeft + geo.fgRect.w / 2);
+  if (drag <= 0 || drag > geo.bgRect.w) {
+    log('hvoy', `拖拽距离越界：${drag.toFixed(1)}px`);
+    return false;
+  }
+  log('hvoy', `拖拽 ${drag.toFixed(1)}px（scale=${scale.toFixed(4)}）`);
+
+  const bx = geo.blockRect.x + geo.blockRect.w / 2;
+  const by = geo.blockRect.y + geo.blockRect.h / 2;
+  await hvDragSlider(page, bx, by, bx + drag);
+  return true;
+}
+
 async function runHvoy(context) {
   const page = await context.newPage();
   try {
     await page.goto(URLS.hvoy, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    const result = await page.evaluate(async () => {
-      const session = await fetch('/__free-token/session', { credentials: 'include' })
-        .then(r => r.json()).catch(() => null);
-      const res = await fetch('/__free-token/daily-check-in', { credentials: 'include' });
-      return { status: res.status, text: await res.text(), session };
+    const before = await page.evaluate(async () => {
+      const session = await fetch('/__free-token/session', { credentials: 'include' }).then(r => r.json()).catch(() => null);
+      const st = await fetch('/__free-token/daily-check-in', { credentials: 'include' }).then(r => r.json()).catch(() => null);
+      return { session, st };
     });
-    const data = parseJson(result.text);
-    log('hvoy', `GET /__free-token/daily-check-in HTTP ${result.status}`);
-    if (!data || data.ok !== true) {
-      if (result.status === 401 || result.status === 403 || result.session?.authenticated === false) {
-        throw new Error('hvoy 未登录；请先运行「重新登录全部网站.cmd」。');
-      }
-      throw new Error('hvoy 签到失败：' + (data?.error || data?.message || result.text.slice(0, 200)));
+
+    if (!before.session || before.session.authenticated !== true) {
+      throw new Error('hvoy 未登录；请先运行「重新登录全部网站.cmd」。');
     }
-    const points = result.session?.user?.pointsBalance;
-    const quota = Number.isFinite(points) ? '\u79ef\u5206\uff1a' + points : '';
-    return { ok: true, message: '\u7b7e\u5230\u6210\u529f' + (quota ? '\uff1b' + quota : ''), quota: quota || '' };
+    if (before.st && before.st.checkedIn === true) {
+      const points = before.session.user?.pointsBalance;
+      const quota = Number.isFinite(points) ? '积分：' + points : '';
+      return { ok: true, message: '今日已签到' + (quota ? '；' + quota : ''), quota: quota || '' };
+    }
+
+    // 点击「每日签到」触发验证码；若弹出确认框再点确认
+    const btn = page.locator('button').filter({ hasText: /每日签到/ }).first();
+    await btn.click({ timeout: 10000 }).catch(() => {});
+    await page.waitForTimeout(1500);
+    const confirm = page.locator('button').filter({ hasText: /确认签到|立即签到/ }).first();
+    if (await confirm.count()) await confirm.click({ timeout: 8000 }).catch(() => {});
+
+    // 解滑块（失败则刷新验证码后重试一次）
+    let solved = false;
+    for (let i = 0; i < 2 && !solved; i++) {
+      solved = await hvSolveCaptcha(page);
+      if (!solved) {
+        const refresh = page.locator('[class*="refresh"]').first();
+        if (await refresh.count()) await refresh.click({ timeout: 3000 }).catch(() => {});
+        await page.waitForTimeout(2500);
+      }
+    }
+
+    // 等待签到结果（checkedIn 或积分增加）
+    const beforePoints = before.session.user?.pointsBalance;
+    const deadline = Date.now() + 12000;
+    let points = null;
+    let done = false;
+    while (Date.now() < deadline) {
+      const cur = await page.evaluate(async () => {
+        const session = await fetch('/__free-token/session', { credentials: 'include' }).then(r => r.json()).catch(() => null);
+        const st = await fetch('/__free-token/daily-check-in', { credentials: 'include' }).then(r => r.json()).catch(() => null);
+        return { points: session?.user?.pointsBalance, checkedIn: st?.checkedIn === true };
+      }).catch(() => null);
+      if (cur && (cur.checkedIn || (Number.isFinite(cur.points) && Number.isFinite(beforePoints) && cur.points > beforePoints))) {
+        points = cur.points;
+        done = true;
+        break;
+      }
+      await page.waitForTimeout(800);
+    }
+
+    if (!done) {
+      throw new Error('hvoy 签到未确认（滑块可能未通过）。' + (solved ? '已尝试拖动。' : '滑块未出现。'));
+    }
+    const quota = '积分：' + points;
+    return { ok: true, message: '签到成功；' + quota, quota };
   } finally {
     await page.close();
   }
@@ -773,14 +924,52 @@ function clickWaitPost(page, matcher, timeout = 45000) {
     { timeout },
   ).catch(() => null);
 }
+// 点击 CapDialog 里无文字的圆环按钮（onClick=ef），触发 <cap-widget> 自动 PoW 验证。
+// ef 会校验：webdriver/UA 无头、isTrusted、navigator.userActivation.isActive，且 nonce 就绪才继续。
+// 用真实鼠标点击（CDP 可信事件）确保 isTrusted=true + userActivation 激活。
+async function clickCapStart(page) {
+  const ring = page.locator('button.flex-shrink-0.aspect-square').first();
+  try {
+    await ring.waitFor({ state: 'visible', timeout: 10000 });
+    const box = await ring.boundingBox();
+    if (!box) return false;
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.up();
+    return true;
+  } catch {
+    return false;
+  }
+}
+// 统一走「欧阳淇淇」隐形 PoW：点触发按钮 → 取 nonce → 点圆环触发 <cap-widget> → 等最终 POST。
+// 签到与转盘共用此流程（转盘每次抽奖都要过一次验证）。
+// 返回 { resp, capError }；capError 非空表示取 nonce 失败（如 429 请求过多）。
+async function hybgzsCapFlow(page, triggerBtn, finalMatcher) {
+  const capPromise = clickWaitPost(page, '/api/cap/challenge', 30000);
+  const finalPromise = clickWaitPost(page, finalMatcher, 60000);
+  await triggerBtn.click({ timeout: 15000 }).catch(() => {});
+  const capResp = await capPromise;
+  let capError = '';
+  if (capResp) {
+    let cd = null; try { cd = await capResp.json(); } catch {}
+    if (capResp.status() !== 200 || cd?.success !== true) {
+      capError = String(cd?.error || cd?.message || ('HTTP ' + capResp.status()));
+    }
+  }
+  if (!capError) {
+    await page.waitForTimeout?.(400);
+    await clickCapStart(page);
+  }
+  const resp = await finalPromise;
+  return { resp, capError };
+}
 async function doHybgzsCheckin(page) {
   await page.goto('https://cdk.hybgzs.com/gas-station/checkin', { waitUntil: 'domcontentloaded', timeout: 60000 });
   await page.waitForTimeout?.(2500);
   const btn = page.locator('button').filter({ hasText: /立即签到|^签到$/ }).first();
   if (!(await btn.count())) return { result: 'fail', message: '未找到签到按钮' };
-  const promise = clickWaitPost(page, '/api/checkin');
-  await btn.click({ timeout: 15000 }).catch(() => {});
-  const resp = await promise;
+  const { resp, capError } = await hybgzsCapFlow(page, btn, '/api/checkin');
+  if (capError) return { result: 'fail', message: '人机验证获取失败：' + capError };
   if (!resp) return { result: 'fail', message: '人机验证未自动通过（未发起签到请求）' };
   let data = null;
   try { data = await resp.json(); } catch {}
@@ -792,27 +981,36 @@ async function doHybgzsCheckin(page) {
   if (/已签|签到过|今日已|已完成/.test(err)) return { result: 'done', message: '今日已签到' };
   return { result: 'fail', message: '签到失败：' + (err || ('HTTP ' + status)) };
 }
-async function doHybgzsWheel(page) {
+async function doHybgzsWheel(page, spins) {
   await page.goto('https://cdk.hybgzs.com/entertainment/wheel', { waitUntil: 'domcontentloaded', timeout: 60000 });
   await page.waitForTimeout?.(2500);
   const spin = page.locator('[data-testid="wheel-spin-button"]').first();
   if (!(await spin.count())) return { result: 'fail', message: '未找到抽奖按钮' };
-  const promise = clickWaitPost(page, '/api/wheel');
-  await spin.click({ timeout: 15000 }).catch(() => {});
-  const resp = await promise;
-  if (!resp) return { result: 'fail', message: '人机验证未自动通过（未发起抽奖请求）' };
-  let data = null;
-  try { data = await resp.json(); } catch {}
-  const status = resp.status();
-  if (status >= 200 && status < 300 && data?.success === true) {
-    const prize = data?.data?.prize;
-    const name = prize?.name || '';
-    const remain = data?.data?.remainingSpins;
-    return { result: 'success', message: '抽中 ' + (name || '奖励') + (Number.isFinite(remain) ? '（剩余' + remain + '次）' : '') };
+
+  let remaining = spins;
+  const prizes = [];
+  while (remaining > 0) {
+    const { resp, capError } = await hybgzsCapFlow(page, spin, '/api/wheel');
+    if (capError) return { result: 'fail', message: '人机验证获取失败：' + capError };
+    if (!resp) return { result: 'fail', message: '抽奖未触发请求（第' + (prizes.length + 1) + '次）' };
+    let data = null;
+    try { data = await resp.json(); } catch {}
+    const status = resp.status();
+    const err = String(data?.error || data?.message || '');
+    if (status >= 200 && status < 300 && data?.success === true) {
+      const prize = data?.data?.prize;
+      prizes.push(prize?.name || '奖励');
+    } else if (/次数|用完|无.*次/.test(err)) {
+      break;
+    } else {
+      return { result: 'fail', message: '抽奖失败：' + (err || ('HTTP ' + status)) };
+    }
+    const next = Number(data?.data?.remainingSpins);
+    remaining = Number.isFinite(next) ? next : remaining - 1;
+    if (remaining > 0) await page.waitForTimeout?.(900);
   }
-  const err = String(data?.error || data?.message || '');
-  if (/次数|用完|无.*次/.test(err)) return { result: 'done', message: '今日免费次数已用完' };
-  return { result: 'fail', message: '抽奖失败：' + (err || ('HTTP ' + status)) };
+  if (!prizes.length) return { result: 'done', message: '今日免费次数已用完' };
+  return { result: 'success', message: '共抽' + prizes.length + '次：' + prizes.join('、') + (remaining > 0 ? '（剩余' + remaining + '次）' : '') };
 }
 async function runHybgzs(context) {
   const page = await context.newPage();
@@ -842,7 +1040,7 @@ async function runHybgzs(context) {
     if (remainingSpins <= 0) {
       parts.push('转盘：今日免费次数已用完');
     } else {
-      const r = await doHybgzsWheel(page);
+      const r = await doHybgzsWheel(page, remainingSpins);
       parts.push('转盘：' + r.message);
       if (r.result === 'fail') failed = true;
     }
