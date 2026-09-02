@@ -18,6 +18,7 @@ browser-profile/
 build/
 dist/
 release/
+release-packages/
 
 # === 浏览器 profile（登录态/缓存，禁止提交）===
 edge-profile/
