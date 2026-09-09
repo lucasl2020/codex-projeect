@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <ImageView android:id="@id/img_item_appInfo_icon" android:layout_width="@dimen/icon_size" android:layout_height="@dimen/icon_size" android:layout_marginTop="@dimen/icon_margin" android:layout_marginBottom="@dimen/icon_margin" android:layout_marginStart="@dimen/icon_margin" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
+    <androidx.constraintlayout.widget.Guideline android:orientation="horizontal" android:id="@id/guideline" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintGuide_percent="0.5" />
+    <TextView android:textStyle="bold" android:textColor="#333" android:id="@id/text_item_appInfo_name" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="2.0dp" android:text="李跳跳" android:layout_marginStart="@dimen/icon_margin" app:layout_constraintBottom_toTopOf="@id/guideline" app:layout_constraintStart_toEndOf="@id/img_item_appInfo_icon" />
+    <TextView android:textColor="#000" android:id="@id/text_item_appInfo_other" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2.0dp" android:text="时长: 默认" app:layout_constraintStart_toStartOf="@id/text_item_appInfo_name" app:layout_constraintTop_toBottomOf="@id/guideline" />
+</androidx.constraintlayout.widget.ConstraintLayout>

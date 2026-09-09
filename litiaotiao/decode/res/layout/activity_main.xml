@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <ImageView android:id="@id/logo_main_a" android:layout_width="@dimen/logo_size" android:layout_height="@dimen/logo_size" android:layout_marginEnd="15.0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent" />
+    <com.google.android.material.switchmaterial.SwitchMaterial android:id="@id/switch_main_a" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="false" android:contentDescription="开启服务" android:layout_marginStart="8.0dp" app:layout_constraintBottom_toBottomOf="@id/logo_main_a" app:layout_constraintStart_toEndOf="@id/logo_main_a" app:layout_constraintTop_toTopOf="@id/logo_main_a" />
+    <LinearLayout android:id="@id/more_main_a" android:padding="10.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="32.0dp" app:layout_constraintEnd_toEndOf="@id/logo_main_a" app:layout_constraintStart_toStartOf="@id/logo_main_a" app:layout_constraintTop_toBottomOf="@id/logo_main_a">
+        <TextView android:textColor="#000" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🥝" />
+        <TextView android:textStyle="bold" android:textColor="#cfd2cd" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="2.0px" android:text="更多" android:paddingStart="4.0dp" />
+    </LinearLayout>
+    <LinearLayout android:id="@id/feedback_layout_main_a" android:padding="10.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="32.0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="@id/more_main_a">
+        <TextView android:textColor="#000" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginTop="1.0px" android:text="♥️️️️" android:alpha="0.66" />
+        <LinearLayout android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content">
+            <TextView android:textColor="#cfd2cd" android:id="@id/feedback_tv_main_a" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="一键反馈" android:paddingStart="4.0dp" />
+            <TextView android:id="@id/underline_main_a" android:background="?colorSecondary" android:layout_width="match_parent" android:layout_height="4.0dp" android:alpha="0.2" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout android:orientation="vertical" android:paddingLeft="24.0dp" android:paddingRight="24.0dp" android:layout_width="match_parent" android:layout_height="match_parent" android:paddingHorizontal="24.0dp"
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <EditText android:textSize="18.0sp" android:textColor="#333" android:id="@id/et_id" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8.0dp" android:hint="用来定位弹窗的文字、id、\nbounds" android:inputType="text" />
+    <EditText android:textSize="18.0sp" android:textColor="#333" android:id="@id/et_action" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="用来关闭弹窗的文字、id、\nbounds" android:inputType="text" />
+    <CheckedTextView android:textSize="18.0sp" android:textColor="#333" android:gravity="center" android:id="@id/ctv_back" android:paddingTop="12.0dp" android:paddingBottom="12.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="12.0dp" android:checkMark="?android:listChoiceIndicatorSingle" android:text="能否通过返回键关闭" android:layout_marginStart="3.0dp" android:paddingVertical="12.0dp" />
+</LinearLayout>

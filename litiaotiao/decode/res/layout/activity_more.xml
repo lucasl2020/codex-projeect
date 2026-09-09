@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <LinearLayout android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginEnd="18.0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintTop_toTopOf="parent">
+        <TextView android:textColor="#cfd2cd" android:id="@id/share_more_a" android:padding="18.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="祸害他人" />
+        <TextView android:textColor="#cfd2cd" android:id="@id/thoughts_more_a" android:padding="18.0dp" android:visibility="gone" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="一点心里话" />
+        <TextView android:textColor="#cfd2cd" android:id="@id/weibo_more_a" android:padding="18.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="去微博瞧瞧" />
+        <TextView android:textColor="#cfd2cd" android:id="@id/tools_more_a" android:padding="18.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="哆啦百宝袋" />
+        <TextView android:textColor="#cfd2cd" android:id="@id/support_more_a" android:padding="18.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="支持作者" />
+        <TextView android:textColor="#cfd2cd" android:id="@id/setting_more_a" android:padding="18.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🥝 设置" />
+    </LinearLayout>
+    <TextView android:textStyle="bold" android:textColor="?colorSecondary" android:id="@id/tips_more_a" android:padding="10.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="重要提示" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toStartOf="@id/guideline_v_more_a" app:layout_constraintTop_toTopOf="parent" />
+    <androidx.constraintlayout.widget.Guideline android:orientation="horizontal" android:id="@id/guideline_h_more_a" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintGuide_percent="0.5" />
+    <androidx.constraintlayout.widget.Guideline android:orientation="vertical" android:id="@id/guideline_v_more_a" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintGuide_percent="0.5" />
+</androidx.constraintlayout.widget.ConstraintLayout>

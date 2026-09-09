@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:layout_height="match_parent"
+  xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto">
+    <ImageView android:id="@id/iv_app_setting_a" android:layout_width="@dimen/icon_size_50" android:layout_height="@dimen/icon_size_50" android:layout_marginTop="80.0dp" android:contentDescription="应用图标" android:layout_marginStart="0.0dp" app:layout_constraintStart_toEndOf="@id/guideline_v_app_setting_a" app:layout_constraintTop_toBottomOf="@id/guideline_h_app_setting_a" />
+    <com.google.android.material.switchmaterial.SwitchMaterial android:id="@id/switch_app_setting_a" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true" android:contentDescription="应用服务" android:layout_marginStart="8.0dp" app:layout_constraintBottom_toBottomOf="@id/iv_app_setting_a" app:layout_constraintStart_toEndOf="@id/iv_app_setting_a" app:layout_constraintTop_toTopOf="@id/iv_app_setting_a" />
+    <LinearLayout android:orientation="vertical" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent">
+        <LinearLayout android:paddingTop="0.0dp" android:paddingBottom="0.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="0.0dp">
+            <TextView android:textColor="#cfd2cd" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="🥑(手势点击)：" android:layout_weight="1.0" />
+            <com.google.android.material.switchmaterial.SwitchMaterial android:id="@id/xyswitch_app_setting_a" android:paddingLeft="1.0dp" android:paddingRight="1.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="false" android:contentDescription="手势点击" android:paddingHorizontal="1.0dp" />
+        </LinearLayout>
+        <LinearLayout android:paddingTop="0.0dp" android:paddingBottom="0.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="0.0dp">
+            <TextView android:textColor="#cfd2cd" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="🐽️(圆形倒计时)：" android:layout_weight="1.0" />
+            <com.google.android.material.switchmaterial.SwitchMaterial android:id="@id/aiswitch_app_setting_a" android:paddingLeft="1.0dp" android:paddingRight="1.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="false" android:contentDescription="圆形倒计时" android:paddingHorizontal="1.0dp" />
+        </LinearLayout>
+        <LinearLayout android:paddingTop="0.0dp" android:paddingBottom="0.0dp" android:layout_width="match_parent" android:layout_height="wrap_content" android:paddingVertical="0.0dp">
+            <TextView android:textColor="#cfd2cd" android:layout_width="0.0dp" android:layout_height="wrap_content" android:text="☘️(青少年弹窗)：" android:layout_weight="1.0" />
+            <com.google.android.material.switchmaterial.SwitchMaterial android:id="@id/qsnswitch_app_setting_a" android:paddingLeft="1.0dp" android:paddingRight="1.0dp" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="false" android:contentDescription="青少年弹窗" android:paddingHorizontal="1.0dp" />
+        </LinearLayout>
+    </LinearLayout>
+    <com.google.android.material.floatingactionbutton.FloatingActionButton android:id="@id/btn_plus" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginBottom="32.0dp" android:contentDescription="新增规则" android:layout_marginEnd="32.0dp" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintEnd_toEndOf="parent" app:srcCompat="@android:drawable/ic_input_add" />
+    <androidx.constraintlayout.widget.Guideline android:orientation="horizontal" android:id="@id/guideline_h_app_setting_a" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintGuide_percent="0.5" />
+    <androidx.constraintlayout.widget.Guideline android:orientation="vertical" android:id="@id/guideline_v_app_setting_a" android:layout_width="wrap_content" android:layout_height="wrap_content" app:layout_constraintGuide_percent="0.5" />
+</androidx.constraintlayout.widget.ConstraintLayout>
