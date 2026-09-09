@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.npm-cache/
+.playwright-cli/
+output/
+.venv/

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>本地验证码助手</title>
+  <style>
+    body {
+      width: 280px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      margin: 0;
+      padding: 14px;
+      background: #f8fafc;
+      color: #1e293b;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+    .title {
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 9999px;
+      background: #e2e8f0;
+      color: #64748b;
+    }
+    .status-badge.online {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #94a3b8;
+    }
+    .status-badge.online .status-dot {
+      background: #22c55e;
+    }
+    .toggle-group {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toggle-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: white;
+      padding: 10px 12px;
+      border-radius: 8px;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      font-size: 13px;
+    }
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 38px;
+      height: 20px;
+    }
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #cbd5e1;
+      transition: .2s;
+      border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
+    input:checked + .slider {
+      background-color: #3b82f6;
+    }
+    input:checked + .slider:before {
+      transform: translateX(18px);
+    }
+    .footer {
+      margin-top: 14px;
+      font-size: 11px;
+      color: #94a3b8;
+      text-align: center;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">🛡️ 本地验证码助手</div>
+    <div id="statusBadge" class="status-badge">
+      <span class="status-dot"></span>
+      <span id="statusText">检测中...</span>
+    </div>
+  </div>
+
+  <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; font-size: 12px;">
+    <span style="color: #166534; font-weight: 500;">⚡ 累计自动秒过</span>
+    <span style="background: #22c55e; color: white; padding: 2px 8px; border-radius: 9999px; font-weight: 700;" id="bypassCount">0</span>
+  </div>
+
+  <div class="toggle-group">
+    <div class="toggle-item" style="background:#eff6ff; border:1px solid #bfdbfe;">
+      <span style="font-weight:600; color:#1d4ed8;">总开关 (启用自动化)</span>
+      <label class="switch">
+        <input type="checkbox" id="toggleEnabled">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="toggle-item">
+      <span>Google reCAPTCHA</span>
+      <label class="switch">
+        <input type="checkbox" id="toggleRecaptcha">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="toggle-item">
+      <span>hCaptcha 空间画布</span>
+      <label class="switch">
+        <input type="checkbox" id="toggleHcaptcha">
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="toggle-item">
+      <span>Cloudflare Turnstile</span>
+      <label class="switch">
+        <input type="checkbox" id="toggleCf">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="footer">
+    本地视觉大模型: Qwen3-VL:4b<br>
+    纯内网运行 · 零云端依赖
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

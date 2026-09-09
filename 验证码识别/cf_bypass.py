@@ -99,21 +99,24 @@ class CloudflareBypasser:
       - 高安全级别：校验 JA3 + TLS + HTTP/2 指纹，需 DrissionPage / Playwright
     """
 
-    # CF 挑战页的特征字符串
+    # CF 挑战页的特征字符串。
+    # 注意：不要匹配 challenge-platform / cdn-cgi/challenge-platform —— 它们是 CF
+    # 全站注入的 precursor 遥测脚本（/cdn-cgi/challenge-platform/scripts/precursor/），
+    # 在「未受挑战、正常放行」的页面上同样存在（cdk.hybgzs.com 即是如此），
+    # 匹配它会导致把真实页面误判为「仍在挑战」。
+    # 真正处于挑战中时，表现是 <title>Just a moment</title> / cf-mitigated:challenge
+    # 响应头 / __cf_chl_jschl_tk__ / Turnstile 组件等，以下特征足以覆盖。
     CF_CHALLENGE_PATTERNS = [
-        r"just a moment",
+        r"<title>[^<]*just a moment",
         r"checking your browser",
         r"cf-browser-verification",
         r"cf_chl_opt",
         r"__cf_chl_jschl_tk__",
-        r"challenge-platform",
-        r"cdn-cgi/challenge-platform",
+        r"challenge-running",
+        r"challenge-stage",
         r"cf-turnstile",
         r"challenges\.cloudflare\.com/turnstile",
-        r"cf-turnstile-response",
         r"Please allow up to 5 seconds",
-        r"ray id",
-        r"cf-mitigated",
     ]
 
     # CF 相关 Cookie 名称
@@ -315,7 +318,7 @@ class CloudflareBypasser:
         return False
 
     def _is_cf_challenge_response(self, response: Any) -> bool:
-        """优先使用官方 cf-mitigated 响应头，再检查 HTML 特征。"""
+        """优先官方 cf-mitigated 响应头，其次 HTTP 状态码，最后 HTML 特征。"""
         headers = getattr(response, "headers", {}) or {}
         mitigated = ""
         try:
@@ -328,6 +331,9 @@ class CloudflareBypasser:
                     mitigated = value
                     break
         if str(mitigated).lower() == "challenge":
+            return True
+        # CF 挑战页通常返回 403/503，无需再依赖 HTML 特征（避免把已通过页误判）
+        if int(getattr(response, "status_code", 0) or 0) >= 400:
             return True
         return self._is_cf_challenge_html(getattr(response, "text", "") or "")
 
@@ -385,6 +391,19 @@ class CloudflareBypasser:
             )
             if value and value.group(1).strip():
                 return True
+        return False
+
+    @staticmethod
+    def _cookies_have_cf_clearance(cookies) -> bool:
+        """判断 cookie 集合（dict 或 list）中是否含 cf_clearance。"""
+        if isinstance(cookies, dict):
+            return "cf_clearance" in cookies
+        if isinstance(cookies, (list, tuple)):
+            for c in cookies:
+                if isinstance(c, dict) and c.get("name") == "cf_clearance":
+                    return True
+                if getattr(c, "name", "") == "cf_clearance":
+                    return True
         return False
 
     def _is_browser_challenge_complete(
@@ -632,7 +651,17 @@ class CloudflareBypasser:
             turnstile_required = self._has_turnstile_widget_in_html(page.html or "")
 
             while time.time() - start_time < max_wait:
-                current_html = page.html or ""
+                try:
+                    current_html = page.html or ""
+                except Exception:
+                    current_html = ""
+                try:
+                    cookie_data = page.cookies()
+                except TypeError:
+                    cookie_data = page.cookies(all_domains=True)
+                except Exception:
+                    cookie_data = {}
+                has_clearance = self._cookies_have_cf_clearance(cookie_data)
                 turnstile_required = (
                     turnstile_required
                     or self._has_turnstile_widget_in_html(current_html)
@@ -649,12 +678,14 @@ class CloudflareBypasser:
                     current_html,
                     turnstile_token,
                     turnstile_required=turnstile_required,
+                    has_cf_clearance=has_clearance,
                 ):
                     logger.info(
-                        "Browser-side Turnstile token detected; "
-                        "server-side Siteverify is still required"
-                        if turnstile_token else
-                        "CF challenge completed, page loaded"
+                        "CF challenge passed (cf_clearance acquired)"
+                        if has_clearance else
+                        ("CF challenge completed, page loaded"
+                         if not turnstile_token else
+                         "Browser-side Turnstile token detected")
                     )
                     break
                 time.sleep(2)
@@ -829,7 +860,15 @@ class CloudflareBypasser:
                     start_time = time.time()
                     turnstile_token = ""
                     while time.time() - start_time < max_wait:
-                        content = page.content()
+                        try:
+                            content = page.content()
+                        except Exception:
+                            content = ""
+                        cookie_list = context.cookies() or []
+                        has_clearance = any(
+                            isinstance(c, dict) and c.get("name") == "cf_clearance"
+                            for c in cookie_list
+                        )
                         turnstile_required = (
                             turnstile_required
                             or self._has_turnstile_widget_in_html(content)
@@ -846,12 +885,14 @@ class CloudflareBypasser:
                             content,
                             turnstile_token,
                             turnstile_required=turnstile_required,
+                            has_cf_clearance=has_clearance,
                         ):
                             logger.info(
-                                "Browser-side Turnstile token detected; "
-                                "server-side Siteverify is still required"
-                                if turnstile_token else
-                                "CF challenge completed, page loaded"
+                                "CF challenge passed (cf_clearance acquired)"
+                                if has_clearance else
+                                ("CF challenge completed, page loaded"
+                                 if not turnstile_token else
+                                 "Browser-side Turnstile token detected")
                             )
                             break
                         time.sleep(2)
