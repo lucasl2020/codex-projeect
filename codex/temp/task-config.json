@@ -1,12 +1,12 @@
 {
   "defaults": [
+    "allapihub",
     "anyrouter",
     "ikuuu",
     "nodeseek",
     "deepflood",
     "nodebuf",
     "hvoy",
-    "hybgzs",
-    "allapihub"
+    "hybgzs"
   ]
 }

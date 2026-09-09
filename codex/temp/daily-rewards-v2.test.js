@@ -45,7 +45,8 @@ test('CF Cookie 回写只保留 Cloudflare Cookie 并清理旧值', async () => 
     },
   });
   assert.equal(applied, true);
-  assert.equal(calls.filter(([kind]) => kind === 'clear').length, 2);
+  assert.equal(calls.filter(([kind]) => kind === 'clear').length, 4);
+  assert.ok(calls.filter(([kind]) => kind === 'clear').every(([, filter]) => ['cf_clearance', '__cf_bm'].includes(filter.name)));
   const added = calls.find(([kind]) => kind === 'add')[1];
   assert.deepEqual(added.map(cookie => cookie.name).sort(), ['__cf_bm', 'cf_clearance']);
   assert.ok(added.every(cookie => cookie.domain === '.www.nodeseek.com' && cookie.path === '/'));

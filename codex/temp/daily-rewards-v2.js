@@ -26,6 +26,7 @@ let nextAnyRouterRetryAt = 0;
 
 // 任务配置（task-config.json 存 { "defaults": ["ikuuu", ...] }）。
 const TASK_ORDER = [
+  { task: 'allapihub', label: 'All API Hub' },
   { task: 'anyrouter', label: 'anyrouter' },
   { task: 'ikuuu', label: 'iKuuu' },
   { task: 'chy', label: 'CHY' },
@@ -34,7 +35,6 @@ const TASK_ORDER = [
   { task: 'nodebuf', label: 'NodeBuf' },
   { task: 'hvoy', label: '禾维AI' },
   { task: 'hybgzs', label: '黑白福利站' },
-  { task: 'allapihub', label: 'All API Hub' },
 ];
 const TASK_CONFIG_FILE = process.env.TASK_CONFIG_FILE || path.join(ROOT, 'task-config.json');
 
@@ -214,8 +214,10 @@ async function applyCfBypassCookies(context, targetUrl, bypass) {
     .map(([name, value]) => ({ name, value: String(value), domain, path: '/' }));
   if (!cookies.length) return false;
   if (typeof context.clearCookies === 'function') {
-    await context.clearCookies({ domain: host });
-    await context.clearCookies({ domain });
+    for (const { name } of cookies) {
+      await context.clearCookies({ domain: host, name });
+      await context.clearCookies({ domain, name });
+    }
   }
   await context.addCookies(cookies);
   return true;
@@ -229,6 +231,106 @@ async function isChyLoggedOutPage(page) {
   const loginLink = await page.locator('a[href="/login"], a[href$="/login"]').first().count().catch(() => 0);
   return loginLink > 0;
 }
+// CDP 可读取封闭 Shadow DOM；仅在 Cloudflare 验证 frame 内定位真实复选框。
+async function clickClosedTurnstile(page) {
+  if (typeof page.frames !== 'function') return false;
+  for (const frame of page.frames()) {
+    let url;
+    try { url = new URL(frame.url()); } catch { continue; }
+    if (url.hostname !== 'challenges.cloudflare.com') continue;
+    let session;
+    try {
+      session = await page.context().newCDPSession(frame).catch(() => page.context().newCDPSession(page));
+      const { root } = await session.send('DOM.getDocument', { depth: -1, pierce: true });
+      const children = node => [...(node.children || []), ...(node.shadowRoots || []), ...(node.contentDocument ? [node.contentDocument] : [])];
+      const findDocument = node => {
+        if (node.documentURL === frame.url()) return node;
+        for (const child of children(node)) { const found = findDocument(child); if (found) return found; }
+        return null;
+      };
+      const doc = findDocument(root);
+      if (!doc) continue;
+      const findCheckbox = node => {
+        const attrs = node.attributes || [];
+        const attr = name => { const i = attrs.indexOf(name); return i >= 0 ? attrs[i + 1] : ''; };
+        if ((node.nodeName === 'INPUT' && attr('type') === 'checkbox') || attr('role') === 'checkbox') return node;
+        for (const child of children(node)) { const found = findCheckbox(child); if (found) return found; }
+        return null;
+      };
+      const checkbox = findCheckbox(doc);
+      if (!checkbox) continue;
+      const { object } = await session.send('DOM.resolveNode', { nodeId: checkbox.nodeId });
+      try {
+        const { result } = await session.send('Runtime.callFunctionOn', {
+          objectId: object.objectId, returnByValue: true,
+          functionDeclaration: `function () {
+            if (this.checked || this.disabled || this.getAttribute('aria-checked') === 'true') return null;
+            let el = this;
+            for (let i = 0; el && i < 3; i++, el = el.parentElement) {
+              const r = el.getBoundingClientRect();
+              const style = getComputedStyle(el);
+              if (r.width > 0 && r.height > 0 && style.visibility !== 'hidden' && style.display !== 'none')
+                return { x: r.x + r.width / 2, y: r.y + r.height / 2 };
+            }
+            return null;
+          }`,
+        });
+        if (!result.value) continue;
+        const element = await frame.frameElement();
+        const box = await element.boundingBox();
+        await element.dispose();
+        if (!box || box.width <= 0 || box.height <= 0) continue;
+        await page.mouse.click(box.x + result.value.x, box.y + result.value.y);
+        return true;
+      } finally {
+        await session.send('Runtime.releaseObject', { objectId: object.objectId }).catch(() => {});
+      }
+    } catch {
+      // frame 导航或重新挂载时留给下一轮重试。
+    } finally {
+      if (session) await session.detach().catch(() => {});
+    }
+  }
+  return false;
+}
+async function tryClickTurnstile(page) {
+  if (typeof page.frames !== 'function') return false;
+  for (const frame of page.frames()) {
+    try {
+      if (new URL(frame.url()).hostname !== 'challenges.cloudflare.com') continue;
+      const box = frame.locator('input[type="checkbox"], [role="checkbox"]').first();
+      if (await box.isVisible() && !(await box.isChecked())) {
+        await box.click({ timeout: 2000 });
+        return true;
+      }
+    } catch {}
+  }
+  return clickClosedTurnstile(page);
+}
+
+// 覆盖页面空闲、冷却等待和接口等待期间，避免只在签到按钮流程处理 CF。
+const hybgzsCfWatchers = new WeakMap();
+function watchHybgzsCf(page) {
+  let stopped = false;
+  let timer;
+  let active = Promise.resolve();
+  const poll = () => {
+    active = (async () => {
+      if (await tryClickTurnstile(page)) log('hybgzs', 'CF：已自动点击验证组件，等待网站放行。');
+    })().catch(error => log('hybgzs', 'CF 检查失败：' + error.message)).finally(() => {
+      if (!stopped) timer = setTimeout(poll, 2000);
+    });
+  };
+  hybgzsCfWatchers.set(page, true);
+  poll();
+  return async () => {
+    stopped = true;
+    clearTimeout(timer);
+    await active;
+    hybgzsCfWatchers.delete(page);
+  };
+}
+
 async function ensureCloudflareCleared(page, {
   url,
   context,
@@ -236,15 +338,20 @@ async function ensureCloudflareCleared(page, {
   bypassCloudflare,
   headless = HEADLESS,
   waitMs = 12000,
+  skipBypass = false,
 } = {}) {
   const readChallenge = async () => {
     const title = await page.title?.().catch?.(() => '') || '';
     const body = await page.locator('body').innerText().catch(() => '');
-    const html = await page.content?.().catch?.(() => '') || body;
+    // 不再匹配整页 HTML：SPA 常驻的 cdn-cgi/challenge-platform precursor 脚本会永久命中挑战关键字，
+    // 导致“已通过验证”后仍被误判为挑战中。改用标题/正文文本 + 可见 Turnstile iframe 判断。
+    const hasTurnstile = await page
+      .locator('iframe[src*="challenges.cloudflare.com"]')
+      .first().count().catch(() => 0) > 0;
     return {
       title,
       body,
-      challenged: isCloudflareChallengeText(title) || isCloudflareChallengeText(body) || isCloudflareChallengeText(html),
+      challenged: isCloudflareChallengeText(title) || isCloudflareChallengeText(body) || hasTurnstile,
     };
   };
   let state = await readChallenge();
@@ -267,13 +374,32 @@ async function ensureCloudflareCleared(page, {
     log(task, 'detected Cloudflare challenge; skip in-page wait');
   }
 
+  if (await tryClickTurnstile(page)) {
+    log(task, 'Turnstile checkbox clicked; waiting for verification');
+    const turnstileDeadline = Date.now() + 20000;
+    while (Date.now() < turnstileDeadline) {
+      await page.waitForTimeout?.(1500);
+      state = await readChallenge();
+      if (!state.challenged) {
+        log(task, 'Cloudflare cleared by Turnstile auto-click');
+        return state;
+      }
+    }
+    log(task, 'Turnstile auto-click did not clear challenge');
+  }
+
+  if (skipBypass) {
+    log(task, 'skip generic bypass (Turnstile not auto-cleared); return for caller to handle');
+    return state;
+  }
+
   log(task, 'Cloudflare still present; trying local bypass/captcha helper');
   const bypass = bypassCloudflare
     ? await bypassCloudflare(url)
     : await runLocalCfBypass(url, { headless: false });
   if (!bypass?.success) {
-    throw new Error('Cloudflare \u5b89\u5168\u9a8c\u8bc1\u672a\u901a\u8fc7' + (bypass?.error ? '\uff1a' + bypass.error : '') +
-      '\uff1b\u8bf7\u5148\u5728\u6d4f\u89c8\u5668\u4e2d\u5b8c\u6210\u9a8c\u8bc1\u6216\u68c0\u67e5 D:\\codex-projeect\\6a6ff848a2c537419fd0b6cf');
+    throw new Error('Cloudflare 安全验证未通过' + (bypass?.error ? '：' + bypass.error : '') +
+      '；请先在浏览器中完成一次人工验证后重试');
   }
   await applyCfBypassCookies(context, url, bypass);
   if (typeof page.goto === 'function') {
@@ -497,78 +623,139 @@ function extractApiQuota(data) {
 async function responseJson(response) {
   return response ? parseJson(await response.text().catch(() => '')) : null;
 }
-async function getAnyRouterSelf(context) {
-  try {
-    const response = await context.request.get('https://anyrouter.top/api/user/self', { timeout: 20000 });
-    return response.ok() ? parseJson(await response.text()) : null;
-  } catch { return null; }
+function isProfileInUseError(error) {
+  const message = String(error?.message || error);
+  return /ProcessSingleton|profile.*(?:already in use|in use by)|Opening in existing browser session|正在运行的浏览器会话/i.test(message)
+    || (/launchPersistentContext/.test(message) && /Target page, context or browser has been closed/.test(message)
+      && /process did exit: exitCode=0/.test(message));
 }
-async function launchContext(headless = HEADLESS) {
+async function launchContext(headless = HEADLESS, {
+  launch = (...args) => chromium.launchPersistentContext(...args),
+  wait = sleep,
+  now = Date.now,
+  waitMs = 120000,
+} = {}) {
   fs.mkdirSync(PROFILE_DIR, { recursive: true });
-  const context = await chromium.launchPersistentContext(PROFILE_DIR, {
+  const options = {
     executablePath: findChrome(),
     headless,
     viewport: null,
     acceptDownloads: false,
     ignoreDefaultArgs: ['--disable-extensions'],
     args: ['--disable-blink-features=AutomationControlled'],
-  });
-  await applyStealth(context);
-  return context;
+  };
+  const deadline = now() + waitMs;
+  let notified = false;
+  while (true) {
+    let context;
+    try {
+      context = await launch(PROFILE_DIR, options);
+    } catch (error) {
+      if (!isProfileInUseError(error)) throw error;
+      if (!notified) {
+        log('browser', `签到浏览器配置正在使用中：${PROFILE_DIR}`);
+        log('browser', '请关闭之前的签到/重新登录浏览器窗口；正在运行的签到请等待它结束。程序最多等待 2 分钟并自动重试。');
+        notified = true;
+      }
+      if (now() >= deadline) {
+        const busy = new Error('浏览器配置仍被占用，本次未执行签到。关闭之前的签到/重新登录浏览器窗口后，再运行本脚本。登录数据已保留。');
+        busy.code = 'BROWSER_PROFILE_BUSY';
+        throw busy;
+      }
+      await wait(Math.min(3000, Math.max(0, deadline - now())));
+      continue;
+    }
+    try {
+      await applyStealth(context);
+      if (notified) log('browser', '浏览器配置已释放，启动成功，继续执行签到。');
+      return context;
+    } catch (error) {
+      await context.close().catch(() => {});
+      throw error;
+    }
+  }
 }
 
-// 隐藏自动化特征（navigator.webdriver 等），绕过 cdk.hybgzs.com 等站点的反自动化检测
+// 仅隐藏 webdriver 自动化标志。cdk.hybgzs.com 走 Cloudflare 托管挑战（"Just a moment"，无复选框），
+// 只要浏览器环境干净即可自动通过；伪造 navigator.plugins/languages 反而会被 challenge-platform 判定为机器人，
+// 导致挑战永久卡住——因此这里只做最保守的 webdriver 隐藏。
 async function applyStealth(context) {
   await context.addInitScript(() => {
-    Object.defineProperty(Navigator.prototype, 'webdriver', { get: () => false, configurable: true });
+    try {
+      Object.defineProperty(Navigator.prototype, 'webdriver', { get: () => undefined, configurable: true });
+    } catch {}
   });
 }
 
+async function anyRouterRequest(page, url, method = 'GET') {
+  return page.evaluate(async ({ url, method }) => {
+    let user = null;
+    try { user = JSON.parse(localStorage.getItem('user')); } catch {}
+    const headers = {};
+    if (user?.id) headers['New-Api-User'] = String(user.id);
+    const res = await fetch(url, {
+      method, headers, credentials: 'include', signal: AbortSignal.timeout(15000),
+    });
+    return { status: res.status, text: await res.text() };
+  }, { url, method });
+}
 async function runAnyRouter(context) {
   const page = await context.newPage();
   try {
-    const before = await getAnyRouterSelf(context);
-    const signInResponsePromise = page.waitForResponse(
-      response => response.request().method() === 'POST' && response.url().endsWith('/api/user/sign_in'),
-      { timeout: 12000 },
-    ).catch(() => null);
+    // 页面可能自动签到；监听完整登录过程，避免重复提交。
+    let signInResponse = null;
+    page.on('response', response => {
+      const url = new URL(response.url());
+      if (url.origin === new URL(URLS.anyrouter).origin && url.pathname === '/api/user/sign_in'
+        && response.request().method() === 'POST') signInResponse = response;
+    });
     await page.goto(URLS.anyrouter, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    if (isLoginUrl(page.url())) throw new Error('Not logged in; run the setup command first.');
-
-    await page.waitForTimeout(2500);
-    let response = await signInResponsePromise;
-    let data = await responseJson(response);
-    if (!response) {
-      const fallback = await page.evaluate(async () => {
-        const res = await fetch('/api/user/sign_in', { method: 'POST', credentials: 'include' });
-        return { status: res.status, text: await res.text() };
-      });
-      data = parseJson(fallback.text);
-      log('anyrouter', `fallback API response HTTP ${fallback.status}`);
-    }
-
-    const after = await getAnyRouterSelf(context);
-    const beforeQuota = extractQuota(before);
-    const afterQuota = extractQuota(after);
-    const quota = attendanceQuotaSummary(beforeQuota, afterQuota);
-    const baseMessage = messageOf(data) || 'no message returned';
-    log('anyrouter', baseMessage + (quota ? '; ' + quota : ''));
-    if (Number.isFinite(beforeQuota) && Number.isFinite(afterQuota)) {
-      if (afterQuota > beforeQuota || anyRouterAlreadyDone(data)) {
-        return { ok: true, message: baseMessage + (quota ? '\uff1b' + quota : '') };
+    const deadline = Date.now() + (HEADLESS ? 15000 : 180000);
+    let selfData = null;
+    let prompted = false;
+    let reason = '登录状态未就绪';
+    do {
+      const self = await anyRouterRequest(page, '/api/user/self').catch(() => null);
+      selfData = parseJson(self?.text);
+      if (self?.status === 200 && selfData?.success === true && selfData?.data?.id) break;
+      signInResponse = null;
+      await tryClickTurnstile(page);
+      reason = messageOf(selfData) || (self ? `HTTP ${self.status}，未返回有效用户信息` : '页面跳转或请求超时');
+      if (!prompted && !HEADLESS) {
+        log('anyrouter', '程序会自动尝试 CF 验证；若登录已过期，请完成账号登录。最多等待 3 分钟；' + reason);
+        await page.bringToFront();
+        prompted = true;
       }
-      log('anyrouter', 'API returned no confirmed quota increase; will retry hourly.');
-      return { ok: false, message: baseMessage + (quota ? '\uff1b' + quota : '') };
+      if (Date.now() >= deadline) throw new Error('Any Router 登录未确认：' + reason + '；请运行「重新登录全部网站.cmd」。');
+      await page.waitForTimeout(2000);
+    } while (true);
+
+    // 给页面自身的自动签到请求留出完成时间，再决定是否补发。
+    await page.waitForTimeout(2500);
+    let data = await responseJson(signInResponse);
+    let status = signInResponse ? signInResponse.status() : 0;
+    const staleLogin = status === 401 || /未登录|登录.*(?:失效|无效|过期)|用户.*(?:无效|不匹配)|unauthorized|invalid.*user/i.test(messageOf(data));
+    if (!signInResponse || staleLogin) {
+      const result = await anyRouterRequest(page, '/api/user/sign_in', 'POST');
+      data = parseJson(result.text);
+      status = result.status;
     }
-    if (anyRouterSuccess(data)) {
-      return { ok: true, message: baseMessage + (quota ? '\uff1b' + quota : '') };
+    const ok = status >= 200 && status < 300 && (anyRouterSuccess(data) || anyRouterAlreadyDone(data));
+    if (ok) {
+      const latest = await anyRouterRequest(page, '/api/user/self').catch(() => null);
+      const latestData = parseJson(latest?.text);
+      if (latest?.status === 200 && latestData?.success === true) selfData = latestData;
     }
-    return { ok: false, message: baseMessage };
+    const quotaRaw = extractQuota(selfData);
+    const quota = Number.isFinite(quotaRaw) ? '额度：$' + (quotaRaw / 500000).toFixed(2) : '';
+    const baseMessage = messageOf(data) || (ok ? '签到成功' : `签到接口 HTTP ${status}，未返回有效结果`);
+    const message = baseMessage + (quota ? '；' + quota : '');
+    log('anyrouter', message);
+    return { ok, message, quota };
   } finally {
     await page.close();
   }
 }
-
 async function runIkuuu(context) {
   const page = await context.newPage();
   try {
@@ -844,13 +1031,32 @@ async function hvSolveCaptcha(page) {
   return true;
 }
 
+async function dismissHvoyNotice(page) {
+  const notice = page.locator('[role="dialog"][aria-labelledby="region-restriction-notice-title"]');
+  if (!(await notice.isVisible())) return false;
+  await notice.getByRole('button', { name: '我知道了', exact: true }).click({ timeout: 3000 });
+  await notice.waitFor({ state: 'hidden', timeout: 3000 });
+  log('hvoy', '已关闭地区限制说明弹窗');
+  return true;
+}
+async function clickHvoyButton(page, button) {
+  await dismissHvoyNotice(page);
+  try {
+    await button.click({ timeout: 5000 });
+  } catch (error) {
+    // 弹窗可能在页面加载后延迟出现；仅在确实关闭它时重试。
+    if (!(await dismissHvoyNotice(page))) throw error;
+    await button.click({ timeout: 5000 });
+  }
+}
 async function runHvoy(context) {
   const page = await context.newPage();
   try {
     await page.goto(URLS.hvoy, { waitUntil: 'domcontentloaded', timeout: 60000 });
+    await dismissHvoyNotice(page);
     const before = await page.evaluate(async () => {
-      const session = await fetch('/__free-token/session', { credentials: 'include' }).then(r => r.json()).catch(() => null);
-      const st = await fetch('/__free-token/daily-check-in', { credentials: 'include' }).then(r => r.json()).catch(() => null);
+      const session = await fetch('/__free-token/session', { credentials: 'include', signal: AbortSignal.timeout(10000) }).then(r => r.json()).catch(() => null);
+      const st = await fetch('/__free-token/daily-check-in', { credentials: 'include', signal: AbortSignal.timeout(10000) }).then(r => r.json()).catch(() => null);
       return { session, st };
     });
 
@@ -865,10 +1071,10 @@ async function runHvoy(context) {
 
     // 点击「每日签到」触发验证码；若弹出确认框再点确认
     const btn = page.locator('button').filter({ hasText: /每日签到/ }).first();
-    await btn.click({ timeout: 10000 }).catch(() => {});
+    await clickHvoyButton(page, btn);
     await page.waitForTimeout(1500);
     const confirm = page.locator('button').filter({ hasText: /确认签到|立即签到/ }).first();
-    if (await confirm.count()) await confirm.click({ timeout: 8000 }).catch(() => {});
+    if (await confirm.isVisible()) await clickHvoyButton(page, confirm);
 
     // 解滑块（失败则刷新验证码后重试一次）
     let solved = false;
@@ -910,10 +1116,10 @@ async function runHvoy(context) {
   }
 }
 
-// --- cdk.hybgzs.com：每日签到 + 大转盘（需人机验证，走浏览器点击 + Turnstile 自动通过） ---
+// --- cdk.hybgzs.com：每日签到 + 大转盘，验证由当前浏览器会话完成 ---
 async function hybgzsStats(page) {
   const res = await page.evaluate(async () => {
-    const r = await fetch('/api/dashboard/stats', { credentials: 'include' });
+    const r = await fetch('/api/dashboard/stats', { credentials: 'include', signal: AbortSignal.timeout(15000) });
     return { status: r.status, text: await r.text() };
   });
   return { status: res.status, data: parseJson(res.text) };
@@ -924,50 +1130,164 @@ function clickWaitPost(page, matcher, timeout = 45000) {
     { timeout },
   ).catch(() => null);
 }
-// 点击 CapDialog 里无文字的圆环按钮（onClick=ef），触发 <cap-widget> 自动 PoW 验证。
+// 点击 CapDialog 里无文字的圆环按钮（onClick=em），触发 <cap-widget> 自动 PoW 验证。
 // ef 会校验：webdriver/UA 无头、isTrusted、navigator.userActivation.isActive，且 nonce 就绪才继续。
 // 用真实鼠标点击（CDP 可信事件）确保 isTrusted=true + userActivation 激活。
 async function clickCapStart(page) {
-  const ring = page.locator('button.flex-shrink-0.aspect-square').first();
+  if (typeof page?.locator !== 'function' || !page?.mouse) return false;
   try {
-    await ring.waitFor({ state: 'visible', timeout: 10000 });
-    const box = await ring.boundingBox();
-    if (!box) return false;
+    const ring = page.locator('button.flex-shrink-0.aspect-square').first();
+    if (await ring.count().catch(() => 0) === 0) return false;
+    await ring.waitFor({ state: 'visible', timeout: 8000 }).catch(() => {});
+    if (!(await ring.isVisible().catch(() => false))) return false;
+
+    // 若弹窗已经在计算验证、验证中或已成功提交，不再重复点击打断
+    const dialogText = await page.locator('[role="dialog"]').first().innerText().catch(() => '');
+    if (/正在计算|正在验证|验证成功|正在提交/i.test(dialogText)) {
+      return false;
+    }
+
+    // 等待 nonce 准备就绪，按钮移除 disabled 状态
+    for (let i = 0; i < 30; i++) {
+      const disabled = await ring.isDisabled().catch(() => true);
+      if (!disabled) break;
+      await page.waitForTimeout?.(200);
+    }
+    const box = await ring.boundingBox().catch(() => null);
+    if (!box || box.width <= 0 || box.height <= 0) return false;
+
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
+    await page.waitForTimeout?.(50);
     await page.mouse.up();
     return true;
   } catch {
     return false;
   }
 }
-// 统一走「欧阳淇淇」隐形 PoW：点触发按钮 → 取 nonce → 点圆环触发 <cap-widget> → 等最终 POST。
-// 签到与转盘共用此流程（转盘每次抽奖都要过一次验证）。
-// 返回 { resp, capError }；capError 非空表示取 nonce 失败（如 429 请求过多）。
-async function hybgzsCapFlow(page, triggerBtn, finalMatcher) {
-  const capPromise = clickWaitPost(page, '/api/cap/challenge', 30000);
-  const finalPromise = clickWaitPost(page, finalMatcher, 60000);
-  await triggerBtn.click({ timeout: 15000 }).catch(() => {});
-  const capResp = await capPromise;
+
+// 在当前会话自动操作验证组件（同时支持网站自带的绮问演算/CapDialog 与 Cloudflare Turnstile），以实际业务响应为完成依据。
+async function hybgzsCapFlow(page, triggerBtn, finalMatcher, { timeoutMs = 90000 } = {}) {
+  let finished = false;
+  let resp = null;
+  const finalPromise = clickWaitPost(page, finalMatcher, timeoutMs).then(value => {
+    resp = value;
+    finished = true;
+    return value;
+  });
+
+  // 监听网站自身的 CapDialog challenge（获取验证 nonce）
+  const capChallengePromise = clickWaitPost(page, '/api/cap/challenge', timeoutMs);
+
+  // 点击触发按钮（签到或抽奖）——若失败则直接向外抛出（符合测试与错误定位要求）
+  await triggerBtn.click({ timeout: 15000 });
+  log('hybgzs', '已触发操作，等待验证组件放行或业务响应。');
+
+  // 等待网站自身验证准备就绪，或直接由最终接口响应
+  const initialWinner = await Promise.race([
+    finalPromise.then(r => (r ? '__DIRECT_DONE__' : null)),
+    capChallengePromise.then(r => (r ? '__CAP_CHALLENGE__' : null)),
+    (page.waitForTimeout ? page.waitForTimeout(2000) : sleep(2000)).then(() => null),
+  ]);
+
+  if (finished && resp) {
+    return { resp, capError: '' };
+  }
+
+  if (initialWinner === '__DIRECT_DONE__') {
+    return { resp, capError: '' };
+  }
+
   let capError = '';
-  if (capResp) {
-    let cd = null; try { cd = await capResp.json(); } catch {}
-    if (capResp.status() !== 200 || cd?.success !== true) {
-      capError = String(cd?.error || cd?.message || ('HTTP ' + capResp.status()));
+  if (initialWinner === '__CAP_CHALLENGE__') {
+    const capResp = await capChallengePromise;
+    if (capResp) {
+      const status = typeof capResp.status === 'function' ? capResp.status() : 200;
+      let cd = null;
+      if (typeof capResp.json === 'function') {
+        try { cd = await capResp.json(); } catch {}
+      }
+      if (status !== 200 || (cd && cd.success !== true)) {
+        capError = String(cd?.error || cd?.message || ('HTTP ' + status));
+      }
     }
   }
+
+  // 尝试点击网站自带的 CapDialog 圆环按钮
+  if (capError) return { resp: null, capError };
+  let capStarted = false;
   if (!capError) {
-    await page.waitForTimeout?.(400);
-    await clickCapStart(page);
+    if (page.waitForTimeout) await page.waitForTimeout(300);
+    capStarted = await clickCapStart(page);
+    if (capStarted) {
+      log('hybgzs', '已自动点击绮问演算验证按钮，正在计算 PoW 并等待放行。');
+    }
   }
-  const resp = await finalPromise;
-  return { resp, capError };
+
+  const deadline = Date.now() + timeoutMs;
+  while (!finished && Date.now() < deadline) {
+    // 1) 检查网站自身验证弹窗：未启动时启动；已启动时仅在出现失败/重试提示时再次点击
+    let capClicked = false;
+    if (!capStarted) {
+      capClicked = await clickCapStart(page);
+      if (capClicked) {
+        capStarted = true;
+        log('hybgzs', '已自动点击绮问演算验证按钮，正在计算 PoW 并等待放行。');
+      }
+    } else if (typeof page.locator === 'function') {
+      const needsRetry = await page.locator('[role="dialog"]').first().innerText()
+        .then(t => /失败|重试|重新验证/i.test(t))
+        .catch(() => false);
+      if (needsRetry) {
+        capStarted = false;
+      }
+    }
+
+    // 2) 检查 Cloudflare Turnstile 复选框
+    const cfClicked = hybgzsCfWatchers.has(page) ? false : await tryClickTurnstile(page).catch(() => false);
+    if (cfClicked) {
+      log('hybgzs', '已自动点击 CF 复选框，等待验证结果。');
+    }
+
+    const waitStep = (capClicked || cfClicked || capStarted) ? 5000 : 2000;
+    await Promise.race([
+      finalPromise,
+      page.waitForTimeout ? page.waitForTimeout(waitStep) : sleep(waitStep),
+    ]);
+  }
+
+  return { resp, capError: resp ? '' : (capError || '验证自动处理超时，未收到业务响应') };
+}
+async function waitHybgzsReady(page, { waitMs = 90000 } = {}) {
+  const deadline = Date.now() + waitMs;
+  let prompted = false;
+  do {
+    if (isLoginUrl(page.url())) throw new Error('cdk.hybgzs.com 未登录；请运行「重新登录全部网站.cmd」。');
+    const stats = await hybgzsStats(page).catch(() => ({ status: 0, data: null }));
+    if (stats.status === 401) throw new Error('cdk.hybgzs.com 未登录；请运行「重新登录全部网站.cmd」。');
+    if (stats.status === 200 && stats.data?.success === true && stats.data?.data
+      && typeof stats.data.data === 'object' && !Array.isArray(stats.data.data)) return stats;
+    const error = stats.data?.error?.message || messageOf(stats.data) || `HTTP ${stats.status}`;
+    if (/未登录|登录.*(?:失效|过期)|unauthorized/i.test(error)) {
+      throw new Error('cdk.hybgzs.com 未登录；请运行「重新登录全部网站.cmd」。');
+    }
+    if (stats.data && !/人机验证|安全验证|captcha|turnstile|cloudflare/i.test(error)) {
+      throw new Error('黑白福利站统计接口未成功：' + error);
+    }
+    if (Date.now() >= deadline) throw new Error('CF 自动验证或统计接口等待超时。');
+    if (!prompted) {
+      log('hybgzs', '检测到验证，程序正在当前会话自动处理 CF。');
+      prompted = true;
+    }
+    const clicked = hybgzsCfWatchers.has(page) ? false : await tryClickTurnstile(page);
+    await page.waitForTimeout(clicked ? 8000 : 2000);
+  } while (true);
 }
 async function doHybgzsCheckin(page) {
   await page.goto('https://cdk.hybgzs.com/gas-station/checkin', { waitUntil: 'domcontentloaded', timeout: 60000 });
-  await page.waitForTimeout?.(2500);
   const btn = page.locator('button').filter({ hasText: /立即签到|^签到$/ }).first();
-  if (!(await btn.count())) return { result: 'fail', message: '未找到签到按钮' };
+  await btn.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+  if (typeof btn.isVisible === 'function' && !(await btn.isVisible())) return { result: 'fail', message: '未找到签到按钮' };
   const { resp, capError } = await hybgzsCapFlow(page, btn, '/api/checkin');
   if (capError) return { result: 'fail', message: '人机验证获取失败：' + capError };
   if (!resp) return { result: 'fail', message: '人机验证未自动通过（未发起签到请求）' };
@@ -983,9 +1303,9 @@ async function doHybgzsCheckin(page) {
 }
 async function doHybgzsWheel(page, spins) {
   await page.goto('https://cdk.hybgzs.com/entertainment/wheel', { waitUntil: 'domcontentloaded', timeout: 60000 });
-  await page.waitForTimeout?.(2500);
   const spin = page.locator('[data-testid="wheel-spin-button"]').first();
-  if (!(await spin.count())) return { result: 'fail', message: '未找到抽奖按钮' };
+  await spin.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {});
+  if (typeof spin.isVisible === 'function' && !(await spin.isVisible())) return { result: 'fail', message: '未找到抽奖按钮' };
 
   let remaining = spins;
   const prizes = [];
@@ -1006,21 +1326,335 @@ async function doHybgzsWheel(page, spins) {
       return { result: 'fail', message: '抽奖失败：' + (err || ('HTTP ' + status)) };
     }
     const next = Number(data?.data?.remainingSpins);
+    if (Number.isFinite(next) && next >= remaining) {
+      return { result: 'fail', message: '转盘剩余次数未减少，停止重复抽奖（已抽 ' + prizes.length + ' 次）' };
+    }
     remaining = Number.isFinite(next) ? next : remaining - 1;
-    if (remaining > 0) await page.waitForTimeout?.(900);
+    if (remaining > 0) {
+      const readyAt = Date.now() + 10000;
+      while (!(await spin.isEnabled())) {
+        if (Date.now() >= readyAt) return { result: 'fail', message: '转盘动画结束后按钮仍不可用，结束本轮' };
+        await page.waitForTimeout(300);
+      }
+    }
   }
   if (!prizes.length) return { result: 'done', message: '今日免费次数已用完' };
   return { result: 'success', message: '共抽' + prizes.length + '次：' + prizes.join('、') + (remaining > 0 ? '（剩余' + remaining + '次）' : '') };
 }
+// 通用同源 fetch（带登录态），用于无需「欧阳淇淇」验证的接口。
+async function hybgzsApi(page, url, opts = {}) {
+  const started = Date.now();
+  const result = await page.evaluate(async (arg) => {
+    const { u, o } = arg;
+    try {
+      const r = await fetch(u, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...o, signal: AbortSignal.timeout(15000) });
+      let data = null; try { data = await r.json(); } catch {}
+      return { status: r.status, data };
+    } catch (e) { return { status: -1, data: null, error: String(e) }; }
+  }, { u: url, o: opts });
+  log('hybgzs', `${url}：HTTP ${result.status}，耗时 ${((Date.now() - started) / 1000).toFixed(1)} 秒`);
+  if (result.status < 0 || !result.data) {
+    throw new Error(`${url} 请求超时、网络异常或未返回 JSON（HTTP ${result.status}），停止本轮以免重复提交。`);
+  }
+  if (result.status === 401) throw new Error('黑白福利站登录失效，请重新登录。');
+  return result;
+}
+// 开福袋（周年福袋）：活动结束/今日已开则跳过，否则免费开 1 次。
+async function doHybgzsGiftbox(page) {
+  const st = await hybgzsApi(page, '/api/giftbox/status');
+  const d = st.data?.data || {};
+  if (d.isActivityEnded) return { parts: ['福袋：活动已结束'] };
+  const rem = Number(d.remainingAttempts ?? 0);
+  if (rem <= 0) return { parts: ['福袋：今日已开'] };
+  const r = await hybgzsApi(page, '/api/giftbox/open', { method: 'POST', body: JSON.stringify({ boxIndex: 0 }) });
+  if (r.data?.success) {
+    const w = r.data?.data || {};
+    let label = '福袋：开启成功';
+    if (w.rewardType === 'quota') label += '（额度 +$' + (Number(w.quotaAmount || 0) / 500000).toFixed(2) + '）';
+    else if (w.rewardType === 'vip') label += '（VIP +' + (w.vipDays || 0) + '天）';
+    else if (w.rewardType === 'card') label += '（卡牌' + (w.cardName ? ' ' + w.cardName : '') + '）';
+    return { parts: [label] };
+  }
+  return { parts: ['福袋：' + String(r.data?.error || '开启失败')] };
+}
+// 抽卡：优先十连抽消耗今日免费次数（dailyFreeLimit），零头单抽；免费/付费由后端 freeRemaining 自动判断。
+async function doHybgzsCards(page) {
+  const st = await hybgzsApi(page, '/api/cards/draw/status');
+  let free = Number(st.data?.limits?.freeRemaining ?? 0);
+  if (free <= 0) return { parts: ['抽卡：今日免费次数已用完'] };
+  let drawn = 0, legendary = 0, epic = 0, failures = 0;
+  while (free > 0) {
+    const drawType = free >= 10 ? 'ten' : 'single';
+    const drawCount = drawType === 'ten' ? 10 : 1;
+    const r = await hybgzsApi(page, '/api/cards/draw', {
+      method: 'POST',
+      body: JSON.stringify({ type: drawType }),
+    });
+    if (!r.data?.success) {
+      const err = String(r.data?.error?.message || r.data?.error || '失败');
+      if (/频繁|稍后|429|limit|rate/i.test(err) && failures < 3) {
+        failures++;
+        const waitMs = failures * 8000;
+        log('hybgzs', `抽卡触发频控（${err}），等待 ${waitMs / 1000} 秒后重试第 ${failures} 次...`);
+        await page.waitForTimeout?.(waitMs);
+        continue;
+      }
+      return { parts: ['抽卡：' + err + '（已抽 ' + drawn + ' 次，剩余 ' + free + ' 次）'] };
+    }
+    failures = 0;
+    drawn += drawCount;
+    free -= drawCount;
+    for (const c of (Array.isArray(r.data.cards) ? r.data.cards : [])) {
+      const rar = c?.rarity;
+      if (rar === 'legendary' || rar === '传说') legendary++;
+      else if (rar === 'epic' || rar === '史诗') epic++;
+    }
+    if (free > 0) await page.waitForTimeout?.(2500);
+  }
+  return { parts: ['抽卡：免费抽 ' + drawn + ' 次' + (legendary ? '，传说 ' + legendary : '') + (epic ? '，史诗 ' + epic : '')] };
+}
+// 从「今日诗词」API 取一句诗用作漂流瓶小纸条；失败或过短时回退固定文案。
+async function fetchJinriShiciNote() {
+  const fallback = '这是一条自动漂流的问候，祝你好运连连。';
+  try {
+    const r = await fetch('https://v1.jinrishici.com/all.json', { signal: AbortSignal.timeout(3000) });
+    if (!r.ok) return fallback;
+    const j = await r.json();
+    const content = String(j?.content || '').trim();
+    if (!content) return fallback;
+    // 小纸条校验 ≥10「汉字等价」（中文=1，其它=0.5），不足则补作者出处兜底。
+    const han = [...content].reduce((s, ch) => s + (ch.charCodeAt(0) > 127 ? 1 : 0.5), 0);
+    const note = han >= 10 ? content : (content + '——' + (j.author || '') + (j.origin ? '《' + j.origin + '》' : ''));
+    return note.slice(0, 200);
+  } catch {
+    return fallback;
+  }
+}
+// 漂流瓶：捡几次就丢几个（1:1，不丢满），每瓶放 $10 额度、匿名、一句新诗；捡瓶每天 1 次，丢/捡均有冷却。
+async function doHybgzsDriftBottle(page) {
+  const settings = await hybgzsApi(page, '/api/drift-bottle/settings');
+  const usage = settings.data?.data?.usage || {};
+  const pickRemaining = Number(usage.pickRemaining ?? 0);
+  const parts = [];
+
+  if (pickRemaining <= 0) {
+    parts.push('漂流瓶：今日已捡');
+    return { ok: true, parts };
+  }
+
+  // 丢瓶：捡几次丢几个（解锁捡瓶资格），每瓶 $10、匿名、随机诗；遇冷却/限流等待重试。
+  let threw = 0;
+  let cooldownWaited = false;
+  for (let i = 0; i < pickRemaining; i++) {
+    const note = await fetchJinriShiciNote();
+    const thr = await hybgzsApi(page, '/api/drift-bottle/throw', {
+      method: 'POST',
+      body: JSON.stringify({ isAnonymous: true, noteContent: note, amountUsd: 10, cardId: null, cardIsSP: false }),
+    });
+    if (!thr.data?.success) {
+      const err = String(thr.data?.error || '失败');
+      if (/频繁|稍后|冷却|限/.test(err) && !cooldownWaited) {
+        cooldownWaited = true;
+        log('hybgzs', '漂流瓶冷却：等待 60 秒后重试一次。');
+        await page.waitForTimeout(60000); i--; continue;
+      }
+      parts.push('丢瓶：' + err);
+      break;
+    }
+    threw++;
+    await page.waitForTimeout?.(2000);
+  }
+  if (threw > 0) parts.push('丢瓶：成功 ' + threw + ' 次');
+
+  // 捡瓶（每天 1 次；冷却是「等待 1 分钟」）
+  let picked = false;
+  for (let t = 0; t < 2 && !picked; t++) {
+    const pk = await hybgzsApi(page, '/api/drift-bottle/pick', { method: 'POST', body: JSON.stringify({ scope: 'world' }) });
+    if (pk.data?.success) { picked = true; parts.push('捡瓶：成功'); break; }
+    if (pk.data?.code === 'PICK_COOLDOWN' && !cooldownWaited) {
+      cooldownWaited = true;
+      log('hybgzs', '捡瓶冷却：等待 60 秒后重试一次。');
+      await page.waitForTimeout(60000); continue;
+    }
+    parts.push('捡瓶：' + String(pk.data?.error || '失败'));
+    break;
+  }
+  if (!picked && !parts.some(p => p.startsWith('捡瓶'))) parts.push('捡瓶：冷却超时未成功');
+
+  return { ok: picked, parts };
+}
+// 农场：照料（一键务农）→ 收成熟作物 → 解锁新地块 → 种植复种 → 偷菜（按体力和每日次数上限循环「随机访问陌生人 → 一键偷菜」）。
+async function doHybgzsFarm(page) {
+  const parts = [];
+
+  // 1) 照料：清除口渴/杂草/虫害等负面状态，减少收菜减产
+  const care = await hybgzsApi(page, '/api/farm/care/all', { method: 'POST', body: JSON.stringify({}) });
+  if (care.data?.success && Number(care.data?.processed ?? 0) > 0) {
+    parts.push('农场照料：处理 ' + care.data.processed + ' 处');
+  }
+
+  // 2) 收菜：一键收获所有成熟作物
+  const crops = await hybgzsApi(page, '/api/farm/crops');
+  const cropList = Array.isArray(crops.data?.data) ? crops.data.data : (Array.isArray(crops.data?.crops) ? crops.data.crops : []);
+  const mature = cropList.filter(c => c.isMature && !c.isHarvested).length;
+  if (mature > 0) {
+    let h = await hybgzsApi(page, '/api/farm/harvest-all', { method: 'POST', body: JSON.stringify({ destroyIfFull: false }) });
+    if (!h.data?.success && /仓库已满/.test(String(h.data?.error?.message || h.data?.error || ''))) {
+      const up = await hybgzsApi(page, '/api/farm/warehouse/upgrade', { method: 'POST' }).catch(() => ({}));
+      if (up.data?.success) {
+        parts.push('农场仓库：自动扩容升级');
+        h = await hybgzsApi(page, '/api/farm/harvest-all', { method: 'POST', body: JSON.stringify({ destroyIfFull: false }) });
+      }
+    }
+    if (h.data?.success) {
+      const d = h.data?.data || {};
+      const total = d.harvestedBySeedId
+        ? Object.values(d.harvestedBySeedId).reduce((s, n) => s + Number(n || 0), 0)
+        : (d.harvestedCount ?? mature);
+      let label = '农场收菜：收 ' + (d.harvestedCount ?? mature) + ' 块地（+ ' + total + ' 个作物）';
+      if (d.experience?.levelUp) label += '，等级升至 ' + d.experience.newLevel;
+      parts.push(label);
+    } else {
+      parts.push('农场收菜：' + String(h.data?.error?.message || h.data?.error || '收获失败'));
+    }
+  } else {
+    parts.push('农场收菜：无成熟作物');
+  }
+
+  // 3) 解锁新地块：每次运行解锁 1 块（消耗余额，渐进解锁避免一次花太多）
+  const pl = await hybgzsApi(page, '/api/farm/plots');
+  const nu = pl.data?.data?.nextUnlock;
+  if (nu?.canUnlock) {
+    const un = await hybgzsApi(page, '/api/farm/plots/unlock', { method: 'POST', body: JSON.stringify({ plotIndex: nu.plotIndex }) });
+    if (un.data?.success) {
+      parts.push('农场解锁：第 ' + (Number(nu.plotIndex) + 1) + ' 块地已解锁');
+    } else {
+      parts.push('农场解锁：' + String(un.data?.error?.message || un.data?.error || '失败'));
+    }
+  }
+
+  // 4) 种植：优先用库存种子免费复种（按单位时间收益从高到低）；库存不足再买收益最高的种子种满
+  const cropsNow = await hybgzsApi(page, '/api/farm/crops');
+  const rc = cropsNow.data || {};
+  const plantedNow = (Array.isArray(rc.data) ? rc.data : (Array.isArray(rc.crops) ? rc.crops : [])).length;
+  const maxSlots = Number(rc.maxSlots ?? rc.baseSlots ?? 0);
+  let freeSlots = maxSlots - plantedNow;
+  if (freeSlots > 0) {
+    const seedsResp = await hybgzsApi(page, '/api/farm/seeds');
+    const seedList = Array.isArray(seedsResp.data?.seeds) ? seedsResp.data.seeds : [];
+    const rate = s => (Number(s.harvestQuantity || 0) * Number(s.harvestValue || 0)) / Math.max(1, Number(s.growthTime || 1));
+    const sorted = seedList.filter(s => s.isEnabled !== false).sort((a, b) => rate(b) - rate(a));
+
+    const inv = await hybgzsApi(page, '/api/farm/inventory');
+    const items = Array.isArray(inv.data?.data) ? inv.data.data : (inv.data?.inventory || []);
+    const stock = new Map(items.map(it => [String(it.seedId), Number(it.quantity || 0)]));
+
+    const doPlant = async (s, qty) => {
+      const p = await hybgzsApi(page, '/api/farm/plant-batch', { method: 'POST', body: JSON.stringify({ seedId: s.id, quantity: qty }) });
+      if (!p.data?.success) {
+        parts.push('农场种植：' + String(p.data?.error?.message || p.data?.error || '失败'));
+        return false;
+      }
+      const n = Number(p.data?.data?.plantedCount ?? qty);
+      freeSlots -= n;
+      parts.push('农场种植：' + s.name + ' × ' + n);
+      return true;
+    };
+
+    // 阶段一：有库存的种子免费复种（收益从高到低）
+    for (const s of sorted) {
+      if (freeSlots <= 0) break;
+      const st = stock.get(String(s.id)) || 0;
+      if (st <= 0) continue;
+      if (!(await doPlant(s, Math.min(st, freeSlots)))) continue;
+    }
+    // 阶段二：库存种完仍缺，买收益最高的可用种子种满（多级回退，避免因等级不足留空）
+    if (freeSlots > 0 && sorted.length > 0) {
+      for (const s of sorted) {
+        if (freeSlots <= 0) break;
+        const ok = await doPlant(s, freeSlots);
+        if (ok) break;
+      }
+    }
+    if (freeSlots > 0) parts.push('农场种植：剩 ' + freeSlots + ' 块地空置');
+  } else if (plantedNow > 0) {
+    parts.push('农场种植：' + plantedNow + ' 块地生长中');
+  }
+
+  // 5) 偷菜：按剩余体力和每日次数上限循环
+  const en = await hybgzsApi(page, '/api/farm/energy/status');
+  const d = en.data?.data || {};
+  const energy = Number(d.currentEnergy ?? 0);
+  const cost = Number(d.energyCostPerSteal ?? 5);
+  const dailyLeft = Number(d.dailyStealLimit ?? 15) - Number(d.dailyStealCount ?? 0);
+  let budget = d.canSteal === false ? 0 : Math.min(Math.floor(energy / cost), dailyLeft);
+  if (budget > 0) {
+    let stolen = 0, stolenCrops = 0, failures = 0;
+    const stealDeadline = Date.now() + 45000;
+    for (let guard = 0; budget > 0 && guard < 25 && Date.now() < stealDeadline; guard++) {
+      const tg = await hybgzsApi(page, '/api/farm/steal/stranger/target', { method: 'POST' });
+      const sid = tg.data?.data?.stealSessionId;
+      const strangerId = tg.data?.data?.stranger?.id;
+      if (!tg.data?.success || !sid || !strangerId) {
+        if (++failures >= 3) { parts.push('农场偷菜：连续 3 次获取目标失败，结束本轮'); break; }
+        await page.waitForTimeout(2000); continue;
+      }
+      const au = await hybgzsApi(page, '/api/farm/steal/stranger/auto', {
+        method: 'POST',
+        body: JSON.stringify({ strangerId, stealSessionId: sid }),
+      });
+      if (!au.data?.success) {
+        const err = String(au.data?.error?.message || au.data?.error || '');
+        if (/体力|次数|energy|limit/i.test(err)) break;
+        if (++failures >= 3) { parts.push('农场偷菜：连续 3 次失败，结束本轮'); break; }
+        // 已被偷光 → 换目标重试；操作频繁(429) → 加长等待后重试
+        await page.waitForTimeout?.(/频繁|稍后/.test(err) ? 6000 : 2500);
+        continue;
+      }
+      failures = 0;
+      stolen++;
+      stolenCrops += (Array.isArray(au.data?.stolenCrops) ? au.data.stolenCrops : []).reduce((s, c) => s + Number(c.quantity || 0), 0);
+      budget--;
+      await page.waitForTimeout?.(2500);
+    }
+    parts.push('农场偷菜：完成 ' + stolen + ' 次' + (stolenCrops ? '（' + stolenCrops + ' 棵）' : ''));
+  } else if (dailyLeft <= 0) {
+    parts.push('农场偷菜：今日次数已用完');
+  } else {
+    parts.push('农场偷菜：体力不足（' + energy + '/' + cost + '，今日剩余 ' + dailyLeft + ' 次）');
+  }
+
+  return { parts };
+}
+async function withPageDeadline(page, action, timeoutMs) {
+  let timer;
+  const deadline = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      reject(new Error(`黑白福利站执行超过 ${timeoutMs / 1000} 秒，本轮未完成；已停止该页面，继续其他任务。`));
+      // 真正关闭执行页面，防止超时后仍在后台提交操作。
+      void page.close().catch(() => {});
+    }, timeoutMs);
+  });
+  try { return await Promise.race([Promise.resolve().then(action), deadline]); }
+  finally { clearTimeout(timer); }
+}
 async function runHybgzs(context) {
   const page = await context.newPage();
+  return withPageDeadline(page, () => runHybgzsPage(page), 360000);
+}
+async function runHybgzsPage(page) {
+  const stopCf = watchHybgzsCf(page);
+  const started = Date.now();
+  const step = async (label, action) => {
+    const start = Date.now();
+    log('hybgzs', label + '：开始');
+    try { return await action(); } finally {
+      log('hybgzs', `${label}：耗时 ${((Date.now() - start) / 1000).toFixed(1)} 秒`);
+    }
+  };
   try {
     await page.goto(URLS.hybgzs, { waitUntil: 'domcontentloaded', timeout: 60000 });
-    await page.waitForTimeout?.(2000);
-    let stats = await hybgzsStats(page);
-    if (stats.status === 401 || stats.status === 403) {
-      throw new Error('cdk.hybgzs.com 未登录；请先运行「重新登录全部网站.cmd」。');
-    }
+    let stats = await waitHybgzsReady(page);
     const s = stats.data?.data || {};
     const checkinDone = s.checkinStatus?.hasCheckedToday === true;
     const consecutive = s.checkinStatus?.consecutiveDays ?? 0;
@@ -1032,7 +1666,7 @@ async function runHybgzs(context) {
     if (checkinDone) {
       parts.push('签到：今日已签到（连续' + consecutive + '天）');
     } else {
-      const r = await doHybgzsCheckin(page);
+      const r = await step('签到', () => doHybgzsCheckin(page));
       parts.push('签到：' + r.message);
       if (r.result === 'fail') failed = true;
     }
@@ -1040,14 +1674,28 @@ async function runHybgzs(context) {
     if (remainingSpins <= 0) {
       parts.push('转盘：今日免费次数已用完');
     } else {
-      const r = await doHybgzsWheel(page, remainingSpins);
+      const r = await step('转盘', () => doHybgzsWheel(page, remainingSpins));
       parts.push('转盘：' + r.message);
       if (r.result === 'fail') failed = true;
     }
 
+    const giftbox = await step('福袋', () => doHybgzsGiftbox(page));
+    parts.push(...giftbox.parts);
+
+    const cards = await step('抽卡', () => doHybgzsCards(page));
+    parts.push(...cards.parts);
+
+    const farm = await step('农场', () => doHybgzsFarm(page));
+    parts.push(...farm.parts);
+
+    const driftBottle = await step('漂流瓶', () => doHybgzsDriftBottle(page));
+    parts.push(...driftBottle.parts);
+    if (!driftBottle.ok) failed = true;
+
     stats = await hybgzsStats(page);
     const balance = stats.data?.data?.walletBalance;
-    const quota = Number.isFinite(balance) ? '\u94b1\u5305\u989d\u5ea6\uff1a' + balance : '';
+    // 钱包额度为大整数，500000 单位 = $1
+    const quota = Number.isFinite(balance) ? '钱包余额：$' + (balance / 500000).toFixed(2) : '';
 
     return {
       ok: !failed,
@@ -1055,7 +1703,9 @@ async function runHybgzs(context) {
       quota: quota || '',
     };
   } finally {
+    await stopCf();
     await page.close();
+    log('hybgzs', `站点任务总耗时 ${((Date.now() - started) / 1000).toFixed(1)} 秒`);
   }
 }
 
@@ -1554,9 +2204,18 @@ async function attempt(context, task, fn, { alwaysRun = false } = {}) {
     const outcome = await fn(context);
     const ok = outcome === true || outcome?.ok === true;
     if (!ok) throw new Error(outcome?.message || 'The site did not confirm success.');
+    if (outcome?.quota) {
+      markDone(task, outcome.quota);
+    }
     if (alreadyDone) {
-      log(task, 'already completed today; skipped');
-      return { task, ok: true, status: 'skipped', message: outcome?.message || skippedMessage(task) };
+      log(task, 'completed today (re-run)');
+      return {
+        task,
+        ok: true,
+        status: 'success',
+        message: outcome?.message || skippedMessage(task),
+        quota: outcome?.quota || lastQuota(task) || '',
+      };
     }
     markDone(task, outcome?.quota);
     log(task, 'completed today');
@@ -1564,11 +2223,12 @@ async function attempt(context, task, fn, { alwaysRun = false } = {}) {
       task,
       ok: true,
       status: 'success',
-      message: outcome?.message || '\u6267\u884c\u6210\u529f',
+      message: outcome?.message || '执行成功',
+      quota: outcome?.quota || '',
     };
   } catch (error) {
     if (alreadyDone) {
-      log(task, 'already completed today; skipped');
+      log(task, `re-run error: ${error.message}; kept as completed today`);
       return { task, ok: true, status: 'skipped', message: skippedMessage(task) };
     }
     log(task, `failed: ${error.message}`);
@@ -1577,6 +2237,7 @@ async function attempt(context, task, fn, { alwaysRun = false } = {}) {
 }
 function printSummary(results) {
   const labels = {
+    allapihub: 'All API Hub',
     anyrouter: 'AnyRouter',
     ikuuu: 'iKuuu',
     chy: 'CHY',
@@ -1585,7 +2246,6 @@ function printSummary(results) {
     nodebuf: 'NodeBuf',
     hvoy: '禾维AI',
     hybgzs: '黑白福利站',
-    allapihub: 'All API Hub',
   };
   console.log('\n========== 本次执行结果 ==========');
   for (const result of results) {
@@ -1620,43 +2280,46 @@ async function runOnce(enabledTasks = null) {
     printSummary([]);
     return [];
   }
-  let context = await launchContext();
   let results = [];
-  try {
-    if (enabled.includes('anyrouter')) {
-      const r = await attempt(context, 'anyrouter', runAnyRouter);
-      results.push(r);
-      nextAnyRouterRetryAt = r.ok ? 0 : Date.now() + HOUR;
-    }
-    if (enabled.includes('ikuuu')) results.push(await attempt(context, 'ikuuu', runIkuuu));
-    if (enabled.includes('chy')) results.push(await attempt(context, 'chy', runChy));
-    const exclusiveSites = [
-      { task: 'nodeseek', url: URLS.nodeseek, origin: 'https://www.nodeseek.com/' },
-      { task: 'deepflood', url: URLS.deepflood, origin: 'https://www.deepflood.com/' },
-    ].filter(site => enabled.includes(site.task));
-    if (exclusiveSites.length) {
-      const stillNeeded = [];
-      for (const site of exclusiveSites) {
-        const r = await attempt(context, site.task, ctx => runCfApiAttendance(ctx, site), { alwaysRun: true });
-        results.push(r);
-        if (!r.ok) stillNeeded.push(site);
-      }
-      if (stillNeeded.length) {
-        const exclusive = await runProfileExclusiveAttendance(context, stillNeeded);
-        context = exclusive.context;
-        const drMap = new Map(exclusive.results.map(r => [r.task, r]));
-        results = results.map(r => drMap.has(r.task) ? drMap.get(r.task) : r);
-      }
-    }
-    if (enabled.includes('nodebuf')) results.push(await attempt(context, 'nodebuf', runNodeBuf));
-    if (enabled.includes('hvoy')) results.push(await attempt(context, 'hvoy', runHvoy));
-    if (enabled.includes('hybgzs')) results.push(await attempt(context, 'hybgzs', runHybgzs));
-  } finally {
-    await context.close();
-  }
   if (enabled.includes('allapihub')) {
     const allApiHubResult = await runOptionalAllApiHubTask();
     if (allApiHubResult) results.push(allApiHubResult);
+  }
+  const browserTasks = enabled.filter(t => t !== 'allapihub');
+  if (browserTasks.length) {
+    let context = await launchContext();
+    try {
+      if (enabled.includes('anyrouter')) {
+        const r = await attempt(context, 'anyrouter', runAnyRouter);
+        results.push(r);
+        nextAnyRouterRetryAt = r.ok ? 0 : Date.now() + HOUR;
+      }
+      if (enabled.includes('ikuuu')) results.push(await attempt(context, 'ikuuu', runIkuuu));
+      if (enabled.includes('chy')) results.push(await attempt(context, 'chy', runChy));
+      const exclusiveSites = [
+        { task: 'nodeseek', url: URLS.nodeseek, origin: 'https://www.nodeseek.com/' },
+        { task: 'deepflood', url: URLS.deepflood, origin: 'https://www.deepflood.com/' },
+      ].filter(site => enabled.includes(site.task));
+      if (exclusiveSites.length) {
+        const stillNeeded = [];
+        for (const site of exclusiveSites) {
+          const r = await attempt(context, site.task, ctx => runCfApiAttendance(ctx, site), { alwaysRun: true });
+          results.push(r);
+          if (!r.ok) stillNeeded.push(site);
+        }
+        if (stillNeeded.length) {
+          const exclusive = await runProfileExclusiveAttendance(context, stillNeeded);
+          context = exclusive.context;
+          const drMap = new Map(exclusive.results.map(r => [r.task, r]));
+          results = results.map(r => drMap.has(r.task) ? drMap.get(r.task) : r);
+        }
+      }
+      if (enabled.includes('nodebuf')) results.push(await attempt(context, 'nodebuf', runNodeBuf));
+      if (enabled.includes('hvoy')) results.push(await attempt(context, 'hvoy', runHvoy));
+      if (enabled.includes('hybgzs')) results.push(await attempt(context, 'hybgzs', runHybgzs, { alwaysRun: true }));
+    } finally {
+      await context.close();
+    }
   }
   printSummary(results);
   return results;
@@ -1714,11 +2377,34 @@ async function main() {
     setDefaultTasks(input);
     return;
   }
-  const results = await runOnce();
+  const tasksIdx = args.indexOf('--tasks');
+  let selectedTasks = null;
+  if (tasksIdx !== -1) {
+    const input = args.slice(tasksIdx + 1).filter(t => !t.startsWith('--')).join(' ');
+    selectedTasks = parseTaskTokens(input);
+  }
+  const results = await runOnce(selectedTasks);
   if (results.some(result => !result.ok)) process.exitCode = 1;
 }
 
 module.exports = {
+  dismissHvoyNotice,
+  clickHvoyButton,
+  withPageDeadline,
+  doHybgzsWheel,
+  watchHybgzsCf,
+  hybgzsApi,
+  doHybgzsCards,
+  doHybgzsDriftBottle,
+  launchContext,
+  isProfileInUseError,
+  tryClickTurnstile,
+  clickClosedTurnstile,
+  anyRouterRequest,
+  runAnyRouter,
+  waitHybgzsReady,
+  clickCapStart,
+  hybgzsCapFlow,
   attendanceQuotaSummary,
   attendanceRequestPlans,
   attendanceSuccess,
@@ -1750,7 +2436,7 @@ module.exports = {
 
 if (require.main === module) {
   main().catch(error => {
-    console.error(error.stack || error);
+    console.error(error.code === 'BROWSER_PROFILE_BUSY' ? error.message : (error.stack || error));
     process.exitCode = 1;
   });
 }

@@ -1,15 +1,18 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
-import { mkdtemp, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import {
   DEFAULT_PROMPT,
   buildChatRequest,
   buildModelRequest,
   createApp,
+  envProxyOptions,
   loadConfig,
+  normalizeWindowsProxy,
   normalizeModels,
   applyProviderOverrides,
   providerFromBody,
@@ -21,6 +24,48 @@ test('默认问题是今天的日期', () => {
   assert.equal(DEFAULT_PROMPT, '今天的日期');
 });
 
+test('存在代理环境变量时为 Node 网络请求启用代理并绕过本地服务', () => {
+  const env = envProxyOptions({ HTTPS_PROXY: 'http://127.0.0.1:3456', NO_PROXY: 'internal.example' });
+  assert.equal(env.NODE_USE_ENV_PROXY, '1');
+  assert.equal(env.HTTPS_PROXY, 'http://127.0.0.1:3456');
+  assert.match(env.NO_PROXY, /internal\.example/);
+  assert.match(env.NO_PROXY, /127\.0\.0\.1/);
+  assert.match(env.NO_PROXY, /localhost/);
+  assert.equal(envProxyOptions({ HTTPS_PROXY: 'http://proxy', NODE_USE_ENV_PROXY: '1' }), null);
+  assert.equal(envProxyOptions({}), null);
+});
+
+test('Windows 系统代理仅在启用时使用并支持动态端口', () => {
+  assert.equal(normalizeWindowsProxy(false, '127.0.0.1:3456'), '');
+  assert.equal(normalizeWindowsProxy(true, ''), '');
+  assert.equal(normalizeWindowsProxy(true, '127.0.0.1:3456'), 'http://127.0.0.1:3456');
+  assert.equal(
+    normalizeWindowsProxy(true, 'http=127.0.0.1:3456;https=127.0.0.1:4567'),
+    'http://127.0.0.1:4567'
+  );
+  assert.equal(normalizeWindowsProxy(true, 'socks=127.0.0.1:1080'), '');
+});
+
+test('便携版现有文件清单能够独立启动并读取厂商配置', async t => {
+  const dir = await mkdtemp(path.join(tmpdir(), 'ai-model-tester-portable-'));
+  t.after(() => rm(dir, { recursive: true, force: true }));
+  for (const name of ['server.mjs', 'public', 'config.example.json']) {
+    await cp(new URL('../' + name, import.meta.url), path.join(dir, name), { recursive: true });
+  }
+  const portable = await import(pathToFileURL(path.join(dir, 'server.mjs')).href);
+  const app = portable.createApp();
+  await new Promise(resolve => app.listen(0, '127.0.0.1', resolve));
+  t.after(() => new Promise(resolve => {
+    app.closeAllConnections();
+    app.close(resolve);
+  }));
+  const response = await fetch(`http://127.0.0.1:${app.address().port}/api/providers`);
+  assert.equal(response.status, 200);
+  const data = await response.json();
+  assert.equal(data.usingExampleConfig, true);
+  assert.ok(data.providers.some(provider => provider.id === 'anyrouter'));
+});
+
 test('首页默认展示中转站缓存搜索和客户端模式', async () => {
   const app = createApp();
   await new Promise((resolve) => app.listen(0, '127.0.0.1', resolve));
@@ -29,9 +74,9 @@ test('首页默认展示中转站缓存搜索和客户端模式', async () => {
     const response = await fetch(`http://127.0.0.1:${port}/`);
     const html = await response.text();
     assert.equal(response.status, 200);
-    assert.match(html, /<details class="relay-panel" open>/);
+    assert.match(html, /<details class="relay-panel" open hidden>/);
     assert.match(html, /缓存标识 \/ 搜索缓存/);
-    assert.match(html, /客户端模式（按需）/);
+    assert.match(html, /客户端标识（通常无需修改）/);
   } finally {
     await new Promise((resolve) => app.close(resolve));
   }
@@ -146,35 +191,20 @@ test('Codex 客户端模式使用 Responses API 和 Codex 标识', () => {
   const request = buildChatRequest(provider, { model: 'gpt-5-codex', prompt: 'hi' });
   const body = JSON.parse(request.options.body);
   assert.equal(request.url, 'https://relay.example.com/v1/responses');
-  assert.equal(request.options.headers.originator, 'codex_cli_rs');
-  assert.match(request.options.headers['user-agent'], /codex_cli_rs/);
+  assert.equal(request.options.headers.originator, 'Codex Desktop');
+  assert.match(request.options.headers['user-agent'], /Codex Desktop/);
+  assert.equal(request.options.headers['x-openai-internal-codex-responses-lite'], 'true');
   assert.equal(body.input, 'hi');
   assert.equal(body.max_output_tokens, 512);
 });
 
-test('Cursor 客户端模式使用 Chat Completions 和 Cursor 标识', () => {
-  const provider = providerFromBody({ providers: [] }, {
-    customProvider: {
-      baseUrl: 'https://api.cursor.com',
-      apiKey: 'cur-test',
-      clientProfile: 'cursor',
-    },
-  });
-  const modelRequest = buildModelRequest(provider);
-  assert.equal(modelRequest.url, 'https://api.cursor.com/v1/models');
-  assert.equal(modelRequest.options.headers.authorization, 'Bearer cur-test');
-
-  const request = buildChatRequest(provider, { model: 'gpt-5', prompt: 'hi' });
-  assert.equal(request.url, 'https://api.cursor.com/v1/chat/completions');
-  assert.match(request.options.headers['user-agent'], /cursor/i);
-  assert.match(request.options.headers['user-agent'], /^(?!.*\bcodex\b).*$/i);
-  assert.match(request.options.headers['user-agent'], /^(?!.*\bopenai\b).*$/i);
-  assert.equal(request.options.headers.authorization, 'Bearer cur-test');
-  assert.equal(request.options.headers.originator, undefined);
-  const body = JSON.parse(request.options.body);
-  assert.equal(body.model, 'gpt-5');
-  assert.equal(body.messages[0].content, 'hi');
-  assert.equal(body.max_tokens, 512);
+test('Cursor 官方支持模型列表，但不伪造聊天接口', () => {
+  const provider = providerFromBody({ providers: [] }, { customProvider: {
+    baseUrl: 'https://api.cursor.com', apiKey: 'cur-test', clientProfile: 'cursor',
+  } });
+  assert.equal(buildModelRequest(provider).url, 'https://api.cursor.com/v1/models');
+  assert.equal(publicProvider(provider).supportsTest, false);
+  assert.throws(() => buildChatRequest(provider, { model: 'gpt-5', prompt: 'hi' }), /Cloud Agents API/);
 });
 
 test('错误脱敏会隐藏常见 token', () => {

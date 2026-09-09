@@ -31,12 +31,16 @@
             <button class="btn ghost" id="refreshProviders" type="button">同步配置</button>
           </div>
 
-          <details class="relay-panel" open>
+          <div class="source-tabs" role="group" aria-label="接口来源">
+            <button class="btn primary" id="officialTab" type="button" aria-pressed="true">厂商接口</button>
+            <button class="btn" id="relayTab" type="button" aria-pressed="false">中转站 / 缓存</button>
+          </div>
+          <details class="relay-panel" open hidden>
             <summary>
               <span class="relay-mark" aria-hidden="true">↗</span>
               <span class="relay-summary-copy">
                 <strong>临时中转站</strong>
-                <small>缓存模糊搜索 · 支持 Codex / Cursor 等客户端</small>
+                <small>自动识别格式 · 保存常用接口</small>
               </span>
               <span class="relay-toggle" aria-hidden="true"></span>
             </summary>
@@ -47,10 +51,10 @@
                 <div class="relay-cache-suggestions" id="relayCacheSuggestions" role="listbox" aria-label="缓存搜索建议" hidden></div>
               </label>
               <label class="field">
-                <span>客户端模式（按需）</span>
+                <span>客户端标识（通常无需修改）</span>
                 <select id="relayClientProfile"></select>
                 <small class="field-note" id="relayClientProfileHint">普通中转站保持“通用 OpenAI”；仅受限中转站需要切换。</small>
-                <div class="relay-client-profile-detail" id="relayClientProfileDetail"></div>
+                <details><summary>请求标识详情</summary><div class="relay-client-profile-detail" id="relayClientProfileDetail"></div></details>
               </label>
               <label class="field">
                 <span>Base URL</span>
@@ -69,18 +73,18 @@
                 <summary>
                   <span>
                     <strong>路径配置</strong>
-                    <small>默认兼容 OpenAI，可按需修改</small>
+                    <small>留空自动处理，特殊中转可填写</small>
                   </span>
                   <span class="relay-subpanel-toggle" aria-hidden="true"></span>
                 </summary>
                 <div class="relay-subpanel-body field-row">
                   <label class="field">
                     <span>模型路径</span>
-                    <input id="relayModelsPath" type="text" value="/models">
+                    <input id="relayModelsPath" type="text" placeholder="自动">
                   </label>
                   <label class="field">
                     <span>测试路径</span>
-                    <input id="relayChatPath" type="text" value="/chat/completions">
+                    <input id="relayChatPath" type="text" placeholder="自动">
                   </label>
                 </div>
               </details>
@@ -105,7 +109,7 @@
           <section class="provider-directory" aria-labelledby="officialProvidersTitle">
             <div class="provider-section-head">
               <div>
-                <h3 id="officialProvidersTitle">官方厂商</h3>
+                <h3 id="officialProvidersTitle">预设接口</h3>
                 <p>页面 Key 优先，留空使用配置文件</p>
               </div>
               <span class="provider-count" id="providerCount">0 个</span>
@@ -133,6 +137,10 @@
           </div>
 
           <div class="key-source-banner" id="keySourceHint">未选择接口</div>
+          <div class="manual-model pad">
+            <label class="field"><span>手动添加模型（无需先拉取列表）</span><input id="manualModel" placeholder="输入模型 ID，多个用逗号分隔"></label>
+            <button class="btn" id="addModel" type="button">添加并勾选</button>
+          </div>
 
           <div class="table-wrap">
             <table>
@@ -164,6 +172,7 @@
           </div>
 
           <label class="field pad">
+            <small class="field-note">自动识别请求格式，成功后显示格式、请求地址和尝试记录。</small>
             <span>测试问题</span>
             <textarea id="prompt" rows="4">今天的日期</textarea>
           </label>

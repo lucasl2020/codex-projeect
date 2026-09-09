@@ -78,6 +78,18 @@ loadProviders();
 updateScheduleUi();
 
 function bindEvents() {
+  document.querySelector('#officialTab').addEventListener('click', () => switchSource(false));
+  document.querySelector('#relayTab').addEventListener('click', () => switchSource(true));
+  document.querySelector('#addModel').addEventListener('click', () => {
+    const input = document.querySelector('#manualModel');
+    for (const id of input.value.split(/[,，\s]+/).filter(Boolean)) {
+      if (!state.models.some((model) => model.id === id)) state.models.push({ id, name: id, ownedBy: '手动输入' });
+      state.selectedModels.add(id);
+    }
+    input.value = '';
+    renderModels();
+    updateSelection();
+  });
   els.refreshProviders.addEventListener('click', loadProviders);
   els.providerSearch.addEventListener('input', renderProviders);
   els.relayCacheLabel.addEventListener('input', renderRelayCacheSuggestions);
@@ -116,7 +128,16 @@ function bindEvents() {
   });
 }
 
-function renderRelayClientProfiles(selectedId = 'openai') {
+function switchSource(relay) {
+  document.querySelector('.relay-panel').hidden = !relay;
+  document.querySelector('.provider-directory').hidden = relay;
+  for (const [id, active] of [['relayTab', relay], ['officialTab', !relay]]) {
+    document.getElementById(id).classList.toggle('primary', active);
+    document.getElementById(id).setAttribute('aria-pressed', String(active));
+  }
+}
+
+function renderRelayClientProfiles(selectedId = 'auto') {
   els.relayClientProfile.replaceChildren();
   for (const profile of RELAY_CLIENT_PROFILES) {
     const option = document.createElement('option');
@@ -131,9 +152,10 @@ function renderRelayClientProfiles(selectedId = 'openai') {
 function updateRelayClientProfileHint(syncPath = false) {
   const profile = RELAY_CLIENT_PROFILES.find((item) => item.id === els.relayClientProfile.value);
   const usageMap = {
-    openai: '普通中转站保持此项。',
+    auto: '无需区分模型格式，自动尝试适用接口。',
+    openai: '优先尝试 Chat Completions，失败后自动识别其他格式。',
     codex: '仅在中转站限制 Codex 客户端时选择。',
-    cursor: '调用 Cursor 官方 API 时选择，请使用 Cursor 颁发的 Key。',
+    cursor: '第三方中转可使用此标识；官方 Cursor 接口仅支持拉取模型，不支持通用对话测试。',
   };
   const usage = profile ? (usageMap[profile.id] || '为当前中转站选择匹配的客户端模式。') : '';
   els.relayClientProfileHint.textContent = profile ? usage + ' ' + profile.description : '';
@@ -160,8 +182,8 @@ function renderRelayClientProfileDetail(profile) {
     box.append(row);
   };
 
-  addRow('请求路径', profile.chatPath);
-  addRow('请求格式', profile.requestStyle);
+  addRow('优先路径', profile.chatPath || '自动');
+  addRow('请求格式', '自动识别（客户端标识仅影响尝试顺序）');
 
   const headers = Object.entries(profile.headers || {});
   const headRow = document.createElement('div');
@@ -348,7 +370,9 @@ async function api(path, body) {
   });
   const data = await response.json().catch(() => ({}));
   if (!response.ok) {
-    throw new Error(data?.error?.message || ('请求失败 (' + response.status + ')'));
+    const error = new Error(data?.error?.message || ('请求失败 (' + response.status + ')'));
+    error.attempts = data.attempts;
+    throw error;
   }
   return data;
 }
@@ -378,10 +402,9 @@ async function loadModels(options = {}) {
     if (!options.silent) showToast('已拉取 ' + state.models.length + ' 个模型');
     return true;
   } catch (error) {
-    state.models = [];
-    state.selectedModels.clear();
     renderModels();
     updateSelection();
+    els.modelHint.textContent = error.message + ' 可手动添加模型继续测试。';
     if (!options.silent) showToast(error.message, true);
     return false;
   } finally {
@@ -479,13 +502,15 @@ async function runTest(options = {}) {
       });
       success += 1;
       head.className = 'status-ok';
-      head.textContent = '完成 · ' + data.elapsedMs + 'ms' + (data.usage ? ' · ' + formatUsage(data.usage) : '');
+      head.textContent = '完成 · ' + data.format + ' · ' + data.elapsedMs + 'ms' + (data.usage ? ' · ' + formatUsage(data.usage) : '');
       body.textContent = data.answer || '模型没有返回文本。';
+      renderAttempts(item, data.attempts);
     } catch (error) {
       failed += 1;
       head.className = 'status-err';
       head.textContent = '失败';
       body.textContent = error.message;
+      renderAttempts(item, error.attempts);
     }
   }
 
@@ -498,11 +523,25 @@ async function runTest(options = {}) {
   updateScheduleUi();
 }
 
+function renderAttempts(item, attempts) {
+  if (!attempts?.length) return;
+  const details = document.createElement('details');
+  details.className = 'request-attempts';
+  const summary = document.createElement('summary');
+  summary.textContent = '请求记录（' + attempts.length + ' 次）';
+  const content = document.createElement('pre');
+  content.textContent = attempts.map((attempt) => attempt.format + ' · ' + attempt.endpoint + '\n' +
+    (attempt.client ? attempt.client + ' · ' + attempt.parameterNote + '\n' : '') +
+    (attempt.ok ? '成功' : (attempt.status || '') + ' ' + attempt.message)).join('\n\n');
+  details.append(summary, content);
+  item.append(details);
+}
+
 function updateSelection() {
   const provider = selectedProvider();
   const count = state.selectedModels.size;
   els.loadModels.disabled = !provider;
-  els.runTest.disabled = !provider || count === 0 || state.testing;
+  els.runTest.disabled = !provider || provider.supportsTest === false || count === 0 || state.testing;
   els.selectAllModels.disabled = state.models.length === 0;
   els.clearModels.disabled = count === 0;
   if (!provider) {
@@ -767,7 +806,7 @@ function selectedProviderPayload() {
         baseUrl: els.relayBaseUrl.value.trim(),
         apiKey: els.relayApiKey.value.trim(),
         clientProfile: els.relayClientProfile.value,
-        modelsPath: els.relayModelsPath.value.trim() || '/models',
+        modelsPath: els.relayModelsPath.value.trim(),
         chatPath: els.relayChatPath.value.trim(),
       },
     };
@@ -786,7 +825,10 @@ function updateKeyHint() {
     return;
   }
   if (provider.id === '__relay__') {
-    els.keySourceHint.textContent = '临时中转站使用左侧填写的明文 key。';
+    els.keySourceHint.textContent = '临时中转站使用左侧填写的 Key；地址填写 API 根地址，自动识别请求格式。';
+    if (/^https?:\/\/api\.cursor\.com(?:[/:]|$)/i.test(els.relayBaseUrl.value.trim())) {
+      els.keySourceHint.textContent = 'Cursor 官方是 Cloud Agents API，可拉取模型，但不支持本工具的通用对话测试。';
+    }
     return;
   }
   if (provider.isLocal) {
@@ -801,6 +843,9 @@ function updateKeyHint() {
   } else {
     els.keySourceHint.textContent = provider.label + '：配置文件没有可用 key，请在厂商旁填写明文 key。';
   }
+  if (provider.id === 'openai') els.keySourceHint.textContent += ' GPT 使用 OpenAI 平台创建的 API Key。';
+  if (provider.id === 'anyrouter') els.keySourceHint.textContent += ' 模型名以 GPT 开头时使用 Codex / Responses，以 Claude 开头时使用 Claude Code / Messages；其他模型自动兼容。';
+  if (provider.supportsTest === false) els.keySourceHint.textContent += ' 此站是 Cloud Agents API，仅支持拉取模型，不能进行通用对话测试。';
 }
 
 function scheduleIntervalMs() {
@@ -810,6 +855,7 @@ function scheduleIntervalMs() {
 }
 
 function startSchedule(restart = false) {
+  if (selectedProvider()?.supportsTest === false) return;
   if (!state.selectedProviderId || state.selectedModels.size === 0) {
     showToast('请先选择接口并勾选模型，再启动定时任务。', true);
     return;
@@ -842,7 +888,7 @@ function updateScheduleUi() {
   const running = state.schedule.running;
   els.scheduleStatus.textContent = running ? '运行中' : '未开启';
   els.scheduleStatus.className = 'pill ' + (running ? 'on' : 'off');
-  els.startSchedule.disabled = running || state.testing;
+  els.startSchedule.disabled = running || state.testing || selectedProvider()?.supportsTest === false;
   els.stopSchedule.disabled = !running;
   const every = Math.max(1, Number(els.scheduleEvery.value) || 1);
   const unitLabel = els.scheduleUnit.value === 'hours' ? '小时' : '分钟';

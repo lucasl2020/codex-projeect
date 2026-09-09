@@ -1,6 +1,20 @@
 {
   "providers": [
     {
+      "id": "anyrouter",
+      "label": "AnyRouter 中转",
+      "type": "openai-compatible",
+      "baseUrl": "https://anyrouter.top",
+      "apiKey": "${ANYROUTER_API_KEY}"
+    },
+    {
+      "id": "cursor",
+      "label": "Cursor（仅模型列表）",
+      "type": "openai-compatible",
+      "baseUrl": "https://api.cursor.com",
+      "apiKey": "${CURSOR_API_KEY}"
+    },
+    {
       "id": "openai",
       "label": "OpenAI",
       "type": "openai",

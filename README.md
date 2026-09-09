@@ -30,24 +30,27 @@
 
 ## 打包为 Windows 独立程序
 
-一键脚本 `build-release.ps1` 可将所有项目打包为「无需安装 Node.js / Python 即可运行」的独立产物：
+一键脚本 `build-release.ps1` 可将除「验证码识别」外的所有项目打包为「无需安装 Node.js / Python 即可运行」的绿色便携独立软件：
 
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File .\build-release.ps1
 ```
 
-产物输出到 `release\`：
+产物输出到 `release\`，并在 `release-packages\` 生成便携压缩包 `Codex-Tools-Portable.zip`：
 
-| 项目 | 产物形态 | 启动 |
+| 项目 | 产物形态 | 启动方式 |
 | --- | --- | --- |
-| `md5处理程序/` | 单文件 exe ×2（GUI + 命令行） | 双击 `csv_phone_to_md5_gui.exe` |
-| `typora-to-obsidian/` | 单文件 exe | 双击 `typora_to_obsidian.exe` |
-| `trae-auto-checkin/` | 单文件 exe | 双击 `trae_checkin.exe` |
-| `ai-model-tester/` | 便携目录（自带 node.exe） | 双击 `start.cmd` |
-| `workbuddy派遣/` | 便携目录（自带 node.exe） | 双击 `start.cmd` |
-| `crawler/` | 便携目录 + 内嵌 Chromium | 双击 `start.cmd` |
-| `验证码识别/` | onedir（内嵌 ddddocr 模型） | 运行 `cf-captcha-server.exe` |
-| `显示codex配置信息/` | PowerShell 原样复制 | 双击 `view-codex-config.cmd` |
+| **Codex 工具箱（统一启动器）** | 根目录单文件 exe | **双击 `Codex工具箱.exe`**（卡片式界面管理启停所有工具） |
+| `ai-model-tester/` | 便携目录（自带 node.exe） | 双击 `start.cmd` 或工具箱内一键启动 |
+| `crawler/` | 便携目录 + 内嵌 Chromium | 双击 `start.cmd` 或工具箱内一键启动 |
+| `md5处理程序/` | 单文件 exe ×2（GUI + 命令行） | 双击 `csv_phone_to_md5_gui.exe` 或工具箱内启动 |
+| `typora-to-obsidian/` | 单文件 exe | 双击 `typora_to_obsidian.exe` 或工具箱内启动 |
+| `trae-auto-checkin/` | 单文件 exe | 双击 `trae_checkin.exe` 或工具箱内启动 |
+| `workbuddy派遣/` | 便携目录（自带 node.exe） | 双击 `start.cmd` 或工具箱内启动 |
+| `显示codex配置信息/` | PowerShell / CMD 便携复制 | 双击 `view-codex-config.cmd` 或工具箱内启动 |
+
+> 💡 默认打包已完全排除 `验证码识别/`（体积大、含重深度学习依赖）。如确需打包验证码识别服务，可附带 `-IncludeCaptcha` 参数执行：
+> `powershell -NoProfile -ExecutionPolicy Bypass -File .\build-release.ps1 -IncludeCaptcha`
 
 > ⚠️ `显示codex配置信息/codex-plus-key-fix.md` 中包含明文 API Key，请勿提交到公开仓库，建议加入 `.gitignore`。
 
