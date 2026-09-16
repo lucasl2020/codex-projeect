@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI-IDE-Manager | Antigravity & Trae 统一账号调度平台</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-icon">⚡</div>
+        <div class="brand-text">
+          <h2>AI-IDE-Manager</h2>
+          <span>统一调度中心</span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <div class="nav-category">概览</div>
+        <button class="nav-item active" data-tab="dashboard">
+          <span class="icon-wrap"><span class="icon">📊</span></span> 仪表盘概览
+        </button>
+
+        <div class="nav-category">IDE 引擎调度</div>
+        <button class="nav-item" data-tab="trae">
+          <span class="icon-wrap"><span class="icon">⚡</span></span> Trae 账号调度
+          <span class="badge" id="trae-count-badge">1</span>
+        </button>
+        <button class="nav-item" data-tab="cursor">
+          <span class="icon-wrap"><span class="icon">🖱️</span></span> Cursor 账号调度
+          <span class="badge" id="cursor-count-badge">0</span>
+        </button>
+        <button class="nav-item" data-tab="workbuddy">
+          <span class="icon-wrap"><span class="icon">🤖</span></span> WorkBuddy 系列
+          <span class="badge" id="wb-count-badge">1</span>
+        </button>
+        <button class="nav-item" data-tab="antigravity">
+          <span class="icon-wrap"><span class="icon">🛸</span></span> Antigravity 管理
+          <span class="badge" id="agy-count-badge">1</span>
+        </button>
+        <button class="nav-item" data-tab="windsurf">
+          <span class="icon-wrap"><span class="icon">🌊</span></span> Windsurf 管理
+          <span class="badge" id="windsurf-count-badge">0</span>
+        </button>
+        <button class="nav-item" data-tab="vscode">
+          <span class="icon-wrap"><span class="icon">💻</span></span> VS Code / MarsCode
+          <span class="badge" id="vscode-count-badge">0</span>
+        </button>
+
+        <div class="nav-category">网关与接口测试</div>
+        <button class="nav-item" data-tab="gateway">
+          <span class="icon-wrap"><span class="icon">🌐</span></span> API 代理网关
+        </button>
+        <button class="nav-item" data-tab="tester">
+          <span class="icon-wrap"><span class="icon">🧪</span></span> API 模型测试
+          <span class="badge badge-accent" id="tester-badge">--</span>
+        </button>
+        <button class="nav-item" data-tab="security">
+          <span class="icon-wrap"><span class="icon">🛡️</span></span> 机器码防风控
+        </button>
+
+        <div class="nav-category">系统与日志</div>
+        <button class="nav-item" data-tab="monitor">
+          <span class="icon-wrap"><span class="icon">📈</span></span> 实时监控日志
+        </button>
+        <button class="nav-item" data-tab="settings">
+          <span class="icon-wrap"><span class="icon">⚙️</span></span> 系统设置
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="status-indicator">
+          <span class="status-dot online"></span>
+          <span id="gateway-status-text">网关监听 19999</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Top Header -->
+      <header class="top-header">
+        <div class="page-title">
+          <h1 id="page-heading">仪表盘概览</h1>
+          <p id="page-subheading">实时监控 Antigravity 与 Trae 本地开发环境及调度网关</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-success" id="checkin-all-btn" onclick="doCheckinAll()">
+            <span class="icon">🎁</span> 一键签到支持的平台
+          </button>
+          <button class="btn btn-secondary" onclick="fetchStatus()">
+            <span class="icon">🔄</span> 刷新状态
+          </button>
+          <button class="btn btn-primary" onclick="openAddAccountModal()">
+            <span class="icon">➕</span> 添加账号
+          </button>
+        </div>
+      </header>
+
+      <!-- TAB 1: DASHBOARD -->
+      <section id="tab-dashboard" class="tab-pane active">
+        <!-- Section 1: IDE Engines Grid -->
+        <div class="dashboard-section-header">
+          <div class="section-title-wrap">
+            <h3 class="section-title">核心 IDE 引擎环境</h3>
+            <span class="section-subtitle">ByteDance Trae · Cursor · Windsurf · VS Code / MarsCode · WorkBuddy · Google Antigravity</span>
+          </div>
+        </div>
+
+        <div class="card-grid ide-cards-grid stat-cards">
+          <!-- Trae IDE Card -->
+          <div class="card stat-card ide-card">
+            <div class="stat-header">
+              <div class="stat-header-top">
+                <div class="card-brand-icon brand-trae">⚡</div>
+                <span class="badge" id="trae-status-badge">检测中...</span>
+              </div>
+              <div class="stat-title-wrap">
+                <div class="stat-title">ByteDance Trae</div>
+                <div class="stat-vendor">IDE 环境与账号调度</div>
+              </div>
+            </div>
+            <div class="stat-value" id="trae-active-name">加载中...</div>
+            <div class="stat-meta" id="trae-meta-text">路径: 扫描中...</div>
+            
+            <div class="credit-banner">
+              <div class="credit-main">
+                <span class="credit-label">⚡ 今日签到奖励:</span>
+                <span class="credit-number" id="trae-credits-num">--</span>
+                <span class="credit-tag" id="trae-checkin-tag">待签到</span>
+              </div>
+              <div class="credit-sub" id="trae-credits-sub">通用 -- / 工作 --</div>
+            </div>
+
+            <div class="card-actions-wrap">
+              <button class="btn btn-sm btn-success" id="trae-checkin-btn" onclick="doCheckin('trae')">
+                <span class="icon">🎁</span> 签到
+              </button>
+              <button class="btn btn-sm btn-primary" id="trae-launch-btn" onclick="launchTrae()">
+                <span class="icon">▶️</span> 启动
+              </button>
+              <button class="btn btn-sm btn-danger" id="trae-stop-btn" onclick="closeTrae()" title="停止 Trae 进程">
+                <span class="icon">⏹️</span> 停止
+              </button>
+              <button class="btn btn-sm btn-outline" onclick="resetTraeMachineId()" title="一键随机机器码">
+                <span class="icon">🛡️</span> 随机指纹
+              </button>
+            </div>
+          </div>
+
+          <!-- WorkBuddy domestic Card -->
+          <div class="card stat-card ide-card">
+            <div class="stat-header">
+              <div class="stat-header-top">
+                <div class="card-brand-icon brand-wb-cn">🤖</div>
+                <span class="badge" id="wb-status-badge">检测中...</span>
+              </div>
+              <div class="stat-title-wrap">
+                <div class="stat-title">WorkBuddy（国内版）</div>
+                <div class="stat-vendor">腾讯智算 · copilot.tencent.com</div>
+              </div>
+            </div>
+            <div class="stat-value" id="wb-active-name">加载中...</div>
+            <div class="stat-meta" id="wb-meta-text">copilot.tencent.com</div>
+
+            <div class="credit-banner">
+              <div class="credit-main">
+                <span class="credit-label">🤖 官方剩余额度:</span>
+                <span class="credit-number" id="wb-credits-num">--</span>
+                <span class="credit-tag" id="wb-checkin-tag">检测签到能力</span>
+              </div>
+              <div class="credit-sub" id="wb-credits-sub">等待国内版官方资源汇总</div>
+              <div class="credit-sub" id="wb-free-models">正在读取官方免费模型活动</div>
+            </div>
+
+            <div class="card-actions-wrap">
+              <button class="btn btn-sm btn-success" id="wb-checkin-btn" onclick="doCheckin('workbuddy')">
+                <span class="icon">🎁</span> 签到
+              </button>
+              <button class="btn btn-sm btn-primary" id="wb-launch-btn" onclick="launchWorkBuddy('workbuddy')">
+                <span class="icon">▶️</span> 启动
+              </button>
+              <button class="btn btn-sm btn-danger" id="wb-stop-btn" onclick="closeWorkBuddy('workbuddy')" title="停止 WorkBuddy 国内版进程">
+                <span class="icon">⏹️</span> 停止
+              </button>
+              <button class="btn btn-sm btn-secondary" id="wb-repair-auth-btn" onclick="repairWorkBuddyLogin('workbuddy')" style="display:none" title="备份并隔离错误的跨区登录态">
+                <span class="icon">🧭</span> 一键修复国内版登录
+              </button>
+              <button class="btn btn-sm btn-outline" onclick="resetWorkBuddyDeviceId('workbuddy')" title="重置国内版 Qimei 指纹">
+                <span class="icon">🛡️</span> 重置 Qimei
+              </button>
+            </div>
+          </div>
+
+          <!-- WorkBuddy AI international Card -->
+          <div class="card stat-card ide-card">
+            <div class="stat-header">
+              <div class="stat-header-top">
+                <div class="card-brand-icon brand-wb-ai">🌐</div>
+                <span class="badge" id="wbai-status-badge">检测中...</span>
+              </div>
+              <div class="stat-title-wrap">
+                <div class="stat-title">WorkBuddy AI（国际版）</div>
+                <div class="stat-vendor">官方海外 · workbuddy.ai</div>
+              </div>
+            </div>
+            <div class="stat-value" id="wbai-active-name">加载中...</div>
+            <div class="stat-meta" id="wbai-meta-text">www.workbuddy.ai</div>
+            
+            <div class="credit-banner">
+              <div class="credit-main">
+                <span class="credit-label">🤖 官方剩余额度:</span>
+                <span class="credit-number" id="wbai-credits-num">--</span>
+                <span class="credit-tag" id="wbai-checkin-tag">WorkBuddy AI（国际版）无签到功能</span>
+              </div>
+              <div class="credit-sub" id="wbai-credits-sub">等待国际版官方资源汇总</div>
+              <div class="credit-sub" id="wbai-free-models">正在读取官方免费模型活动</div>
+            </div>
+
+            <div class="card-actions-wrap">
+              <button class="btn btn-sm btn-primary" id="wbai-launch-btn" onclick="launchWorkBuddy('workbuddy-ai')">
+                <span class="icon">▶️</span> 启动
+              </button>
+              <button class="btn btn-sm btn-danger" id="wbai-stop-btn" onclick="closeWorkBuddy('workbuddy-ai')" title="停止 WorkBuddy AI 国际版进程">
+                <span class="icon">⏹️</span> 停止
+              </button>
+              <button class="btn btn-sm btn-secondary" id="wbai-repair-auth-btn" onclick="repairWorkBuddyLogin('workbuddy-ai')" style="display:none" title="备份并隔离错误的跨区登录态">
+                <span class="icon">🧭</span> 一键修复国际版登录
+              </button>
+              <button class="btn btn-sm btn-outline" onclick="resetWorkBuddyDeviceId('workbuddy-ai')" title="重置国际版 Qimei 指纹">
+                <span class="icon">🛡️</span> 重置 Qimei
+              </button>
+            </div>
+          </div>
+
+          <!-- Antigravity Card -->
+          <div class="card stat-card ide-card">
+            <div class="stat-header">
+              <div class="stat-header-top">
+                <div class="card-brand-icon brand-agy">🛸</div>
+                <span class="badge" id="agy-status-badge">检测中...</span>
+              </div>
+              <div class="stat-title-wrap">
+                <div class="stat-title">Google Antigravity</div>
+                <div class="stat-vendor">协同开发端与模型调用</div>
+              </div>
+            </div>
+            <div class="stat-value" id="agy-active-name">加载中...</div>
+            <div class="stat-meta" id="agy-meta-text">配置就绪</div>
+            
+            <div class="credit-banner">
+              <div class="credit-main">
+                <span class="credit-label">🛸 最低模型剩余:</span>
+                <span class="credit-number" id="agy-credits-num">--</span>
+                <span class="credit-tag" id="agy-checkin-tag">无签到功能</span>
+              </div>
+              <div class="credit-sub" id="agy-credits-sub">等待 Google 官方逐模型配额</div>
+            </div>
+
+            <div class="card-actions-wrap">
+              <button class="btn btn-sm btn-primary" id="agy-launch-btn" onclick="launchAntigravity()">
+                <span class="icon">▶️</span> 启动
+              </button>
+              <button class="btn btn-sm btn-danger" id="agy-stop-btn" onclick="closeAntigravity()" title="停止 Antigravity 进程">
+                <span class="icon">⏹️</span> 停止
+              </button>
+              <button class="btn btn-sm btn-secondary" onclick="resetAgyMachineId()" title="伪装机器指纹">
+                <span class="icon">🛡️</span> 伪装指纹
+              </button>
+            </div>
+          </div>
+
+          <!-- Cursor Card -->
+          <div class="card stat-card ide-card">
+            <div class="stat-header">
+              <div class="stat-header-top">
+                <div class="card-brand-icon brand-cursor">🖱️</div>
+                <span class="badge" id="cursor-status-badge">检测中...</span>
+              </div>
+              <div class="stat-title-wrap">
+                <div class="stat-title">Cursor</div>
+                <div class="stat-vendor">Anysphere · Cursor AI</div>
+              </div>
+            </div>
+            <div class="stat-value" id="cursor-active-name">加载中...</div>
+            <div class="stat-meta" id="cursor-meta-text">路径: 扫描中...</div>
+            
+            <div class="credit-banner">
+              <div class="credit-main">
+                <span class="credit-label">🖱️ 会员类型:</span>
+                <span class="credit-number" id="cursor-credits-num">--</span>
+                <span class="credit-tag" id="cursor-checkin-tag">无签到功能</span>
+              </div>
+              <div class="credit-sub" id="cursor-credits-sub">读取自 state.vscdb</div>
+            </div>
+
+            <div class="card-actions-wrap">
+              <button class="btn btn-sm btn-primary" id="cursor-launch-btn" onclick="launchGenericIde('cursor')">
+                <span class="icon">▶️</span> 启动
+              </button>
+              <button class="btn btn-sm btn-danger" id="cursor-stop-btn" onclick="closeGenericIde('cursor')" title="停止 Cursor 进程">
+                <span class="icon">⏹️</span> 停止
+              </button>
+              <button class="btn btn-sm btn-outline" onclick="resetGenericIdeMachineId('cursor')" title="一键随机机器码">
+                <span class="icon">🛡️</span> 随机指纹
+              </button>
+            </div>
+          </div>
+
+          <!-- Windsurf Card -->
+          <div class="card stat-card ide-card">
+            <div class="stat-header">
+              <div class="stat-header-top">
+                <div class="card-brand-icon brand-windsurf">🌊</div>
+                <span class="badge" id="windsurf-status-badge">检测中...</span>
+              </div>
+              <div class="stat-title-wrap">
+                <div class="stat-title">Windsurf</div>
+                <div class="stat-vendor">Codeium · AI IDE</div>
+              </div>
+            </div>
+            <div class="stat-value" id="windsurf-active-name">加载中...</div>
+            <div class="stat-meta" id="windsurf-meta-text">路径: 扫描中...</div>
+            
+            <div class="credit-banner">
+              <div class="credit-main">
+                <span class="credit-label">🌊 Codeium 计划:</span>
+                <span class="credit-number" id="windsurf-credits-num">--</span>
+                <span class="credit-tag" id="windsurf-checkin-tag">无签到功能</span>
+              </div>
+              <div class="credit-sub" id="windsurf-credits-sub">读取自 ~/.windsurf</div>
+            </div>
+
+            <div class="card-actions-wrap">
+              <button class="btn btn-sm btn-primary" id="windsurf-launch-btn" onclick="launchGenericIde('windsurf')">
+                <span class="icon">▶️</span> 启动
+              </button>
+              <button class="btn btn-sm btn-danger" id="windsurf-stop-btn" onclick="closeGenericIde('windsurf')" title="停止 Windsurf 进程">
+                <span class="icon">⏹️</span> 停止
+              </button>
+              <button class="btn btn-sm btn-outline" onclick="resetGenericIdeMachineId('windsurf')" title="一键随机机器码">
+                <span class="icon">🛡️</span> 随机指纹
+              </button>
+            </div>
+          </div>
+
+          <!-- VS Code / MarsCode Card -->
+          <div class="card stat-card ide-card">
+            <div class="stat-header">
+              <div class="stat-header-top">
+                <div class="card-brand-icon brand-vscode">💻</div>
+                <span class="badge" id="vscode-status-badge">检测中...</span>
+              </div>
+              <div class="stat-title-wrap">
+                <div class="stat-title">VS Code / MarsCode</div>
+                <div class="stat-vendor">Microsoft / ByteDance MarsCode</div>
+              </div>
+            </div>
+            <div class="stat-value" id="vscode-active-name">加载中...</div>
+            <div class="stat-meta" id="vscode-meta-text">路径: 扫描中...</div>
+            
+            <div class="credit-banner">
+              <div class="credit-main">
+                <span class="credit-label">💻 AI 扩展态:</span>
+                <span class="credit-number" id="vscode-credits-num">--</span>
+                <span class="credit-tag" id="vscode-checkin-tag">无签到功能</span>
+              </div>
+              <div class="credit-sub" id="vscode-credits-sub">GitHub / MarsCode Copilot</div>
+            </div>
+
+            <div class="card-actions-wrap">
+              <button class="btn btn-sm btn-primary" id="vscode-launch-btn" onclick="launchGenericIde('vscode')">
+                <span class="icon">▶️</span> 启动
+              </button>
+              <button class="btn btn-sm btn-danger" id="vscode-stop-btn" onclick="closeGenericIde('vscode')" title="停止 VS Code 进程">
+                <span class="icon">⏹️</span> 停止
+              </button>
+              <button class="btn btn-sm btn-outline" onclick="resetGenericIdeMachineId('vscode')" title="一键随机机器码">
+                <span class="icon">🛡️</span> 随机指纹
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Gateway & Telemetry Hub -->
+        <div class="dashboard-section-header" style="margin-top: 2rem;">
+          <div class="section-title-wrap">
+            <h3 class="section-title">服务网关与系统防护总线</h3>
+            <span class="section-subtitle">OpenAI 兼容 API 本地调度转发、实时连通性与机器码防风控</span>
+          </div>
+        </div>
+
+        <div class="card-grid two-cols">
+          <!-- Gateway Card -->
+          <div class="card stat-card gateway-hub-card">
+            <div class="stat-header">
+              <div class="stat-header-top">
+                <div class="card-brand-icon brand-gateway">🔮</div>
+                <span class="badge badge-success">运行中</span>
+              </div>
+              <div class="stat-title-wrap">
+                <div class="stat-title">OpenAI API 代理网关</div>
+                <div class="stat-vendor">本地统一调度与多模型流式转发</div>
+              </div>
+            </div>
+            <div class="stat-value" id="gateway-requests-val">0 次调用</div>
+            <div class="stat-meta" id="gateway-models-val">正在读取实时模型目录</div>
+            
+            <div class="credit-banner">
+              <div class="credit-main">
+                <span class="credit-label">🌐 统一接入端口:</span>
+                <span class="credit-number" style="font-size: 1.15rem;">19999</span>
+                <span class="badge badge-success">已联通</span>
+              </div>
+              <div class="credit-sub">数量与上下文规格均来自 WorkBuddy 当前实时目录</div>
+            </div>
+
+            <div class="card-actions-wrap">
+              <button class="btn btn-sm btn-primary" onclick="copyTraeConfig()">
+                <span class="icon">📋</span> 复制 Trae 配置
+              </button>
+              <button class="btn btn-sm btn-outline" onclick="switchNavTab('tester')">
+                <span class="icon">🧪</span> 测试模型
+              </button>
+            </div>
+          </div>
+
+          <!-- Telemetry Summary Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="stat-title-group">
+                <div class="card-brand-icon brand-security">🛡️</div>
+                <div>
+                  <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">当前机器遥测指纹摘要 (Trae)</h3>
+                  <div class="stat-vendor">硬件标识防关联与风控隔离保护</div>
+                </div>
+              </div>
+              <span class="badge badge-info" id="trae-fingerprint-date">实时检测</span>
+            </div>
+            <div class="code-box">
+              <div class="code-line">
+                <span class="code-label">Machine ID:</span>
+                <span class="code-val" id="dash-machine-id">--</span>
+              </div>
+              <div class="code-line">
+                <span class="code-label">Device UUID:</span>
+                <span class="code-val" id="dash-dev-uuid">--</span>
+              </div>
+              <div class="code-line">
+                <span class="code-label">SQM ID:</span>
+                <span class="code-val" id="dash-sqm-id">--</span>
+              </div>
+              <div class="code-line">
+                <span class="code-label">machineid 文件:</span>
+                <span class="code-val" id="dash-raw-id">--</span>
+              </div>
+            </div>
+            <p class="hint-text">💡 当您在 Trae 中切换账号时，系统会自动将该账号绑定的专属指纹注入，确保各账号设备标识完全隔离。</p>
+          </div>
+        </div>
+
+        <!-- Section 3: Quick Actions -->
+        <div class="card" style="margin-top: 1.5rem;">
+          <div class="card-header">
+            <div class="stat-title-group">
+              <div class="card-brand-icon brand-trae" style="background: linear-gradient(135deg, #6366f1, #a855f7);">⚡</div>
+              <div>
+                <h3 style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">全平台快捷功能入口</h3>
+                <div class="stat-vendor">支持 Trae / WorkBuddy 国内版 / WorkBuddy AI 国际版 / Antigravity 跨平台极速操作</div>
+              </div>
+            </div>
+          </div>
+          <div class="quick-actions-list">
+            <div class="quick-action-item" onclick="openQuickActionModal('snapshot')">
+              <div class="qa-icon">📸</div>
+              <div class="qa-info">
+                <h4>全平台会话快照捕获</h4>
+                <p>一键将当前打开的 IDE 会话与机器码完整备份为独立账号档案</p>
+              </div>
+              <button class="btn btn-sm btn-primary">立即备份</button>
+            </div>
+
+            <div class="quick-action-item" onclick="openQuickActionModal('isolated')">
+              <div class="qa-icon">🪟</div>
+              <div class="qa-info">
+                <h4>全平台多开隔离沙箱</h4>
+                <p>在全新独立的用户数据目录中启动互不干扰的独立多开窗口</p>
+              </div>
+              <button class="btn btn-sm btn-secondary">多开启动</button>
+            </div>
+
+            <div class="quick-action-item" onclick="openQuickActionModal('reset')">
+              <div class="qa-icon">🛡</div>
+              <div class="qa-info">
+                <h4>全平台机器码与指纹急救</h4>
+                <p>一键伪装/随机化 Trae、WorkBuddy 或 Antigravity 底层硬件与设备标识</p>
+              </div>
+              <button class="btn btn-sm btn-outline">急救重置</button>
+            </div>
+
+            <div class="quick-action-item" onclick="switchNavTab('tester')">
+              <div class="qa-icon">🧪</div>
+              <div class="qa-info">
+                <h4>API 大模型连通性测试</h4>
+                <p>在线体检当前可用模型的 API 连通性、测速及在 Web Playground 中实时调试</p>
+              </div>
+              <button class="btn btn-sm btn-primary">进入测试</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: TRAE MANAGER -->
+      <section id="tab-trae" class="tab-pane">
+        <div class="pane-toolbar">
+          <div class="toolbar-left">
+            <h2>Trae 账号列表</h2>
+            <span class="sub-badge" id="trae-accounts-count">1 个账号</span>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn btn-success" onclick="doCheckin('trae')"><span class="icon">🎁</span> 官方签到</button>
+            <button class="btn btn-primary" onclick="launchTrae()"><span class="icon">▶️</span> 启动 Trae</button>
+            <button class="btn btn-danger" onclick="closeTrae()"><span class="icon">⏹️</span> 停止 Trae</button>
+            <button class="btn btn-secondary" onclick="createTraeSnapshot()">📸 捕获当前会话为新账号</button>
+            <button class="btn btn-outline" onclick="launchTraeIsolated()">🪟 启动隔离多开</button>
+            <button class="btn btn-primary" onclick="openAddAccountModal('trae')">➕ 添加 Trae 账号</button>
+          </div>
+        </div>
+
+        <div class="accounts-grid" id="trae-accounts-list">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+      <!-- TAB: CURSOR MANAGER -->
+      <section id="tab-cursor" class="tab-pane">
+        <div class="pane-toolbar">
+          <div class="toolbar-left">
+            <h2>Cursor 账号列表</h2>
+            <span class="sub-badge" id="cursor-accounts-count">0 个账号</span>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn btn-primary" onclick="launchGenericIde('cursor')"><span class="icon">▶️</span> 启动 Cursor</button>
+            <button class="btn btn-danger" onclick="closeGenericIde('cursor')"><span class="icon">⏹️</span> 停止 Cursor</button>
+            <button class="btn btn-secondary" onclick="createGenericIdeSnapshot('cursor')">📸 捕获当前会话为新账号</button>
+            <button class="btn btn-outline" onclick="launchIsolatedGenericIde('cursor')">🪟 启动隔离多开</button>
+            <button class="btn btn-outline" onclick="resetGenericIdeMachineId('cursor')">🛡 伪装设备指纹</button>
+            <button class="btn btn-primary" onclick="openAddAccountModal('cursor')">➕ 添加 Cursor 账号</button>
+          </div>
+        </div>
+
+        <div class="accounts-grid" id="cursor-accounts-list">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+      <!-- TAB: WORKBUDDY SERIES -->
+      <section id="tab-workbuddy" class="tab-pane">
+        <div class="pane-toolbar">
+          <div class="toolbar-left">
+            <h2>WorkBuddy AI 国际版与 WorkBuddy 国内版</h2>
+          </div>
+        </div>
+
+        <div class="pane-toolbar">
+          <div class="toolbar-left">
+            <h3>WorkBuddy AI（国际版）</h3>
+            <span class="sub-badge" id="wbai-accounts-count">0 个国际版档案</span>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn btn-primary" onclick="launchWorkBuddy('workbuddy-ai')">▶️ 启动国际版</button>
+            <button class="btn btn-secondary" onclick="createWorkBuddySnapshot('workbuddy-ai')">📸 捕获当前会话</button>
+            <button class="btn btn-outline" onclick="launchWorkBuddyIsolated('workbuddy-ai')">🪟 启动隔离多开</button>
+            <button class="btn btn-secondary" onclick="openAddAccountModal('workbuddy-ai')">➕ 添加国际版档案</button>
+          </div>
+        </div>
+        <div class="accounts-grid" id="wbai-accounts-list"></div>
+
+        <div class="pane-toolbar" style="margin-top: 2rem;">
+          <div class="toolbar-left">
+            <h3>WorkBuddy（国内版）</h3>
+            <span class="sub-badge" id="wb-accounts-count">0 个国内版档案</span>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn btn-success" onclick="doCheckin('workbuddy')">🎁 官方签到</button>
+            <button class="btn btn-primary" onclick="launchWorkBuddy('workbuddy')">▶️ 启动国内版</button>
+            <button class="btn btn-secondary" onclick="createWorkBuddySnapshot('workbuddy')">📸 捕获当前会话</button>
+            <button class="btn btn-outline" onclick="launchWorkBuddyIsolated('workbuddy')">🪟 启动隔离多开</button>
+            <button class="btn btn-secondary" onclick="openAddAccountModal('workbuddy')">➕ 添加国内版档案</button>
+          </div>
+        </div>
+        <div class="accounts-grid" id="wb-accounts-list">
+          <!-- Dynamically populated -->
+        </div>
+
+        <!-- Custom Models Management in WorkBuddy -->
+        <div class="card" style="margin-top: 2rem;">
+          <div class="card-header">
+            <h3>🤖 WorkBuddy 自定义大模型管理 (~/.workbuddy/models.json)</h3>
+            <button class="btn btn-sm btn-primary" onclick="openAddCustomModelModal()">➕ 添加自定义模型</button>
+          </div>
+          <p class="description-text">
+            WorkBuddy 支持在客户端直接挂载外部第三方大模型。您可以在这里可视化查看、维护与添加自定义大模型。
+          </p>
+          <div class="table-responsive" style="margin-top: 1rem;">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>模型 ID</th>
+                  <th>模型名称</th>
+                  <th>提供商</th>
+                  <th>Base URL</th>
+                  <th>协议类型</th>
+                  <th>能力标签</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="wb-custom-models-tbody">
+                <tr><td colspan="7" class="text-center">加载中...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: ANTIGRAVITY MANAGER -->
+      <section id="tab-antigravity" class="tab-pane">
+        <div class="pane-toolbar">
+          <div class="toolbar-left">
+            <h2>Antigravity 账号列表</h2>
+            <span class="sub-badge" id="agy-accounts-count">1 个账号</span>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn btn-primary" onclick="launchAntigravity()"><span class="icon">▶️</span> 启动 Antigravity</button>
+            <button class="btn btn-danger" onclick="closeAntigravity()"><span class="icon">⏹️</span> 停止进程</button>
+            <button class="btn btn-secondary" onclick="createAntigravitySnapshot()">📸 捕获当前会话</button>
+            <button class="btn btn-outline" onclick="launchAntigravityIsolated()">🪟 启动隔离多开</button>
+            <button class="btn btn-outline" onclick="resetAgyMachineId()">🛡 伪装设备指纹</button>
+            <button class="btn btn-secondary" onclick="openAddAccountModal('antigravity')">➕ 添加 Antigravity 账号</button>
+          </div>
+        </div>
+
+        <div class="accounts-grid" id="agy-accounts-list">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+      <!-- TAB: WINDSURF MANAGER -->
+      <section id="tab-windsurf" class="tab-pane">
+        <div class="pane-toolbar">
+          <div class="toolbar-left">
+            <h2>Windsurf 账号列表</h2>
+            <span class="sub-badge" id="windsurf-accounts-count">0 个账号</span>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn btn-primary" onclick="launchGenericIde('windsurf')"><span class="icon">▶️</span> 启动 Windsurf</button>
+            <button class="btn btn-danger" onclick="closeGenericIde('windsurf')"><span class="icon">⏹️</span> 停止 Windsurf</button>
+            <button class="btn btn-secondary" onclick="createGenericIdeSnapshot('windsurf')">📸 捕获当前会话为新账号</button>
+            <button class="btn btn-outline" onclick="launchIsolatedGenericIde('windsurf')">🪟 启动隔离多开</button>
+            <button class="btn btn-outline" onclick="resetGenericIdeMachineId('windsurf')">🛡 伪装设备指纹</button>
+            <button class="btn btn-primary" onclick="openAddAccountModal('windsurf')">➕ 添加 Windsurf 账号</button>
+          </div>
+        </div>
+
+        <div class="accounts-grid" id="windsurf-accounts-list">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+      <!-- TAB: VS CODE / MARSCODE MANAGER -->
+      <section id="tab-vscode" class="tab-pane">
+        <div class="pane-toolbar">
+          <div class="toolbar-left">
+            <h2>VS Code / MarsCode 账号列表</h2>
+            <span class="sub-badge" id="vscode-accounts-count">0 个账号</span>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn btn-primary" onclick="launchGenericIde('vscode')"><span class="icon">▶️</span> 启动 VS Code</button>
+            <button class="btn btn-danger" onclick="closeGenericIde('vscode')"><span class="icon">⏹️</span> 停止 VS Code</button>
+            <button class="btn btn-secondary" onclick="createGenericIdeSnapshot('vscode')">📸 捕获当前会话为新账号</button>
+            <button class="btn btn-outline" onclick="launchIsolatedGenericIde('vscode')">🪟 启动隔离多开</button>
+            <button class="btn btn-outline" onclick="resetGenericIdeMachineId('vscode')">🛡 伪装设备指纹</button>
+            <button class="btn btn-primary" onclick="openAddAccountModal('vscode')">➕ 添加 VS Code 账号</button>
+          </div>
+        </div>
+
+        <div class="accounts-grid" id="vscode-accounts-list">
+          <!-- Dynamically populated -->
+        </div>
+      </section>
+
+      <!-- TAB 4: SECURITY & DEVICE SPOOFER -->
+      <section id="tab-security" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <h3>🛡 设备指纹风控规避中心</h3>
+            <span class="badge badge-warning">防多账号风控关联</span>
+          </div>
+          <p class="description-text">
+            Trae 与 Antigravity 均基于 VS Code 架构，通过 <code>storage.json</code> 与 <code>machineid</code> 采集 4 项全局硬件唯一哈希用于风控和新用户识别。
+            本模块可在不影响您电脑真实硬件的前提下，一键为 IDE 伪造合规随机的设备指纹。
+          </p>
+
+          <div class="card-grid three-cols" style="margin-top: 1.5rem;">
+            <!-- Trae Security Box -->
+            <div class="sub-card">
+              <div class="sub-card-header">
+                <h4>⚡ Trae 设备指纹</h4>
+                <button class="btn btn-sm btn-primary" onclick="resetTraeMachineId()">一键随机重置</button>
+              </div>
+              <div class="fingerprint-details" id="trae-full-fingerprint">
+                <!-- Dynamically rendered -->
+              </div>
+            </div>
+
+            <!-- WorkBuddy Security Box -->
+            <div class="sub-card">
+              <div class="sub-card-header">
+                <h4>🤖 WorkBuddy 凭据与 Qimei</h4>
+                <button class="btn btn-sm btn-outline" onclick="resetWorkBuddyDeviceId()">一键随机重置</button>
+              </div>
+              <div class="fingerprint-details" id="wb-full-fingerprint">
+                <!-- Dynamically rendered -->
+              </div>
+            </div>
+
+            <!-- Antigravity Security Box -->
+            <div class="sub-card">
+              <div class="sub-card-header">
+                <h4>🛸 Antigravity 设备指纹</h4>
+                <button class="btn btn-sm btn-secondary" onclick="resetAgyMachineId()">一键随机重置</button>
+              </div>
+              <div class="fingerprint-details" id="agy-full-fingerprint">
+                <!-- Dynamically rendered -->
+              </div>
+            </div>
+
+            <!-- Cursor Security Box -->
+            <div class="sub-card">
+              <div class="sub-card-header">
+                <h4>🖱️ Cursor 设备指纹</h4>
+                <button class="btn btn-sm btn-primary" onclick="resetGenericIdeMachineId('cursor')">一键随机重置</button>
+              </div>
+              <div class="fingerprint-details" id="cursor-full-fingerprint">
+                <!-- Dynamically rendered -->
+              </div>
+            </div>
+
+            <!-- Windsurf Security Box -->
+            <div class="sub-card">
+              <div class="sub-card-header">
+                <h4>🌊 Windsurf 设备指纹</h4>
+                <button class="btn btn-sm btn-primary" onclick="resetGenericIdeMachineId('windsurf')">一键随机重置</button>
+              </div>
+              <div class="fingerprint-details" id="windsurf-full-fingerprint">
+                <!-- Dynamically rendered -->
+              </div>
+            </div>
+
+            <!-- VS Code Security Box -->
+            <div class="sub-card">
+              <div class="sub-card-header">
+                <h4>💻 VS Code 设备指纹</h4>
+                <button class="btn btn-sm btn-primary" onclick="resetGenericIdeMachineId('vscode')">一键随机重置</button>
+              </div>
+              <div class="fingerprint-details" id="vscode-full-fingerprint">
+                <!-- Dynamically rendered -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: API GATEWAY -->
+      <section id="tab-gateway" class="tab-pane">
+        <div class="card-grid two-cols">
+          <div class="card">
+            <div class="card-header">
+              <h3>🌐 OpenAI 兼容网关配置</h3>
+              <span class="badge badge-success">运行中</span>
+            </div>
+            <div class="gateway-info">
+              <div class="info-row">
+                <span class="label">API Base URL:</span>
+                <code id="gw-base-url">http://127.0.0.1:19999/v1</code>
+                <button class="btn-copy" onclick="copyText('http://127.0.0.1:19999/v1')">复制</button>
+              </div>
+              <div class="info-row">
+                <span class="label">API Key:</span>
+                <code>workbuddy-trae-key</code>
+                <button class="btn-copy" onclick="copyText('workbuddy-trae-key')">复制</button>
+              </div>
+              <div class="info-row">
+                <span class="label">底层大模型引擎:</span>
+                <span class="text-highlight">WorkBuddy 本地服务当前返回的实时模型目录</span>
+              </div>
+            </div>
+
+            <div class="model-catalog-box" style="margin-top: 1.5rem;">
+              <h4>可用模型目录清单 (<span id="model-count-num">--</span> 个)</h4>
+              <div class="model-tags" id="models-list-tags">
+                <!-- Populated via JS -->
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h3>⚡ 快速接入 Trae (一键复制配置)</h3>
+              <button class="btn btn-sm btn-primary" onclick="copyTraeConfig()">复制完整配置</button>
+            </div>
+            <p class="description-text">
+              在 Trae 的设置页面中添加“自定义模型（Custom OpenAI Provider）”，填入以下网关信息；实际可用模型与上下文规格以实时模型目录为准：
+            </p>
+            <pre class="json-code" id="trae-json-snippet">加载中...</pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: MODEL TESTER & PLAYGROUND -->
+      <section id="tab-tester" class="tab-pane">
+        <!-- Connected IDEs Status Banner -->
+        <div class="ide-status-banner">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-weight: 600; font-size: 0.88rem; color: var(--text-primary);">🔌 关联 IDE 环境状态:</span>
+          </div>
+          <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+            <div class="ide-status-item">
+              <span class="ide-status-dot online" id="tester-wb-dot"></span>
+              <span class="ide-badge ide-badge-wb">🤖 WorkBuddy 国内版（官方 CLI 直连）</span>
+              <span style="font-size: 0.78rem; color: var(--text-secondary);" id="tester-wb-desc">官方模型无需 18888；自定义模型使用桥接</span>
+            </div>
+            <div class="ide-status-item">
+              <span class="ide-status-dot" id="tester-trae-dot"></span>
+              <span class="ide-badge ide-badge-trae">⚡ ByteDance Trae (主调用端)</span>
+              <span style="font-size: 0.78rem; color: var(--text-secondary);" id="tester-trae-desc">OpenAI 自定义通道就绪</span>
+            </div>
+            <div class="ide-status-item">
+              <span class="ide-status-dot" id="tester-agy-dot"></span>
+              <span class="ide-badge ide-badge-agy">🛸 Google Antigravity (协同端)</span>
+              <span style="font-size: 0.78rem; color: var(--text-secondary);" id="tester-agy-desc">环境就绪</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Diagnostic Header Cards -->
+        <div class="card-grid stat-cards four-cols">
+          <div class="card stat-card">
+            <div class="stat-header">
+              <span class="stat-title">网关 API 根端点</span>
+              <button class="btn btn-xs btn-outline" onclick="copyEndpoint()">复制</button>
+            </div>
+            <div class="stat-value text-accent" style="font-size: 1rem; word-break: break-all;" id="tester-endpoint-val">http://127.0.0.1:19999/v1</div>
+            <div class="stat-meta">标准 OpenAI API 格式兼容</div>
+          </div>
+
+          <div class="card stat-card">
+            <div class="stat-header">
+              <span class="stat-title">已暴露模型总数</span>
+              <span class="badge badge-success">实时目录</span>
+            </div>
+            <div class="stat-value" id="tester-total-models-count">--</div>
+            <div class="stat-meta">DeepSeek / Claude / GPT / Hunyuan / 可灵</div>
+          </div>
+
+          <div class="card stat-card">
+            <div class="stat-header">
+              <span class="stat-title">本次体检通过率</span>
+              <span class="badge" id="test-summary-badge">待体检</span>
+            </div>
+            <div class="stat-value" id="test-summary-passrate">0%</div>
+            <div class="stat-meta" id="test-summary-counts">已通过 0 / 0 个模型</div>
+          </div>
+
+          <div class="card stat-card">
+            <div class="stat-header">
+              <span class="stat-title">平均响应耗时</span>
+              <span class="badge badge-info">RTT</span>
+            </div>
+            <div class="stat-value" id="test-summary-latency">-- ms</div>
+            <div class="stat-meta">包含网络握手与模型首字生成</div>
+          </div>
+        </div>
+
+        <!-- Section 1: Batch Health Check & Benchmark -->
+        <div class="card" style="margin-top: 1.5rem;">
+          <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
+            <div>
+              <h3>⚡ 批量模型可用性体检与测速矩阵</h3>
+              <p class="description-text">一键对网关暴露的所有大模型进行 API 连通性探测、握手延迟测速与回复能力验证</p>
+            </div>
+            <div class="header-actions" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button class="btn btn-primary" id="btn-batch-core" onclick="runCoreBatchTest()">
+                <span class="icon">🚀</span> 快速体检核心模型 (Top 8)
+              </button>
+              <button class="btn btn-outline" id="btn-batch-all" onclick="runAllBatchTest()">
+                <span class="icon">⚡</span> 全量体检当前模型
+              </button>
+              <button class="btn btn-danger" id="btn-batch-stop" onclick="stopBatchTest()" style="display: none;">
+                <span class="icon">⏹️</span> 停止测试
+              </button>
+            </div>
+          </div>
+
+          <!-- Progress Bar -->
+          <div class="test-progress-wrapper" id="test-progress-wrapper" style="display: none; margin: 1rem 0;">
+            <div class="test-progress-bar-bg">
+              <div class="test-progress-bar-fill" id="test-progress-fill" style="width: 0%;"></div>
+            </div>
+            <div class="test-progress-text">
+              <span id="test-progress-label">正在初始化测试...</span>
+              <span id="test-progress-percent">0%</span>
+            </div>
+          </div>
+
+          <!-- Filter Controls Grid -->
+          <div class="test-filter-matrix" style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem; margin: 1.25rem 0;">
+            <div style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.75rem; display: flex; justify-content: space-between; align-items: center;">
+              <span>🎯 多条件联动筛选控制台 (可根据 所属 IDE、模型名称、服务商名称 进行组合筛选)</span>
+              <span id="filter-stats-text" style="font-size: 0.78rem; color: var(--accent-cyan); font-weight: normal;">正在读取实时目录</span>
+            </div>
+
+            <div class="filter-controls-row" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem; align-items: center;">
+              <!-- 1. IDE 筛选 -->
+              <div class="filter-group">
+                <label style="display: block; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.25rem;">🏢 按所属 / 适配 IDE 筛选:</label>
+                <select id="filter-ide-select" class="form-control" style="width: 100%; padding: 0.45rem 0.65rem; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);" onchange="filterTestTable()">
+                  <option value="all">🏢 全部所属 IDE (All IDEs)</option>
+                  <option value="workbuddy-ai">🌍 WorkBuddy AI（国际版）</option>
+                  <option value="workbuddy">🤖 WorkBuddy（国内版桥接宿主）</option>
+                  <option value="trae">⚡ ByteDance Trae (适配调用端)</option>
+                  <option value="antigravity">🛸 Google Antigravity (协同调用端)</option>
+                  <option value="custom">🛠️ WorkBuddy 自定义扩展接入</option>
+                </select>
+              </div>
+
+              <!-- 2. 服务商筛选 -->
+              <div class="filter-group">
+                <label style="display: block; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.25rem;">🌐 按服务商 / 厂商筛选:</label>
+                <select id="filter-vendor-select" class="form-control" style="width: 100%; padding: 0.45rem 0.65rem; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);" onchange="filterTestTable()">
+                  <option value="all">🌐 全部服务商 (All Vendors)</option>
+                  <option value="deepseek">深度求索 (DeepSeek)</option>
+                  <option value="anthropic">Anthropic (Claude)</option>
+                  <option value="openai">OpenAI (ChatGPT)</option>
+                  <option value="tencent">腾讯科技 (Tencent 混元/智算)</option>
+                  <option value="kuaishou">快手科技 (Kuaishou 可灵)</option>
+                  <option value="zhipu">智谱 AI (Zhipu GLM)</option>
+                  <option value="moonshot">月之暗面 (Moonshot Kimi)</option>
+                  <option value="minimax">稀宇科技 (MiniMax)</option>
+                  <option value="alibaba">阿里巴巴 (Alibaba 通义千问)</option>
+                  <option value="bytedance">字节跳动 (ByteDance 豆包)</option>
+                  <option value="custom">第三方 / 自定义接入</option>
+                </select>
+              </div>
+
+              <!-- 3. 模型名称搜索 -->
+              <div class="filter-group">
+                <label style="display: block; font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.25rem;">🔍 按模型名称 / ID 模糊搜索:</label>
+                <input type="text" id="test-search-input" class="search-input" style="width: 100%; padding: 0.45rem 0.65rem; background: var(--bg-dark); border: 1px solid var(--border-color); border-radius: 6px; color: var(--text-primary);" placeholder="输入模型名称如 deepseek, sonnet, hunyuan..." oninput="filterTestTable()">
+              </div>
+
+              <!-- 4. 重置按钮 -->
+              <div class="filter-group" style="align-self: flex-end;">
+                <button type="button" class="btn btn-outline" style="width: 100%; padding: 0.45rem 0.65rem;" onclick="resetAllTestFilters()">
+                  🔄 重置所有筛选条件
+                </button>
+              </div>
+            </div>
+
+            <!-- Quick Status Filter Pills -->
+            <div class="filter-pills" style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.75rem; padding-top: 0.65rem; border-top: 1px dashed var(--border-color); align-items: center;">
+              <span style="font-size: 0.76rem; color: var(--text-muted); margin-right: 0.3rem;">状态快速直达:</span>
+              <button class="filter-pill active" data-filter="all" onclick="setTestFilter('all')">全部 (<span id="filter-count-all">--</span>)</button>
+              <button class="filter-pill" data-filter="passed" onclick="setTestFilter('passed')">通过 ✅ (<span id="filter-count-passed">0</span>)</button>
+              <button class="filter-pill" data-filter="failed" onclick="setTestFilter('failed')">异常 ❌ (<span id="filter-count-failed">0</span>)</button>
+              <button class="filter-pill" data-filter="core" onclick="setTestFilter('core')">核心精选 ⭐</button>
+              <button class="filter-pill" data-filter="trae" onclick="setTestFilter('trae')">⚡ Trae 优选 (<span id="filter-count-trae">9</span>)</button>
+            </div>
+          </div>
+
+          <!-- Models Test Table -->
+          <div class="table-responsive" style="max-height: 520px; overflow-y: auto;">
+            <table class="data-table test-table">
+              <thead>
+                <tr>
+                  <th>模型名称 / 标识符</th>
+                  <th>所属 IDE</th>
+                  <th>服务商 / 厂商</th>
+                  <th>上下文容量</th>
+                  <th>积分倍率</th>
+                  <th>测试状态</th>
+                  <th>响应耗时</th>
+                  <th>回复验证与操作</th>
+                </tr>
+              </thead>
+              <tbody id="test-models-tbody">
+                <tr><td colspan="8" class="text-center" style="padding: 2rem;">正在加载模型列表...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Section 2: Interactive API Chat Playground -->
+        <div class="card" style="margin-top: 1.5rem;" id="interactive-playground-section">
+          <div class="card-header">
+            <div>
+              <h3>💬 交互式 API 对话测试台 (Playground)</h3>
+              <p class="description-text">挑选任意模型进行单项测试、打字机流式调用、参数调优与 cURL 调试复现</p>
+            </div>
+          </div>
+
+          <div class="playground-layout">
+            <!-- Left: Config & Prompt -->
+            <div class="playground-controls">
+              <div class="form-group">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                  <label style="margin-bottom: 0;">目标模型 (Model)</label>
+                  <span id="play-ide-badge" style="font-size: 0.74rem; color: var(--accent-cyan);">
+                    🤖 宿主提供: WorkBuddy 国内版模型桥接 ｜ ⚡ 适配: Trae &amp; Antigravity
+                  </span>
+                </div>
+                <select id="play-model-select" onchange="onPlaygroundModelChange()">
+                  <!-- Dynamically populated -->
+                </select>
+              </div>
+
+              <!-- Preset Prompt Chips -->
+              <div class="preset-prompts-box">
+                <span class="preset-title">💡 快捷测试用例:</span>
+                <div class="preset-chips">
+                  <button type="button" class="preset-chip" onclick="applyPresetPrompt('ping')">⚡ 极速 Ping 测活</button>
+                  <button type="button" class="preset-chip" onclick="applyPresetPrompt('intro')">👋 身份与版本验证</button>
+                  <button type="button" class="preset-chip" onclick="applyPresetPrompt('code')">💻 代码生成能力</button>
+                  <button type="button" class="preset-chip" onclick="applyPresetPrompt('logic')">🧠 逻辑思考与推理</button>
+                  <button type="button" class="preset-chip" onclick="applyPresetPrompt('context')">📜 满血长上下文压测</button>
+                </div>
+              </div>
+
+              <div class="form-row three-cols">
+                <div class="form-group">
+                  <label>流式输出 (Stream)</label>
+                  <select id="play-stream-select">
+                    <option value="true" selected>开启打字机流式 (Stream: True)</option>
+                    <option value="false">单次返回 (Stream: False)</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>温度 (Temperature)</label>
+                  <input type="number" id="play-temp-input" value="0.7" min="0" max="1" step="0.1">
+                </div>
+                <div class="form-group">
+                  <label>最大 Token (Max Tokens)</label>
+                  <select id="play-tokens-select">
+                    <option value="128">128 (极速)</option>
+                    <option value="512" selected>512 (标准)</option>
+                    <option value="1024">1024 (长回复)</option>
+                    <option value="2048">2048 (丰富内容)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>系统提示词 (System Prompt - 可选)</label>
+                <input type="text" id="play-system-input" placeholder="例如：You are an expert AI assistant.">
+              </div>
+
+              <div class="form-group">
+                <label>用户测试提示词 (User Prompt) <span style="font-size:0.75rem; color:var(--text-muted);">(支持 Ctrl + Enter 快捷发送)</span></label>
+                <textarea id="play-prompt-input" rows="4" placeholder="请输入要测试的内容，或点击上方的快捷测试用例..." onkeydown="handlePlaygroundKeydown(event)">Say OK in one word.</textarea>
+              </div>
+
+              <div class="playground-actions">
+                <button class="btn btn-primary" id="btn-play-send" onclick="sendPlaygroundTest()">
+                  <span class="icon">🚀</span> 发送 API 请求测试
+                </button>
+                <button class="btn btn-outline" onclick="copyPlaygroundCurl()">
+                  <span class="icon">📋</span> 复制 cURL 命令
+                </button>
+                <button class="btn btn-secondary" onclick="clearPlayground()">
+                  <span class="icon">🧹</span> 清空输出
+                </button>
+              </div>
+            </div>
+
+            <!-- Right: Response Console -->
+            <div class="playground-console">
+              <div class="console-header">
+                <div class="console-title">
+                  <span class="console-dot"></span>
+                  <span>API 实时响应输出</span>
+                </div>
+                <div class="console-stats">
+                  <span class="badge" id="play-status-pill">⚪ 待调用</span>
+                  <span class="stat-pill" id="play-latency-pill">延迟: -- ms</span>
+                  <span class="stat-pill" id="play-ttft-pill">首字: -- ms</span>
+                </div>
+              </div>
+
+              <div class="console-body" id="play-response-body">
+                <div class="empty-state-text">
+                  👈 在左侧选择模型并点击「发送 API 请求测试」，实时结果将呈现在这里。
+                </div>
+              </div>
+
+              <div class="console-footer">
+                <details class="raw-details">
+                  <summary>🔍 查看底层请求报文与 cURL 命令</summary>
+                  <pre class="raw-box" id="play-raw-box">等待发送请求...</pre>
+                </details>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: MONITOR & LOGS -->
+      <section id="tab-monitor" class="tab-pane">
+        <div class="card-grid three-cols stat-cards">
+          <div class="card stat-card">
+            <span class="stat-title">总请求次数</span>
+            <div class="stat-value" id="mon-total-req">0</div>
+          </div>
+          <div class="card stat-card">
+            <span class="stat-title">当前活跃流式连接</span>
+            <div class="stat-value text-accent" id="mon-active-streams">0</div>
+          </div>
+          <div class="card stat-card">
+            <span class="stat-title">平均响应延迟</span>
+            <div class="stat-value" id="mon-avg-latency">0 ms</div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-top: 1.5rem;">
+          <div class="card-header">
+            <h3>实时请求日志流</h3>
+            <button class="btn btn-sm btn-outline" onclick="fetchStatus()">刷新日志</button>
+          </div>
+          <div class="table-responsive">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>模型</th>
+                  <th>类型</th>
+                  <th>耗时</th>
+                  <th>状态</th>
+                  <th>客户端 IP</th>
+                </tr>
+              </thead>
+              <tbody id="logs-tbody">
+                <tr><td colspan="6" class="text-center">暂无请求记录</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 7: SETTINGS -->
+      <section id="tab-settings" class="tab-pane">
+        <div class="card">
+          <div class="card-header">
+            <h3>⚙️ 系统与环境设置</h3>
+          </div>
+          <div class="settings-form">
+            <div class="form-group">
+              <label>Trae Solo CN 安装可执行文件路径</label>
+              <input type="text" id="cfg-trae-path" value="D:\devloop-tools\TRAE SOLO CN\TRAE SOLO CN.exe" readonly>
+            </div>
+            <div class="form-group">
+              <label>Trae 用户配置存储目录</label>
+              <input type="text" id="cfg-trae-appdata" value="C:\Users\Administrator\AppData\Roaming\TRAE SOLO CN" readonly>
+            </div>
+            <div class="form-group">
+              <label>网关监听端口</label>
+              <input type="number" id="cfg-port" value="19999" readonly>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- MODAL: ADD / EDIT ACCOUNT -->
+  <div class="modal" id="account-modal">
+    <div class="modal-backdrop" onclick="closeAccountModal()"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-title">添加新账号档案</h3>
+        <button class="modal-close" onclick="closeAccountModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>所属工具平台</label>
+          <select id="acc-tool">
+            <option value="trae">⚡ ByteDance Trae</option>
+            <option value="cursor">🖱️ Cursor</option>
+            <option value="workbuddy-ai">🌍 WorkBuddy AI（国际版）</option>
+            <option value="workbuddy">🇨🇳 WorkBuddy（国内版）</option>
+            <option value="antigravity">🛸 Antigravity</option>
+            <option value="windsurf">🌊 Windsurf</option>
+            <option value="vscode">💻 VS Code / MarsCode</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>账号名称 / 备注标签</label>
+          <input type="text" id="acc-name" placeholder="例如：工作主账号 / 个人测试账号">
+        </div>
+        <div class="form-group">
+          <label>登录邮箱 / 用户 ID (可选)</label>
+          <input type="text" id="acc-email" placeholder="user@example.com">
+        </div>
+        <div class="form-group">
+          <label>订阅等级 (Tier)</label>
+          <select id="acc-tier">
+            <option value="Free">Free (免费版)</option>
+            <option value="Pro">Pro (专业版)</option>
+            <option value="Ultra">Ultra (终极版)</option>
+            <option value="Team">Team (团队版)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" id="acc-random-device" checked>
+            自动为此账号生成独立的专属设备机器码 (防风控隔离)
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeAccountModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveAccountFromModal()">确认保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD CUSTOM MODEL FOR WORKBUDDY -->
+  <div class="modal" id="custom-model-modal">
+    <div class="modal-backdrop" onclick="closeCustomModelModal()"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3>添加 WorkBuddy 自定义大模型</h3>
+        <button class="modal-close" onclick="closeCustomModelModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>模型 ID (例如: claude-3-7-sonnet)</label>
+          <input type="text" id="cm-id" placeholder="my-custom-model">
+        </div>
+        <div class="form-group">
+          <label>显示名称</label>
+          <input type="text" id="cm-name" placeholder="Claude 3.7 Sonnet">
+        </div>
+        <div class="form-group">
+          <label>OpenAI 兼容接口 Base URL</label>
+          <input type="text" id="cm-url" placeholder="https://api.openai.com/v1">
+        </div>
+        <div class="form-group">
+          <label>API Key</label>
+          <input type="password" id="cm-key" placeholder="sk-...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeCustomModelModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveCustomModel()">确认添加</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: UNIVERSAL QUICK ACTION MODAL -->
+  <div class="modal" id="quick-action-modal">
+    <div class="modal-backdrop" onclick="closeQuickActionModal()"></div>
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="qa-modal-title">⚡ 全平台快捷操作</h3>
+        <button class="modal-close" onclick="closeQuickActionModal()">✕</button>
+      </div>
+      <div class="modal-body">
+        <p id="qa-modal-desc" style="font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 1.25rem;">
+          请选择目标 IDE 执行对应操作：
+        </p>
+        <div class="form-group">
+          <label>目标 IDE 平台</label>
+          <select id="qa-target-tool" onchange="onQuickActionToolChange()">
+            <option value="trae">⚡ ByteDance Trae</option>
+            <option value="cursor">🖱️ Cursor</option>
+            <option value="workbuddy">🇨🇳 WorkBuddy（国内版）</option>
+            <option value="workbuddy-ai">🌍 WorkBuddy AI（国际版）</option>
+            <option value="antigravity">🛸 Google Antigravity</option>
+            <option value="windsurf">🌊 Windsurf</option>
+            <option value="vscode">💻 VS Code / MarsCode</option>
+          </select>
+        </div>
+        <div class="form-group" id="qa-input-group">
+          <label id="qa-input-label">参数名称</label>
+          <input type="text" id="qa-input-val" placeholder="">
+        </div>
+        <div id="qa-extra-hint" class="hint-text" style="margin-top: 0.5rem; font-size: 0.8rem;"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeQuickActionModal()">取消</button>
+        <button class="btn btn-primary" id="qa-confirm-btn" onclick="executeQuickAction()">立即执行</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

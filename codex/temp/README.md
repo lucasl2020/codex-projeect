@@ -1,29 +1,23 @@
 # 每日网页任务自动化
 
-使用 Playwright 启动已安装的 Google Chrome，并复用一个独立的浏览器会话完成六个网站的每日任务；若日常使用的正常 Chrome Profile 安装了 All API Hub，还会额外请求一次扩展快速签到：
+使用 Playwright 启动已安装的 Google Chrome，并复用一个独立的浏览器会话完成各大网站的每日任务；若日常使用的正常 Chrome Profile 安装了 All API Hub，还会额外请求一次扩展快速签到。
 
-1. 打开 AnyRouter 个人控制台；当前前端已探查到已登录页面会自动调用 `POST /api/user/sign_in`。如果用户信息接口能读到余额字段，脚本还会比较签到前后余额；没有增加且未明确显示“今日已签到”时，不会标记完成，daemon 会每小时重试。
-2. 调用 iKuuu 当前页面使用的 `POST /user/checkin`，失败时再尝试点击页面上的“签到”。
-3. 打开 CHY 页面并点击“领取今日5GB”。由于它使用 LinuxDO OAuth，且登录链路可能经过 Cloudflare，脚本不猜测内部接口，而是点击页面并记录点击后实际捕获到的同源请求。
-4. NodeSeek 依次尝试 `POST /api/attendance`（表单体 `random=true`）和 `POST /api/attendance?random=true`（JSON 请求体）；任一方式确认成功或“今日已签到”后立即停止，不再执行后续方式。接口均不能确认成功时，回退识别 `data-rand`、签到相关 class/data-action、页面文本“试试手气”，以及 `.head-info` 等控件。仅在页面或接口能可靠解析额度时，才输出签到前/后额度及变化；解析不到则完全跳过额度字段，不会显示“未获取”。
+当前支持 9 大站点自动化任务：
+1. **All API Hub**：检测并调用 Chrome 扩展自动化签到
+2. **AnyRouter**：个人控制台签到与余额前后比对
+3. **iKuuu**：流量签到与剩余流量解析
+4. **CHY**：LinuxDO OAuth 认证下的每日 5GB 流量领取
+5. **NodeSeek**：社区鸡腿/积分“试试手气”与接口自动回退
+6. **DeepFlood**：每日打卡与额度更新
+7. **NodeBuf**：积分状态查询与打卡签到
+8. **禾维 AI (hvoy.ai)**：自动化签到与奖励领取
+9. **黑白福利站 (cdk.hybgzs.com)**：每日签到与福利大转盘抽奖
 
-Cloudflare：NodeSeek/DeepFlood/CHY 若落到“Just a moment / 安全验证”页，会可选调用本仓库 `cf-bypass-json.py`（内部使用 `D:\codex-projeect\6a6ff848a2c537419fd0b6cf` 的 `cf_bypass`）。成功后写回 Cookie 并重试定位“试试手气/领取”按钮；失败则给出明确错误，不继续盲点。
+### 模块化架构说明
+- `services/`：所有站点逻辑已完整重构成解耦的微服务文件（如 `anyrouter.js`、`hvoy.js`、`hybgzs.js`、`ikuuu.js` 等），核心引擎 `daily-rewards-v2.js` 统一按需调度。
+- `单独执行/`：提供各站点的独立运行批处理（如 `1-All_API_Hub.cmd`、`8-禾维AI.cmd`、`9-黑白福利站.cmd`），方便单独调试排查。
 
-Cloudflare / 验证码：检测到安全验证时调用 `cf-bypass-json.py`（`D:\codex-projeect\6a6ff848a2c537419fd0b6cf`）。可用 `python cf-bypass-json.py --diagnose` 检查依赖。
-
-可选：启动本地 `cf-captcha-server` HTTP API 服务后，脚本会优先通过同目录 `cf-solver.js` 走 HTTP 调用（更快，且支持 cf_clearance 缓存），服务不可达时自动回退到上面的 `cf-bypass-json.py`：
-
-```powershell
-cd D:\codex-projeect\验证码识别\cf_captcha_solver_pkg
-python -m cf_captcha_solver.server --port 8000
-```
-
-服务地址可用环境变量 `CF_SOLVER_URL` 覆盖（默认 `http://localhost:8000`）。
-
-额度显示策略：AnyRouter 使用只读 `GET /api/user/self`；NodeBuf 使用只读 `GET /api/account/points` 的账户总积分字段；iKuuu/CHY 仅在页面正文能解析“剩余/可用流量”时显示；NodeSeek/DeepFlood 仅在页面或签到响应能解析鸡腿/积分时显示。没有可靠来源时跳过，不猜测写接口，也不重复签到。
-5. DeepFlood 使用相同的双接口回退流程。
-6. NodeBuf 先调用 `GET /api/account/points` 判断今日状态；未签到时调用页面“立即签到”按钮当前使用的 `POST /api/account/points/check-in`。该请求无请求体，复用浏览器登录 Cookie。若被重定向到登录页，有界面模式会等待 Chrome 密码管理器自动填充已保存的账号密码，再点击页面原生登录按钮；脚本不会读取密码内容。
-7. 可选检测正常 Chrome Profile 中的 All API Hub 扩展；存在时用该 Profile 打开扩展真实的 `options.html?runNow=true#autoCheckin` 地址，请求“快速签到”。不读取或复制 Cookie、密码或扩展配置；未安装时静默跳过，不影响其他网站任务。
+Cloudflare / 验证码：检测到安全验证时优先通过同目录 `cf-solver.js` 调用本地 `cf-captcha-server` HTTP API（端口 8000），服务不可达时自动回退到 `cf-bypass-json.py`。
 
 ## 最简单用法（推荐）
 
@@ -33,7 +27,7 @@ python -m cf_captcha_solver.server --port 8000
 一键执行每日签到（显示结果）.cmd
 ```
 
-第一次运行会自动安装依赖，并用普通 Chrome 打开六个网站让你手动完成登录。完成 LinuxDO 验证后，请关闭这个登录 Chrome 窗口，再回到终端按 Enter；以后只需再次双击这个文件，任务会立即执行一次并显示汇总结果。
+第一次运行会自动安装依赖，并用普通 Chrome 打开目标网站让你手动完成登录。完成验证后，关闭登录 Chrome 窗口回到终端即可；以后只需双击该文件即可一键执行并显示结果汇总。
 
 如果 Cookie 过期或网站要求重新登录，双击：
 

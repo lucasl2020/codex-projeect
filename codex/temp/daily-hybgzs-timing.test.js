@@ -1,7 +1,7 @@
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const vm = require('node:vm');
-const { watchHybgzsCf, hybgzsApi, doHybgzsDriftBottle } = require('./daily-rewards-v2.js');
+const { watchHybgzsCf, clickCapStart, hybgzsApi, doHybgzsDriftBottle } = require('./daily-rewards-v2.js');
 
 test('通用接口设置请求超时，非 JSON 响应不会误报今日已完成', async () => {
   let timeout;
@@ -46,4 +46,34 @@ test('漂流瓶反复冷却最多等待一分钟，并标记未完成', async ()
     assert.equal(picks, 1);
     assert.deepEqual(waits, [60000]);
   } finally { global.fetch = originalFetch; }
+});
+test('绮问演算按钮出现后不因缺少 role=dialog 空等默认超时', async () => {
+  const textTimeouts = [];
+  const ring = {
+    waitFor: async () => {},
+    isVisible: async () => true,
+    isDisabled: async () => false,
+    boundingBox: async () => ({ x: 10, y: 10, width: 20, height: 20 }),
+  };
+  const missingDialog = {
+    innerText: options => {
+      if (!options?.timeout) return new Promise(() => {});
+      textTimeouts.push(options.timeout);
+      return Promise.resolve('');
+    },
+  };
+  const page = {
+    locator: selector => ({ first: () => selector === '[role="dialog"]' ? missingDialog : ring }),
+    mouse: { move: async () => {}, down: async () => {}, up: async () => {} },
+    waitForTimeout: async () => {},
+  };
+
+  const result = await Promise.race([
+    clickCapStart(page, { timeout: 20 }),
+    new Promise(resolve => setTimeout(() => resolve('timeout'), 250)),
+  ]);
+
+  assert.equal(result, true);
+  assert.ok(textTimeouts.length >= 1);
+  assert.ok(textTimeouts.every(timeout => timeout <= 100));
 });

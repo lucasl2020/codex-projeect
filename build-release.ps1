@@ -1,4 +1,4 @@
-﻿# =============================================================================
+# =============================================================================
 #  build-release.ps1 —— 一键打包所有项目为「Windows 独立运行」产物
 # =============================================================================
 #  用法：在项目根目录打开 PowerShell 执行：
@@ -229,7 +229,11 @@ Write-Host "    复制 Playwright Chromium ..." -ForegroundColor DarkGray
 $pw = Join-Path $env:USERPROFILE 'AppData\Local\ms-playwright'
 New-Item -ItemType Directory -Force -Path "$dst\ms-playwright" | Out-Null
 if (Test-Path $pw) {
-  Get-ChildItem $pw -Directory | Where-Object { $_.Name -match '^(chromium|chromium_headless_shell|ffmpeg|winldd)-' } | ForEach-Object {
+  $matched = Get-ChildItem $pw -Directory | Where-Object { $_.Name -match '^(chromium|chromium_headless_shell|ffmpeg|winldd)-' }
+  $crDirs = $matched | Where-Object { $_.Name -match '^chromium-\d+' } | Sort-Object Name -Descending | Select-Object -First 1
+  $crHeadlessDirs = $matched | Where-Object { $_.Name -match '^chromium_headless_shell-\d+' } | Sort-Object Name -Descending | Select-Object -First 1
+  $otherDirs = $matched | Where-Object { $_.Name -match '^(ffmpeg|winldd)-' }
+  @($crDirs, $crHeadlessDirs, $otherDirs) | Where-Object { $_ } | ForEach-Object {
     robocopy $_.FullName "$dst\ms-playwright\$($_.Name)" /E /NFL /NDL /NJH /NP | Out-Null
   }
 }
@@ -249,13 +253,53 @@ if not "%ERR%"=="0" ( echo. & echo [ERROR] Start failed, exit code %ERR% & pause
 exit /b %ERR%
 '@ | Set-Content -Encoding ASCII "$dst\start.cmd"
 
+# ---- 3.4 antigravity-trae-manager ----
+Write-Host "==> 装配 antigravity-trae-manager（便携式）" -ForegroundColor Cyan
+$dst = "$Out\antigravity-trae-manager"; New-Item -ItemType Directory -Force -Path $dst | Out-Null
+Copy-Item $nodeExe "$dst\node.exe" -Force
+foreach ($it in @('lib','public','data','server.js','cli.js','package.json')) {
+  if (Test-Path "$Root\antigravity-trae-manager\$it") { Copy-Item "$Root\antigravity-trae-manager\$it" $dst -Recurse -Force }
+}
+@'
+@echo off
+chcp 65001 >nul
+cd /d "%~dp0"
+if not exist "%~dp0node.exe" ( echo [ERROR] node.exe missing. & pause & exit /b 1 )
+title AI-IDE-Manager 控制台 (19999)
+echo 正在启动 AI-IDE-Manager (http://127.0.0.1:19999)...
+start "" "http://127.0.0.1:19999"
+"%~dp0node.exe" server.js
+pause
+'@ | Set-Content -Encoding ASCII "$dst\start.cmd"
+
 # =============================================================================
-# 4. PowerShell 项目 —— 直接复制（Windows 自带）
+# 4. 原生/通用工具与文档项目 —— 直接复制（Windows 自带或独立免环境）
 # =============================================================================
 Write-Host "==> 复制 显示codex配置信息" -ForegroundColor Cyan
 $dst = "$Out\显示codex配置信息"; New-Item -ItemType Directory -Force -Path $dst | Out-Null
 Copy-Item "$Root\显示codex配置信息\view-codex-config.cmd" $dst -Force
 Copy-Item "$Root\显示codex配置信息\view_codex.ps1" $dst -Force
+
+Write-Host "==> 复制 port_manager（原生 C# WPF + 脚本）" -ForegroundColor Cyan
+$dst = "$Out\port_manager"; New-Item -ItemType Directory -Force -Path $dst | Out-Null
+if (Test-Path "$Root\port_manager\windows") {
+  Copy-Item "$Root\port_manager\windows" $dst -Recurse -Force
+}
+
+Write-Host "==> 复制 litiaotiao（规则与说明）" -ForegroundColor Cyan
+$dst = "$Out\litiaotiao"; New-Item -ItemType Directory -Force -Path $dst | Out-Null
+foreach ($it in @('李跳跳规则_AllRules.json','操作手册_李跳跳.md','README.md')) {
+  if (Test-Path "$Root\litiaotiao\$it") { Copy-Item "$Root\litiaotiao\$it" $dst -Force }
+}
+
+Write-Host "==> 复制 check-antigravity-proxy（Antigravity 工具箱）" -ForegroundColor Cyan
+$dst = "$Out\check-antigravity-proxy"; New-Item -ItemType Directory -Force -Path $dst | Out-Null
+if (Test-Path "$Root\check-antigravity-proxy\dist\AntigravityToolbox") {
+  Copy-Item "$Root\check-antigravity-proxy\dist\AntigravityToolbox" "$dst\AntigravityToolbox" -Recurse -Force
+  if (Test-Path "$Root\check-antigravity-proxy\启动工具箱.bat") {
+    Copy-Item "$Root\check-antigravity-proxy\启动工具箱.bat" $dst -Force
+  }
+}
 
 # =============================================================================
 # 5. 清理 PyInstaller 中间产物

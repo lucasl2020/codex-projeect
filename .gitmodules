@@ -1,0 +1,6 @@
+[submodule "check-antigravity-proxy"]
+	path = check-antigravity-proxy
+	url = https://github.com/lucasl2020/AntigravityToolbox.git
+[submodule "port_manager"]
+	path = port_manager
+	url = https://github.com/lucasl2020/port_manager.git

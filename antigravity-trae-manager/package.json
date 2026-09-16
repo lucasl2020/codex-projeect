@@ -1,0 +1,22 @@
+{
+  "name": "antigravity-trae-manager",
+  "version": "1.0.0",
+  "description": "Unified Multi-Account Manager & AI Proxy Gateway for Antigravity and ByteDance Trae IDE",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning --use-env-proxy server.js",
+    "cli": "node cli.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "antigravity",
+    "trae",
+    "account-manager",
+    "machine-id",
+    "device-spoofer",
+    "openai-proxy",
+    "ai-gateway"
+  ],
+  "author": "Antigravity & Trae Team",
+  "license": "MIT"
+}

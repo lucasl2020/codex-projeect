@@ -12,7 +12,7 @@ const HEADLESS = process.env.HEADLESS === '1';
 const HOUR = 60 * 60 * 1000;
 const URLS = {
   anyrouter: 'https://anyrouter.top/console/personal',
-  ikuuu: 'https://ikuuu.win/user',
+  ikuuu: 'https://ikuuu.top/user',
   chy: 'https://dy.chybenzun.top/',
 };
 let nextAnyRouterRetryAt = 0;

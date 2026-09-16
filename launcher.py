@@ -4,12 +4,16 @@ r"""
 Codex 工具箱 —— 免环境独立运行桌面启动器
 统一管理并一键启动 D:\codex-projeect 下所有工具（已排除验证码识别）：
 1. AI 模型接口测试台 (ai-model-tester)
-2. 卡网管理与比价面板 (crawler)
-3. CSV 手机号转 MD5 (md5处理程序)
-4. Typora 转 Obsidian 迁移 (typora-to-obsidian)
-5. TRAE / WorkBuddy 每日签到 (trae-auto-checkin)
-6. WorkBuddy 派猫旅行自动脚本 (workbuddy派遣)
-7. Codex++ 配置查看器 (显示codex配置信息)
+2. AI-IDE-Manager 控制台 (antigravity-trae-manager)
+3. 卡网管理与比价面板 (crawler)
+4. Antigravity 综合管理工具箱 (check-antigravity-proxy)
+5. 跨平台端口监控与管理 (port_manager)
+6. CSV 手机号转 MD5 (md5处理程序)
+7. Typora 转 Obsidian 迁移 (typora-to-obsidian)
+8. TRAE / WorkBuddy 每日签到 (trae-auto-checkin)
+9. WorkBuddy 派猫旅行自动脚本 (workbuddy派遣)
+10. 李跳跳规则与优化手册 (litiaotiao)
+11. Codex++ 配置查看器 (显示codex配置信息)
 """
 
 from __future__ import annotations
@@ -250,6 +254,48 @@ class App(tk.Tk):
                 "dir": "workbuddy派遣",
                 "actions": [
                     ("🐾 立即派猫/领奖", self._cmd_workbuddy_travel),
+                ],
+            },
+            {
+                "id": "ai-ide-manager",
+                "title": "🤖 AI-IDE-Manager 控制台",
+                "type": "web",
+                "port": 19999,
+                "url": "http://127.0.0.1:19999",
+                "desc": "Antigravity、Trae、WorkBuddy 状态、真实额度、官方签到、设备档案及模型网关控制台。",
+                "dir": "antigravity-trae-manager",
+                "run_cmd": self._cmd_ai_ide_manager,
+            },
+            {
+                "id": "antigravity-toolbox",
+                "title": "🛡️ Antigravity 综合管理工具箱",
+                "type": "gui",
+                "desc": "Google Antigravity 网络连通诊断、全界面中文化汉化 (antigravity2-cn) 与免 TUN 代理注入 (antigravity-proxy)。",
+                "dir": "check-antigravity-proxy",
+                "actions": [
+                    ("🖥️ 启动工具箱", self._cmd_antigravity_toolbox),
+                ],
+            },
+            {
+                "id": "port-manager",
+                "title": "🔌 跨平台端口监控与管理",
+                "type": "gui",
+                "desc": "毫秒级快速扫描本地端口占用，原生 Win11 Fluent 界面一键释放与 Web 仪表盘。",
+                "dir": "port_manager",
+                "actions": [
+                    ("🖥️ 打开端口管理 (WPF)", self._cmd_port_manager_gui),
+                    ("🌐 打开 Web 版", self._cmd_port_manager_web),
+                ],
+            },
+            {
+                "id": "litiaotiao",
+                "title": "⚡ 李跳跳规则与优化手册",
+                "type": "gui",
+                "desc": "李跳跳 177+ 常用 App 广告跳过规则库、腾讯乐固加固分析与脱壳重打包操作手册。",
+                "dir": "litiaotiao",
+                "actions": [
+                    ("📄 查看规则文件", self._cmd_litiaotiao_rules),
+                    ("📖 查看操作手册", self._cmd_litiaotiao_doc),
                 ],
             },
             {
@@ -562,6 +608,68 @@ class App(tk.Tk):
             return
         messagebox.showerror("错误", f"未找到配置文件：\n{cmd_file}")
 
+    def _cmd_ai_ide_manager(self) -> str:
+        d = os.path.join(BASE_DIR, "antigravity-trae-manager")
+        bat = os.path.join(d, "start.bat")
+        if os.path.exists(bat):
+            return f'cmd /c "{bat}"'
+        node = os.path.join(d, "node.exe")
+        if os.path.exists(node):
+            return f'"{node}" server.js'
+        return "node server.js"
+
+    def _cmd_antigravity_toolbox(self):
+        d = os.path.join(BASE_DIR, "check-antigravity-proxy")
+        bat = os.path.join(d, "启动工具箱.bat")
+        if os.path.exists(bat):
+            os.system(f'start "" "{bat}"')
+            return
+        exe = os.path.join(d, "dist", "AntigravityToolbox", "AntigravityToolbox.exe")
+        if os.path.exists(exe):
+            os.system(f'start "" "{exe}"')
+            return
+        py = os.path.join(d, "src", "app.py")
+        if os.path.exists(py):
+            subprocess.Popen([sys.executable, py], cwd=d)
+            return
+        messagebox.showerror("错误", f"未找到 Antigravity 工具箱启动文件：\n{d}")
+
+    def _cmd_port_manager_gui(self):
+        d = os.path.join(BASE_DIR, "port_manager")
+        bat = os.path.join(d, "windows", "port_manager_gui.bat")
+        if os.path.exists(bat):
+            os.system(f'start "" "{bat}"')
+            return
+        exe = os.path.join(d, "windows", "exe", "port_manager_win.exe")
+        if os.path.exists(exe):
+            os.system(f'start "" "{exe}"')
+            return
+        messagebox.showerror("错误", f"未找到端口管理程序：\n{d}")
+
+    def _cmd_port_manager_web(self):
+        d = os.path.join(BASE_DIR, "port_manager")
+        bat = os.path.join(d, "windows", "port_manager_web.bat")
+        if os.path.exists(bat):
+            os.system(f'start "" "{bat}"')
+            return
+        messagebox.showerror("错误", f"未找到端口管理 Web 启动脚本：\n{d}")
+
+    def _cmd_litiaotiao_rules(self):
+        d = os.path.join(BASE_DIR, "litiaotiao")
+        rules = os.path.join(d, "李跳跳规则_AllRules.json")
+        if os.path.exists(rules):
+            os.startfile(rules)
+        else:
+            messagebox.showerror("错误", f"未找到规则文件：\n{rules}")
+
+    def _cmd_litiaotiao_doc(self):
+        d = os.path.join(BASE_DIR, "litiaotiao")
+        doc = os.path.join(d, "操作手册_李跳跳.md")
+        if os.path.exists(doc):
+            os.startfile(doc)
+        else:
+            messagebox.showerror("错误", f"未找到操作手册：\n{doc}")
+
     # ==================== 状态巡检循环 ====================
     def _start_monitor_loop(self):
         def loop():
@@ -570,6 +678,10 @@ class App(tk.Tk):
                     # 检查 AI Model Tester (8787)
                     ai_run = self.mgr.is_running("ai-model-tester", 8787)
                     self._update_web_badge("ai-model-tester", ai_run, 8787)
+
+                    # 检查 AI-IDE-Manager (19999)
+                    ide_run = self.mgr.is_running("ai-ide-manager", 19999)
+                    self._update_web_badge("ai-ide-manager", ide_run, 19999)
 
                     # 检查 Crawler (3780)
                     crawler_run = self.mgr.is_running("crawler", 3780)

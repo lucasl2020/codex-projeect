@@ -1,0 +1,20 @@
+﻿# Dependencies
+node_modules/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Screenshots & Temporary images
+screenshot_*.png
+cross_ide_*.png
+*.tmp
+*.bak
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Sandbox user data dirs
+data/trae-isolated/*
+!data/trae-isolated/.gitkeep

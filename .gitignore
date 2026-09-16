@@ -24,8 +24,10 @@ release-packages/
 edge-profile/
 edge-profile-test/
 
-# === WorkBuddy 工作区数据 ===
+# === WorkBuddy 与 IDE 管理器工作区数据 / 用户会话 ===
 .workbuddy/
+antigravity-trae-manager/data/
+*.vscdb
 
 # === 系统 ===
 Thumbs.db
